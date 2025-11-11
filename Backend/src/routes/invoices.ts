@@ -107,6 +107,64 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Get all invoices with filters
+router.get('/', async (req, res) => {
+  const { type, startDate, endDate, supplierId, customerId, limit = '50' } = req.query as {
+    type?: 'PURCHASE' | 'SALE';
+    startDate?: string;
+    endDate?: string;
+    supplierId?: string;
+    customerId?: string;
+    limit?: string;
+  };
+
+  try {
+    const where: any = {};
+    
+    if (type) {
+      where.type = type;
+    }
+    
+    if (startDate || endDate) {
+      where.date = {};
+      if (startDate) {
+        where.date.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.date.lte = new Date(endDate);
+      }
+    }
+    
+    if (supplierId) {
+      where.supplierId = Number(supplierId);
+    }
+    
+    if (customerId) {
+      where.customerId = Number(customerId);
+    }
+
+    const invoices = await prisma.invoice.findMany({
+      where,
+      include: {
+        supplier: true,
+        customer: true,
+        items: {
+          include: {
+            part: true
+          }
+        }
+      },
+      orderBy: { date: 'desc' },
+      take: Number(limit)
+    });
+
+    res.json(invoices);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to load invoices' });
+  }
+});
+
 // Get invoice with items
 router.get('/:id', async (req, res) => {
   const id = Number(req.params.id);

@@ -29,3 +29,19 @@ export interface InvoiceCreateBody {
   cgstPercent?: number;
   sgstPercent?: number;
 }
+
+export interface SupplierCreateBody {
+  name: string;
+  address?: string;
+  phone?: string;
+  gstin?: string;
+  state?: string;
+}
+
+export interface CustomerCreateBody {
+  name: string;
+  address?: string;
+  phone?: string;
+  gstin?: string;
+  state?: string;
+}

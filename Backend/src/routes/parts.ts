@@ -101,4 +101,66 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Update part
+router.put('/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  const body = req.body as PartCreateBody;
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: 'Invalid part ID. Must be a number.' });
+  }
+
+  if (!body.partNumber || !body.itemName || !body.hsnCode) {
+    return res.status(400).json({ error: 'partNumber, itemName, hsnCode required' });
+  }
+
+  const gstPercent = body.gstPercent ?? 18;
+  const unit = body.unit ?? 'PCS';
+
+  try {
+    const part = await prisma.part.update({
+      where: { id },
+      data: {
+        partNumber: body.partNumber,
+        itemName: body.itemName,
+        description: body.description,
+        hsnCode: body.hsnCode,
+        gstPercent,
+        unit,
+        mrp: body.mrp,
+        rtl: body.rtl,
+        barcode: body.barcode,
+        qrCode: body.qrCode
+      }
+    });
+
+    res.json(part);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to update part' });
+  }
+});
+
+// Delete part
+router.delete('/:id', async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: 'Invalid part ID. Must be a number.' });
+  }
+
+  try {
+    await prisma.part.delete({ where: { id } });
+    res.json({ success: true, message: 'Part deleted' });
+  } catch (e: any) {
+    console.error(e);
+    if (e.code === 'P2003') {
+      return res.status(400).json({ 
+        error: 'Cannot delete part with existing invoices or transactions' 
+      });
+    }
+    res.status(500).json({ error: 'Failed to delete part' });
+  }
+});
+
 export default router;
