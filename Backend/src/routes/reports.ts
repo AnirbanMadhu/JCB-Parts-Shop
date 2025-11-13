@@ -67,6 +67,298 @@ router.get('/dashboard', async (_req, res) => {
   }
 });
 
+// Weekly purchase data for current month
+router.get('/weekly-purchases', async (req, res) => {
+  try {
+    const { year, month } = req.query;
+    const now = new Date();
+    const currentYear = year ? parseInt(year as string) : now.getFullYear();
+    const currentMonth = month ? parseInt(month as string) : now.getMonth() + 1; // 1-12
+
+    // Get first and last day of the month
+    const firstDay = new Date(currentYear, currentMonth - 1, 1);
+    const lastDay = new Date(currentYear, currentMonth, 0);
+
+    // Get all purchase invoices for the month
+    const purchaseInvoices = await prisma.invoice.findMany({
+      where: {
+        type: 'PURCHASE',
+        status: { not: 'CANCELLED' },
+        date: {
+          gte: firstDay,
+          lte: lastDay
+        }
+      },
+      select: {
+        date: true,
+        total: true,
+        id: true
+      },
+      orderBy: {
+        date: 'asc'
+      }
+    });
+
+    // Calculate weeks in the month
+    const weeks: Array<{
+      weekNumber: number;
+      weekLabel: string;
+      dateRange: string;
+      startDate: string;
+      endDate: string;
+      purchases: number;
+      invoiceCount: number;
+    }> = [];
+
+    // Divide month into weeks
+    let weekNumber = 1;
+    let currentWeekStart = new Date(firstDay);
+
+    while (currentWeekStart <= lastDay) {
+      const currentWeekEnd = new Date(currentWeekStart);
+      currentWeekEnd.setDate(currentWeekEnd.getDate() + 6);
+      
+      // Don't go past the end of the month
+      if (currentWeekEnd > lastDay) {
+        currentWeekEnd.setTime(lastDay.getTime());
+      }
+
+      // Calculate purchases for this week
+      const weekPurchases = purchaseInvoices.filter(inv => {
+        const invDate = new Date(inv.date);
+        return invDate >= currentWeekStart && invDate <= currentWeekEnd;
+      });
+
+      const totalPurchases = weekPurchases.reduce((sum, inv) => {
+        return sum + parseFloat(inv.total.toString());
+      }, 0);
+
+      const startDay = currentWeekStart.getDate();
+      const endDay = currentWeekEnd.getDate();
+      const dateRange = `${startDay}-${endDay}`;
+
+      weeks.push({
+        weekNumber,
+        weekLabel: `Week ${weekNumber}`,
+        dateRange,
+        startDate: currentWeekStart.toISOString().split('T')[0],
+        endDate: currentWeekEnd.toISOString().split('T')[0],
+        purchases: totalPurchases,
+        invoiceCount: weekPurchases.length
+      });
+
+      // Move to next week
+      currentWeekStart = new Date(currentWeekEnd);
+      currentWeekStart.setDate(currentWeekStart.getDate() + 1);
+      weekNumber++;
+    }
+
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    res.json({
+      month: monthNames[currentMonth - 1],
+      year: currentYear,
+      weeks
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to load weekly purchase data' });
+  }
+});
+
+// Weekly sales data for current month
+router.get('/weekly-sales', async (req, res) => {
+  try {
+    const { year, month } = req.query;
+    const now = new Date();
+    const currentYear = year ? parseInt(year as string) : now.getFullYear();
+    const currentMonth = month ? parseInt(month as string) : now.getMonth() + 1; // 1-12
+
+    // Get first and last day of the month
+    const firstDay = new Date(currentYear, currentMonth - 1, 1);
+    const lastDay = new Date(currentYear, currentMonth, 0);
+
+    // Get all sales invoices for the month
+    const salesInvoices = await prisma.invoice.findMany({
+      where: {
+        type: 'SALE',
+        status: { not: 'CANCELLED' },
+        date: {
+          gte: firstDay,
+          lte: lastDay
+        }
+      },
+      select: {
+        date: true,
+        total: true,
+        id: true
+      },
+      orderBy: {
+        date: 'asc'
+      }
+    });
+
+    // Calculate weeks in the month
+    const weeks: Array<{
+      weekNumber: number;
+      weekLabel: string;
+      dateRange: string;
+      startDate: string;
+      endDate: string;
+      sales: number;
+      invoiceCount: number;
+    }> = [];
+
+    // Divide month into weeks
+    let weekNumber = 1;
+    let currentWeekStart = new Date(firstDay);
+
+    while (currentWeekStart <= lastDay) {
+      const currentWeekEnd = new Date(currentWeekStart);
+      currentWeekEnd.setDate(currentWeekEnd.getDate() + 6);
+      
+      // Don't go past the end of the month
+      if (currentWeekEnd > lastDay) {
+        currentWeekEnd.setTime(lastDay.getTime());
+      }
+
+      // Calculate sales for this week
+      const weekSales = salesInvoices.filter(inv => {
+        const invDate = new Date(inv.date);
+        return invDate >= currentWeekStart && invDate <= currentWeekEnd;
+      });
+
+      const totalSales = weekSales.reduce((sum, inv) => {
+        return sum + parseFloat(inv.total.toString());
+      }, 0);
+
+      const startDay = currentWeekStart.getDate();
+      const endDay = currentWeekEnd.getDate();
+      const dateRange = `${startDay}-${endDay}`;
+
+      weeks.push({
+        weekNumber,
+        weekLabel: `Week ${weekNumber}`,
+        dateRange,
+        startDate: currentWeekStart.toISOString().split('T')[0],
+        endDate: currentWeekEnd.toISOString().split('T')[0],
+        sales: totalSales,
+        invoiceCount: weekSales.length
+      });
+
+      // Move to next week
+      currentWeekStart = new Date(currentWeekEnd);
+      currentWeekStart.setDate(currentWeekStart.getDate() + 1);
+      weekNumber++;
+    }
+
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    res.json({
+      month: monthNames[currentMonth - 1],
+      year: currentYear,
+      weeks
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to load weekly sales data' });
+  }
+});
+
+// Monthly cashflow data (rolling 12 months with running balance)
+router.get('/cashflow', async (req, res) => {
+  try {
+    const { year, month } = req.query;
+    const now = new Date();
+    const currentYear = year ? parseInt(year as string) : now.getFullYear();
+    const currentMonth = month ? parseInt(month as string) : now.getMonth() + 1; // 1-12
+
+    // Calculate date range for last 12 months from current month
+    const endDate = new Date(currentYear, currentMonth, 1); // First day of NEXT month (to include current month)
+    const startDate = new Date(currentYear, currentMonth - 12, 1); // 12 months back
+
+    // Get all sales and purchases in the date range
+    const salesData = await prisma.$queryRaw<Array<{ year: number; month: number; total: number }>>`
+      SELECT 
+        EXTRACT(YEAR FROM date)::INTEGER as year,
+        EXTRACT(MONTH FROM date)::INTEGER as month,
+        SUM(total)::DECIMAL as total
+      FROM "Invoice"
+      WHERE type = 'SALE' 
+        AND status != 'CANCELLED'
+        AND date >= ${startDate}
+        AND date < ${endDate}
+      GROUP BY EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date)
+      ORDER BY year, month
+    `;
+
+    const purchaseData = await prisma.$queryRaw<Array<{ year: number; month: number; total: number }>>`
+      SELECT 
+        EXTRACT(YEAR FROM date)::INTEGER as year,
+        EXTRACT(MONTH FROM date)::INTEGER as month,
+        SUM(total)::DECIMAL as total
+      FROM "Invoice"
+      WHERE type = 'PURCHASE' 
+        AND status != 'CANCELLED'
+        AND date >= ${startDate}
+        AND date < ${endDate}
+      GROUP BY EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date)
+      ORDER BY year, month
+    `;
+
+    // Create monthly data for last 12 months with running stock balance
+    const monthlyData = [];
+    const monthNames = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+
+    let runningStockBalance = 0; // Cumulative stock value
+
+    // Generate 12 months of data
+    for (let i = 0; i < 12; i++) {
+      const targetDate = new Date(currentYear, currentMonth - 12 + i, 1);
+      const targetYear = targetDate.getFullYear();
+      const targetMonth = targetDate.getMonth() + 1;
+
+      const sales = salesData.find(s => s.year === targetYear && s.month === targetMonth);
+      const purchase = purchaseData.find(p => p.year === targetYear && p.month === targetMonth);
+
+      const salesAmount = sales ? parseFloat(sales.total.toString()) : 0;
+      const purchaseAmount = purchase ? parseFloat(purchase.total.toString()) : 0;
+
+      // Stock balance: increases with purchases, decreases with sales
+      runningStockBalance += purchaseAmount - salesAmount;
+
+      monthlyData.push({
+        month: targetMonth,
+        year: targetYear,
+        monthName: monthNames[targetMonth - 1],
+        monthYear: `${monthNames[targetMonth - 1]} ${targetYear}`,
+        sales: salesAmount,
+        purchases: purchaseAmount,
+        netCashflow: salesAmount - purchaseAmount, // Profit for the month
+        stockBalance: Math.max(0, runningStockBalance) // Stock value (can't be negative)
+      });
+    }
+
+    res.json({
+      startMonth: monthlyData[0]?.monthYear || '',
+      endMonth: monthlyData[11]?.monthYear || '',
+      data: monthlyData
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to load cashflow data' });
+  }
+});
+
 // Monthly sales/purchase report
 router.get('/monthly', async (req, res) => {
   const { year = new Date().getFullYear().toString(), type } = req.query as {

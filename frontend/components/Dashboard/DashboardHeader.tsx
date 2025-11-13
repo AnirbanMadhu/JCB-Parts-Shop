@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronDown } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 export default function DashboardHeader() {
   const router = useRouter();
@@ -14,10 +14,6 @@ export default function DashboardHeader() {
         </button>
         <h1 className="text-xl font-semibold text-gray-800">Dashboard</h1>
       </div>
-      <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 rounded-md">
-        <span className="text-sm text-gray-700">This Year</span>
-        <ChevronDown className="w-4 h-4 text-gray-500" />
-      </button>
     </header>
   );
 }
