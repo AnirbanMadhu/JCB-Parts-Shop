@@ -339,4 +339,52 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// Update payment status (PATCH)
+router.patch('/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  
+  if (isNaN(id)) {
+    return res.status(400).json({ error: 'Invalid invoice ID. Must be a number.' });
+  }
+
+  const { paymentStatus, paidAmount, dueAmount, paymentDate, paymentMethod, paymentNote, note } = req.body;
+
+  try {
+    const invoice = await prisma.invoice.findUnique({ where: { id } });
+    
+    if (!invoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    const updateData: any = {};
+    
+    if (paymentStatus !== undefined) updateData.paymentStatus = paymentStatus;
+    if (paidAmount !== undefined) updateData.paidAmount = new Decimal(paidAmount);
+    if (dueAmount !== undefined) updateData.dueAmount = new Decimal(dueAmount);
+    if (paymentDate !== undefined) updateData.paymentDate = paymentDate ? new Date(paymentDate) : null;
+    if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod || null;
+    if (paymentNote !== undefined) updateData.paymentNote = paymentNote || null;
+    if (note !== undefined) updateData.note = note || null;
+
+    const updatedInvoice = await prisma.invoice.update({
+      where: { id },
+      data: updateData,
+      include: {
+        customer: true,
+        supplier: true,
+        items: {
+          include: {
+            part: true
+          }
+        }
+      }
+    });
+
+    res.json(updatedInvoice);
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Failed to update payment status' });
+  }
+});
+
 export default router;

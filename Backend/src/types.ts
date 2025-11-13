@@ -33,6 +33,8 @@ export interface InvoiceCreateBody {
 
 export interface SupplierCreateBody {
   name: string;
+  email?: string;
+  contactPerson?: string;
   address?: string;
   phone?: string;
   gstin?: string;

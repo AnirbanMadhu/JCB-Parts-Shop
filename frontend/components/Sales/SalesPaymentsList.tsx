@@ -3,8 +3,10 @@
 
 import Link from "next/link";
 import BackButton from "../Common/BackButton";
-import { Filter, Plus, Search, Calendar } from "lucide-react";
+import PaymentStatusModal from "./PaymentStatusModal";
+import { Filter, Plus, Search, Calendar, DollarSign, Edit } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 
 type SalesInvoice = {
   id: number;
@@ -20,16 +22,27 @@ type SalesInvoice = {
   note?: string;
   createdAt?: string;
   updatedAt?: string;
+  paymentStatus?: string;
+  paidAmount?: number;
+  dueAmount?: number;
+  paymentDate?: string;
+  paymentMethod?: string;
+  paymentNote?: string;
 };
 
 type Props = {
   payments: SalesInvoice[];
 };
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 export default function SalesPaymentsList({ payments }: Props) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [selectedInvoice, setSelectedInvoice] = useState<SalesInvoice | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Filter payments based on search term and filters
   const filteredPayments = useMemo(() => {
@@ -71,6 +84,32 @@ export default function SalesPaymentsList({ payments }: Props) {
   const pendingAmount = filteredPayments
     .filter(p => p.status === 'SUBMITTED')
     .reduce((sum, payment) => sum + Number(payment.total), 0);
+
+  const handleOpenPaymentModal = (invoice: SalesInvoice) => {
+    setSelectedInvoice(invoice);
+    setIsModalOpen(true);
+  };
+
+  const handleSavePayment = async (paymentData: any) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/invoices/${selectedInvoice?.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentData),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to update payment');
+      }
+
+      alert('Payment status updated successfully');
+      router.refresh();
+    } catch (error: any) {
+      alert('Error updating payment: ' + error.message);
+      throw error;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -200,19 +239,21 @@ export default function SalesPaymentsList({ payments }: Props) {
           ) : (
             <>
               {/* Table Header */}
-              <div className="grid grid-cols-[60px_120px_200px_150px_120px_1fr_150px] gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <div className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200">
                 <div className="text-xs font-medium text-gray-500">#</div>
                 <div className="text-xs font-medium text-gray-500">Invoice No</div>
                 <div className="text-xs font-medium text-gray-500">Customer</div>
                 <div className="text-xs font-medium text-gray-500">Date & Time</div>
                 <div className="text-xs font-medium text-gray-500">Status</div>
+                <div className="text-xs font-medium text-gray-500">Payment</div>
                 <div className="text-xs font-medium text-gray-500">Remarks</div>
                 <div className="text-xs font-medium text-gray-500 text-right">Amount</div>
+                <div className="text-xs font-medium text-gray-500 text-center">Actions</div>
               </div>
               {/* Table Body */}
               <div className="max-h-[600px] overflow-y-auto">
                 {filteredPayments.map((payment, i) => (
-                  <div key={payment.id} className="grid grid-cols-[60px_120px_200px_150px_120px_1fr_150px] gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
+                  <div key={payment.id} className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
                     <div className="text-sm text-gray-900">{i + 1}</div>
                     <div className="text-sm">
                       <Link href={`/sales/invoices/${payment.id}`} className="text-blue-600 hover:underline font-medium">
@@ -257,11 +298,48 @@ export default function SalesPaymentsList({ payments }: Props) {
                         {payment.status}
                       </span>
                     </div>
+                    <div className="text-sm">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        payment.paymentStatus === 'PAID' 
+                          ? 'bg-green-100 text-green-800'
+                          : payment.paymentStatus === 'PARTIAL'
+                          ? 'bg-orange-100 text-orange-800'
+                          : payment.paymentStatus === 'ON_CREDIT'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {payment.paymentStatus === 'PAID' ? 'Paid' 
+                          : payment.paymentStatus === 'PARTIAL' ? 'Partial'
+                          : payment.paymentStatus === 'ON_CREDIT' ? 'Credit'
+                          : 'Due'}
+                      </span>
+                      {payment.paidAmount !== undefined && payment.paidAmount > 0 && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          ₹{Number(payment.paidAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      )}
+                    </div>
                     <div className="text-sm text-gray-600 truncate" title={payment.note || ''}>
                       {payment.note || '-'}
                     </div>
-                    <div className="text-sm text-gray-900 text-right font-semibold">
-                      ₹{Number(payment.total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <div className="text-sm text-gray-900 text-right">
+                      <div className="font-semibold">
+                        ₹{Number(payment.total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                      {payment.dueAmount !== undefined && payment.dueAmount > 0 && (
+                        <div className="text-xs text-orange-600">
+                          Due: ₹{Number(payment.dueAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-center">
+                      <button
+                        onClick={() => handleOpenPaymentModal(payment)}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title="Edit Payment Status"
+                      >
+                        <DollarSign className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -270,6 +348,19 @@ export default function SalesPaymentsList({ payments }: Props) {
           )}
         </div>
       </div>
+
+      {/* Payment Status Modal */}
+      {selectedInvoice && (
+        <PaymentStatusModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedInvoice(null);
+          }}
+          invoice={selectedInvoice}
+          onSave={handleSavePayment}
+        />
+      )}
     </div>
   );
 }

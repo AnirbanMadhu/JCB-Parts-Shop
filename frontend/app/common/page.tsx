@@ -20,6 +20,13 @@ export default function CommonPage() {
             <h2 className="text-xl font-semibold text-gray-800 mb-2">Customers</h2>
             <p className="text-gray-600 text-sm">Manage customer information</p>
           </Link>
+          <Link
+            href="/common/suppliers"
+            className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+          >
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">Suppliers</h2>
+            <p className="text-gray-600 text-sm">Manage supplier information</p>
+          </Link>
         </div>
       </div>
     </div>

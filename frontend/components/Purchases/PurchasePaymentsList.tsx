@@ -1,40 +1,227 @@
 // components/Purchases/PurchasePaymentsList.tsx
-import Link from "next/link";
-import { Payment } from "@/lib/api";
-import BackButton from "../Common/BackButton";
-import { Filter, Plus } from "lucide-react";
+"use client";
 
-type Props = {
-  payments: Payment[];
+import Link from "next/link";
+import BackButton from "../Common/BackButton";
+import PaymentStatusModal from "../Sales/PaymentStatusModal";
+import { Search, Calendar, DollarSign } from "lucide-react";
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+
+type PurchaseInvoice = {
+  id: number;
+  invoiceNumber: string;
+  date: string;
+  total: number;
+  status: string;
+  supplier?: {
+    id: number;
+    name: string;
+  };
+  note?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  paymentStatus?: string;
+  paidAmount?: number;
+  dueAmount?: number;
+  paymentDate?: string;
+  paymentMethod?: string;
+  paymentNote?: string;
 };
 
+type Props = {
+  payments: PurchaseInvoice[];
+};
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 export default function PurchasePaymentsList({ payments }: Props) {
-  const hasRows = payments && payments.length > 0;
+  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [selectedInvoice, setSelectedInvoice] = useState<PurchaseInvoice | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Filter payments based on search term and filters
+  const filteredPayments = useMemo(() => {
+    let filtered = payments;
+
+    // Search filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter(payment => 
+        payment.invoiceNumber.toLowerCase().includes(term) ||
+        payment.supplier?.name.toLowerCase().includes(term) ||
+        payment.note?.toLowerCase().includes(term)
+      );
+    }
+
+    // Date filter
+    if (dateFilter) {
+      filtered = filtered.filter(payment => 
+        payment.date.startsWith(dateFilter)
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== "ALL") {
+      filtered = filtered.filter(payment => payment.status === statusFilter);
+    }
+
+    return filtered;
+  }, [payments, searchTerm, dateFilter, statusFilter]);
+
+  const hasRows = filteredPayments && filteredPayments.length > 0;
+
+  // Calculate totals
+  const totalAmount = filteredPayments.reduce((sum, payment) => sum + Number(payment.total), 0);
+  const paidAmount = filteredPayments
+    .filter(p => p.status === 'PAID')
+    .reduce((sum, payment) => sum + Number(payment.total), 0);
+  const pendingAmount = filteredPayments
+    .filter(p => p.status === 'SUBMITTED')
+    .reduce((sum, payment) => sum + Number(payment.total), 0);
+
+  const handleOpenPaymentModal = (invoice: PurchaseInvoice) => {
+    setSelectedInvoice(invoice);
+    setIsModalOpen(true);
+  };
+
+  const handleSavePayment = async (paymentData: any) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/invoices/${selectedInvoice?.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentData),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to update payment');
+      }
+
+      alert('Payment status updated successfully');
+      router.refresh();
+    } catch (error: any) {
+      alert('Error updating payment: ' + error.message);
+      throw error;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BackButton />
-          <h1 className="text-[17px] font-semibold text-gray-900">Purchase Payment</h1>
+          <h1 className="text-[17px] font-semibold text-gray-900">Purchase Payments</h1>
         </div>
         <div className="flex items-center gap-2">
           <button className="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200">
             Export
           </button>
-          <button className="flex items-center gap-2 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200">
-            <Filter className="w-4 h-4" />
-            Filter
-          </button>
-          <Link href="/purchases/payments/new" className="p-2 bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors inline-flex">
-            <Plus className="w-4 h-4" />
+          <Link href="/purchases/invoices/new" className="px-4 py-1.5 text-sm bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors">
+            New Purchase
           </Link>
         </div>
       </header>
 
+      {/* Summary Cards */}
+      <div className="px-6 pt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+            <p className="text-xs text-purple-600 font-medium mb-1">Total Purchases</p>
+            <p className="text-2xl font-bold text-purple-900">
+              ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-xs text-purple-600 mt-1">{filteredPayments.length} transaction(s)</p>
+          </div>
+          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+            <p className="text-xs text-green-600 font-medium mb-1">Paid Amount</p>
+            <p className="text-2xl font-bold text-green-900">
+              ₹{paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-xs text-green-600 mt-1">
+              {filteredPayments.filter(p => p.status === 'PAID').length} invoice(s)
+            </p>
+          </div>
+          <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+            <p className="text-xs text-orange-600 font-medium mb-1">Pending Amount</p>
+            <p className="text-2xl font-bold text-orange-900">
+              ₹{pendingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-xs text-orange-600 mt-1">
+              {filteredPayments.filter(p => p.status === 'SUBMITTED').length} invoice(s)
+            </p>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Search */}
+          <div className="relative md:col-span-2">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by invoice number, supplier, or remarks..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Date Filter */}
+          <div className="relative">
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {dateFilter && (
+              <button
+                onClick={() => setDateFilter("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Status Filter Tabs */}
+        <div className="flex gap-2 mt-4">
+          {['ALL', 'PAID', 'SUBMITTED', 'DRAFT', 'CANCELLED'].map(status => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-4 py-1.5 text-sm rounded-md transition-colors ${
+                statusFilter === status
+                  ? 'bg-[#2c3e50] text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Table Container */}
       <div className="px-6 py-6">
-        <div className="bg-white">
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           {!hasRows ? (
+            /* Empty State */
             <div className="flex flex-col items-center justify-center py-32">
               <div className="mb-4">
                 <svg className="w-20 h-20 text-gray-300" viewBox="0 0 80 80" fill="none">
@@ -42,45 +229,133 @@ export default function PurchasePaymentsList({ payments }: Props) {
                   <rect x="18" y="18" width="40" height="48" rx="2" fill="white" stroke="currentColor" strokeWidth="1.5" />
                 </svg>
               </div>
-              <p className="text-sm text-gray-400 mb-5">No entries found</p>
-              <Link href="/purchases/payments/new" className="px-5 py-2 bg-[#2c3e50] text-white text-sm font-medium rounded-md hover:bg-[#1a252f] transition-colors">
-                Make Entry
+              <p className="text-sm text-gray-400 mb-5">No purchase transactions found</p>
+              <Link href="/purchases/invoices/new" className="px-5 py-2 bg-[#2c3e50] text-white text-sm font-medium rounded-md hover:bg-[#1a252f] transition-colors">
+                Create First Purchase
               </Link>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-[60px_repeat(5,1fr)] gap-4 px-4 py-3 border-b border-gray-200">
+              {/* Table Header */}
+              <div className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200">
                 <div className="text-xs font-medium text-gray-500">#</div>
                 <div className="text-xs font-medium text-gray-500">Invoice No</div>
-                <div className="text-xs font-medium text-gray-500">Date</div>
-                <div className="text-xs font-medium text-gray-500">Method</div>
-                <div className="text-xs font-medium text-gray-500">Reference</div>
+                <div className="text-xs font-medium text-gray-500">Supplier</div>
+                <div className="text-xs font-medium text-gray-500">Date & Time</div>
+                <div className="text-xs font-medium text-gray-500">Status</div>
+                <div className="text-xs font-medium text-gray-500">Payment</div>
+                <div className="text-xs font-medium text-gray-500">Remarks</div>
                 <div className="text-xs font-medium text-gray-500 text-right">Amount</div>
+                <div className="text-xs font-medium text-gray-500 text-center">Actions</div>
               </div>
-              {payments.map((payment, i) => (
-                <div key={payment.id} className="grid grid-cols-[60px_repeat(5,1fr)] gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
-                  <div className="text-sm text-gray-900">{i + 1}</div>
-                  <div className="text-sm">
-                    <Link href={`/purchases/invoices/${payment.invoiceNumber}`} className="text-blue-600 hover:underline">
-                      {payment.invoiceNumber}
-                    </Link>
+              {/* Table Body */}
+              <div className="max-h-[600px] overflow-y-auto">
+                {filteredPayments.map((payment, i) => (
+                  <div key={payment.id} className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
+                    <div className="text-sm text-gray-900">{i + 1}</div>
+                    <div className="text-sm">
+                      <Link href={`/purchases/invoices/${payment.id}`} className="text-blue-600 hover:underline font-medium">
+                        {payment.invoiceNumber}
+                      </Link>
+                    </div>
+                    <div className="text-sm">
+                      {payment.supplier ? (
+                        <div className="text-gray-900">
+                          <div className="font-medium">{payment.supplier.name}</div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-900">
+                      <div>{new Date(payment.date).toLocaleDateString('en-IN', { 
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                      })}</div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(payment.createdAt || payment.date).toLocaleTimeString('en-IN', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                    <div className="text-sm">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        payment.status === 'PAID' 
+                          ? 'bg-green-100 text-green-800'
+                          : payment.status === 'CANCELLED'
+                          ? 'bg-red-100 text-red-800'
+                          : payment.status === 'DRAFT'
+                          ? 'bg-gray-100 text-gray-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {payment.status}
+                      </span>
+                    </div>
+                    <div className="text-sm">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        payment.paymentStatus === 'PAID' 
+                          ? 'bg-green-100 text-green-800'
+                          : payment.paymentStatus === 'PARTIAL'
+                          ? 'bg-orange-100 text-orange-800'
+                          : payment.paymentStatus === 'ON_CREDIT'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {payment.paymentStatus === 'PAID' ? 'Paid' 
+                          : payment.paymentStatus === 'PARTIAL' ? 'Partial'
+                          : payment.paymentStatus === 'ON_CREDIT' ? 'Credit'
+                          : 'Due'}
+                      </span>
+                      {payment.paidAmount !== undefined && payment.paidAmount > 0 && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          ₹{Number(payment.paidAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-600 truncate" title={payment.note || ''}>
+                      {payment.note || '-'}
+                    </div>
+                    <div className="text-sm text-gray-900 text-right">
+                      <div className="font-semibold">
+                        ₹{Number(payment.total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                      {payment.dueAmount !== undefined && payment.dueAmount > 0 && (
+                        <div className="text-xs text-orange-600">
+                          Due: ₹{Number(payment.dueAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-center">
+                      <button
+                        onClick={() => handleOpenPaymentModal(payment)}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title="Edit Payment Status"
+                      >
+                        <DollarSign className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-900">{payment.date}</div>
-                  <div className="text-sm text-gray-900">{payment.method}</div>
-                  <div className="text-sm text-gray-900">{payment.reference}</div>
-                  <div className="text-sm text-gray-900 text-right">
-                    {payment.amount.toLocaleString(undefined, {
-                      style: "currency",
-                      currency: "INR",
-                      maximumFractionDigits: 2,
-                    })}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </>
           )}
         </div>
       </div>
+
+      {/* Payment Status Modal */}
+      {selectedInvoice && (
+        <PaymentStatusModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedInvoice(null);
+          }}
+          invoice={selectedInvoice}
+          onSave={handleSavePayment}
+        />
+      )}
     </div>
   );
 }

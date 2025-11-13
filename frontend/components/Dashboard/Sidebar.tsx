@@ -41,6 +41,7 @@ const mainMenuItems = [
     submenu: [
       { label: "Items", href: "/common/items" },
       { label: "Customers", href: "/common/customers" },
+      { label: "Suppliers", href: "/common/suppliers" },
     ]
   },
   { 

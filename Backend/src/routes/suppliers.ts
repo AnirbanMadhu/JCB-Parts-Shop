@@ -16,6 +16,8 @@ router.post('/', async (req, res) => {
     const supplier = await prisma.supplier.create({
       data: {
         name: body.name,
+        email: body.email,
+        contactPerson: body.contactPerson,
         address: body.address,
         phone: body.phone,
         gstin: body.gstin,
@@ -103,6 +105,8 @@ router.put('/:id', async (req, res) => {
       where: { id },
       data: {
         name: body.name,
+        email: body.email,
+        contactPerson: body.contactPerson,
         address: body.address,
         phone: body.phone,
         gstin: body.gstin,
