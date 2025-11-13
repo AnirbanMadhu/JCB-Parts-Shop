@@ -64,7 +64,7 @@ export default function Sidebar() {
     <aside className="w-[213px] bg-[#f5f5f5] border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0">
       {/* Logo */}
       <div className="p-4 pb-6">
-        <h1 className="text-xl font-semibold text-gray-800">Layer Dream</h1>
+        <h1 className="text-xl font-semibold text-gray-800">S.P.TRADERS AND BUILDERS</h1>
       </div>
 
       {/* Main Menu */}

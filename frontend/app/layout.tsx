@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Layer Dream - Dashboard",
+  title: "S.P.TRADERS AND BUILDERS - Dashboard",
   description: "JCB Parts Shop Management System",
 };
 
