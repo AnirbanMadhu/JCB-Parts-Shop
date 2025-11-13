@@ -4,6 +4,24 @@ import { CustomerCreateBody } from '../types';
 
 const router = Router();
 
+// Generate next indexId
+async function generateIndexId(): Promise<string> {
+  const lastCustomer = await prisma.customer.findFirst({
+    orderBy: { id: 'desc' }
+  });
+  
+  if (!lastCustomer || !lastCustomer.indexId) {
+    return 'CUST-001';
+  }
+  
+  // Extract number from last indexId (e.g., CUST-001 -> 1)
+  const match = lastCustomer.indexId.match(/CUST-(\d+)/);
+  const lastNum = match ? parseInt(match[1], 10) : 0;
+  const nextNum = lastNum + 1;
+  
+  return `CUST-${String(nextNum).padStart(3, '0')}`;
+}
+
 // Create a new customer
 router.post('/', async (req, res) => {
   const body = req.body as CustomerCreateBody;
@@ -13,9 +31,13 @@ router.post('/', async (req, res) => {
   }
 
   try {
+    const indexId = await generateIndexId();
+    
     const customer = await prisma.customer.create({
       data: {
+        indexId,
         name: body.name,
+        email: body.email,
         address: body.address,
         phone: body.phone,
         gstin: body.gstin,
@@ -40,12 +62,13 @@ router.get('/', async (req, res) => {
         ? {
             OR: [
               { name: { contains: search, mode: 'insensitive' } },
+              { indexId: { contains: search, mode: 'insensitive' } },
               { gstin: { contains: search, mode: 'insensitive' } },
               { phone: { contains: search, mode: 'insensitive' } }
             ]
           }
         : undefined,
-      orderBy: { name: 'asc' }
+      orderBy: { id: 'asc' }
     });
 
     res.json(customers);
@@ -103,6 +126,7 @@ router.put('/:id', async (req, res) => {
       where: { id },
       data: {
         name: body.name,
+        email: body.email,
         address: body.address,
         phone: body.phone,
         gstin: body.gstin,

@@ -23,7 +23,6 @@ const mainMenuItems = [
     submenu: [
       { label: "Sales Invoices", href: "/sales/invoices" },
       { label: "Sales Payments", href: "/sales/payments" },
-      { label: "Customers", href: "/sales/customers" },
     ]
   },
   { 
@@ -33,7 +32,6 @@ const mainMenuItems = [
     submenu: [
       { label: "Purchase Invoices", href: "/purchases/invoices" },
       { label: "Purchase Payments", href: "/purchases/payments" },
-      { label: "Purchase Items", href: "/purchases/items" },
     ]
   },
   { 
@@ -42,6 +40,7 @@ const mainMenuItems = [
     href: "/common",
     submenu: [
       { label: "Items", href: "/common/items" },
+      { label: "Customers", href: "/common/customers" },
     ]
   },
   { 

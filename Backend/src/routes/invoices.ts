@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
 import { InvoiceCreateBody } from '../types';
-import { InvoiceType, InventoryDirection } from '@prisma/client';
+import { InvoiceType, InventoryDirection, InvoiceStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
 const router = Router();
@@ -56,11 +56,17 @@ router.post('/', async (req, res) => {
       const roundedTotal = gross.toDecimalPlaces(0);
       const roundOff = roundedTotal.sub(gross);
 
+      // Parse the date and set time to current time
+      const invoiceDate = new Date(body.date);
+      const now = new Date();
+      invoiceDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+
       const invoice = await tx.invoice.create({
         data: {
           invoiceNumber: body.invoiceNumber,
-          date: new Date(body.date),
+          date: invoiceDate,
           type: body.type as InvoiceType,
+          status: body.status as InvoiceStatus || InvoiceStatus.SUBMITTED,
           supplierId: body.type === 'PURCHASE' ? body.supplierId ?? null : null,
           customerId: body.type === 'SALE' ? body.customerId ?? null : null,
           subtotal,
@@ -194,6 +200,142 @@ router.get('/:id', async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Failed to load invoice' });
+  }
+});
+
+// Update invoice (only DRAFT invoices can be updated)
+router.put('/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  const body = req.body as InvoiceCreateBody;
+  
+  if (isNaN(id)) {
+    return res.status(400).json({ error: 'Invalid invoice ID. Must be a number.' });
+  }
+
+  if (!body.invoiceNumber || !body.date || !body.type || !body.items?.length) {
+    return res.status(400).json({ error: 'invoiceNumber, date, type, items required' });
+  }
+
+  try {
+    // Check if invoice exists and is DRAFT
+    const existingInvoice = await prisma.invoice.findUnique({
+      where: { id },
+      include: { items: true }
+    });
+
+    if (!existingInvoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    if (existingInvoice.status !== InvoiceStatus.DRAFT) {
+      return res.status(400).json({ error: 'Only DRAFT invoices can be edited' });
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // Delete existing invoice items and their inventory transactions
+      await tx.inventoryTransaction.deleteMany({
+        where: {
+          invoiceItemId: {
+            in: existingInvoice.items.map(item => item.id)
+          }
+        }
+      });
+
+      await tx.invoiceItem.deleteMany({
+        where: { invoiceId: id }
+      });
+
+      // Calculate new totals
+      let subtotal = new Decimal(0);
+      const itemsData: any[] = [];
+
+      for (const item of body.items) {
+        const part = await tx.part.findUnique({ where: { id: item.partId } });
+        if (!part) throw new Error(`Part ${item.partId} not found`);
+
+        const qty = new Decimal(item.quantity);
+        const rate = new Decimal(item.rate);
+        const amount = qty.mul(rate);
+        subtotal = subtotal.add(amount);
+
+        itemsData.push({
+          partId: part.id,
+          hsnCode: part.hsnCode,
+          quantity: item.quantity,
+          unit: item.unit || part.unit,
+          rate,
+          amount
+        });
+      }
+
+      const discountPercent = body.discountPercent ?? 0;
+      const discountAmount = subtotal.mul(discountPercent).div(100);
+      const taxableValue = subtotal.sub(discountAmount);
+      const cgstPercent = body.cgstPercent ?? 0;
+      const sgstPercent = body.sgstPercent ?? 0;
+      const cgstAmount = taxableValue.mul(cgstPercent).div(100);
+      const sgstAmount = taxableValue.mul(sgstPercent).div(100);
+      const gross = taxableValue.add(cgstAmount).add(sgstAmount);
+      const roundedTotal = gross.toDecimalPlaces(0);
+      const roundOff = roundedTotal.sub(gross);
+
+      // Parse the date and set time to current time if status changes
+      const invoiceDate = new Date(body.date);
+      if (body.status && body.status !== InvoiceStatus.DRAFT) {
+        const now = new Date();
+        invoiceDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+      }
+
+      // Update the invoice
+      const updatedInvoice = await tx.invoice.update({
+        where: { id },
+        data: {
+          invoiceNumber: body.invoiceNumber,
+          date: invoiceDate,
+          status: body.status as InvoiceStatus || InvoiceStatus.DRAFT,
+          supplierId: body.type === 'PURCHASE' ? body.supplierId ?? null : null,
+          customerId: body.type === 'SALE' ? body.customerId ?? null : null,
+          subtotal,
+          discountPercent,
+          discountAmount,
+          taxableValue,
+          cgstPercent,
+          cgstAmount,
+          sgstPercent,
+          sgstAmount,
+          roundOff,
+          total: roundedTotal,
+          items: {
+            create: itemsData
+          }
+        },
+        include: { items: true }
+      });
+
+      // Create new inventory transactions
+      const direction =
+        body.type === 'PURCHASE'
+          ? InventoryDirection.IN
+          : InventoryDirection.OUT;
+
+      for (const item of updatedInvoice.items) {
+        await tx.inventoryTransaction.create({
+          data: {
+            partId: item.partId,
+            invoiceItemId: item.id,
+            direction,
+            quantity: item.quantity
+          }
+        });
+      }
+
+      return updatedInvoice;
+    });
+
+    res.json(result);
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Failed to update invoice' });
   }
 });
 

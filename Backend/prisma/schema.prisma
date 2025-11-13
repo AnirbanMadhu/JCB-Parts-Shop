@@ -41,7 +41,9 @@ model Supplier {
 
 model Customer {
   id        Int       @id @default(autoincrement())
+  indexId   String?   @unique
   name      String
+  email     String?
   address   String?
   phone     String?
   gstin     String?
@@ -57,10 +59,18 @@ enum InvoiceType {
   SALE
 }
 
+enum InvoiceStatus {
+  DRAFT
+  SUBMITTED
+  PAID
+  CANCELLED
+}
+
 model Invoice {
   id           Int          @id @default(autoincrement())
   invoiceNumber String
   type         InvoiceType
+  status       InvoiceStatus @default(DRAFT)
   date         DateTime
 
   supplierId  Int?

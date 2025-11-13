@@ -1,146 +1,85 @@
+// components/Purchases/PurchaseInvoices.tsx
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Filter, Plus } from "lucide-react";
 
-export default function PurchaseInvoicesPage() {
+type Invoice = {
+  id: string;
+  number: string;
+  status: "Draft" | "Submitted" | "Paid";
+  supplierName: string;
+  date: string;
+  total: number;
+};
+
+export default function PurchaseInvoices({ invoices }: { invoices: Invoice[] }) {
   const router = useRouter();
+  const hasRows = invoices && invoices.length > 0;
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-md">
-            <ChevronLeft className="w-4 h-4 text-gray-500" />
-          </button>
-          <h1 className="text-[17px] font-semibold text-gray-900">Purchase Invoice</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200">
-            Export
-          </button>
-          <button className="flex items-center gap-2 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200">
-            <Filter className="w-4 h-4" />
-            Filter
-          </button>
-          <button className="p-2 bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors">
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-      </header>
-
-      {/* Table Container */}
-      <div className="px-6 py-6">
-        <div className="bg-white">
-          {/* Table Header */}
-          <div className="grid grid-cols-[60px_repeat(5,1fr)] gap-4 px-4 py-3 border-b border-gray-200">
-            <div className="text-xs font-medium text-gray-500">#</div>
-            <div className="text-xs font-medium text-gray-500">Invoice No</div>
-            <div className="text-xs font-medium text-gray-500">Status</div>
-            <div className="text-xs font-medium text-gray-500">Supplier</div>
-            <div className="text-xs font-medium text-gray-500">Date</div>
-            <div className="text-xs font-medium text-gray-500">Base Grand Total</div>
-            <div className="text-xs font-medium text-gray-500">Outstanding Amount</div>
-          </div>
-
-          {/* Empty State */}
-          <div className="flex flex-col items-center justify-center py-32">
-            <div className="mb-4">
-              <svg
-                className="w-20 h-20 text-gray-300"
-                viewBox="0 0 80 80"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {/* Back document */}
-                <rect
-                  x="22"
-                  y="14"
-                  width="40"
-                  height="48"
-                  rx="2"
-                  fill="white"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                />
-                {/* Front document */}
-                <rect
-                  x="18"
-                  y="18"
-                  width="40"
-                  height="48"
-                  rx="2"
-                  fill="white"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                />
-                {/* Checkboxes */}
-                <rect
-                  x="24"
-                  y="28"
-                  width="8"
-                  height="8"
-                  rx="1.5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  fill="none"
-                />
-                <line
-                  x1="36"
-                  y1="31"
-                  x2="48"
-                  y2="31"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <line
-                  x1="36"
-                  y1="34"
-                  x2="44"
-                  y2="34"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <rect
-                  x="24"
-                  y="42"
-                  width="8"
-                  height="8"
-                  rx="1.5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  fill="none"
-                />
-                <line
-                  x1="36"
-                  y1="45"
-                  x2="48"
-                  y2="45"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <line
-                  x1="36"
-                  y1="48"
-                  x2="44"
-                  y2="48"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-            <p className="text-sm text-gray-400 mb-5">No entries found</p>
-            <button className="px-5 py-2 bg-[#2c3e50] text-white text-sm font-medium rounded-md hover:bg-[#1a252f] transition-colors">
-              Make Entry
-            </button>
-          </div>
-        </div>
+    <div className="p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Purchase Invoice</h1>
+        <button
+          onClick={() => router.push("/purchases/invoices/new")}
+          className="rounded-md px-4 py-2 text-white bg-neutral-800 hover:bg-neutral-900"
+        >
+          Make Entry
+        </button>
       </div>
+
+      {!hasRows ? (
+        <div className="mt-20 flex flex-col items-center justify-center gap-4">
+          <div className="text-neutral-500">No entries found</div>
+          <Link
+            className="rounded-md px-4 py-2 text-white bg-neutral-800 hover:bg-neutral-900"
+            href="/purchases/invoices/new"
+          >
+            Make Entry
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-6 overflow-x-auto rounded-lg border">
+          <table className="min-w-[900px] w-full text-sm">
+            <thead className="bg-neutral-50">
+              <tr>
+                <th className="px-3 py-2 text-left">#</th>
+                <th className="px-3 py-2 text-left">Invoice No</th>
+                <th className="px-3 py-2 text-left">Status</th>
+                <th className="px-3 py-2 text-left">Supplier</th>
+                <th className="px-3 py-2 text-left">Date</th>
+                <th className="px-3 py-2 text-right">Base Grand Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoices.map((inv, i) => (
+                <tr key={inv.id} className="border-t">
+                  <td className="px-3 py-2">{i + 1}</td>
+                  <td className="px-3 py-2">
+                    <Link
+                      className="text-neutral-800 underline"
+                      href={`/purchases/invoices/${inv.id}`}
+                    >
+                      {inv.number}
+                    </Link>
+                  </td>
+                  <td className="px-3 py-2">{inv.status}</td>
+                  <td className="px-3 py-2">{inv.supplierName}</td>
+                  <td className="px-3 py-2">{inv.date}</td>
+                  <td className="px-3 py-2 text-right">
+                    {inv.total.toLocaleString(undefined, {
+                      style: "currency",
+                      currency: "INR",
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

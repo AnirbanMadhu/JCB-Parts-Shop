@@ -22,6 +22,7 @@ export interface InvoiceCreateBody {
   invoiceNumber: string;
   date: string;
   type: 'PURCHASE' | 'SALE';
+  status?: 'DRAFT' | 'SUBMITTED' | 'PAID' | 'CANCELLED';
   supplierId?: number | null;
   customerId?: number | null;
   items: InvoiceItemBody[];
@@ -40,6 +41,7 @@ export interface SupplierCreateBody {
 
 export interface CustomerCreateBody {
   name: string;
+  email?: string;
   address?: string;
   phone?: string;
   gstin?: string;
