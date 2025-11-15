@@ -197,14 +197,22 @@ export default function CashflowChart() {
     const svgRect = event.currentTarget.ownerSVGElement?.getBoundingClientRect();
     
     if (svgRect) {
-      setTooltip({
-        x: rect.left - svgRect.left + rect.width / 2,
-        y: rect.top - svgRect.top,
+      console.log('Tooltip Data:', {
         month: data.monthYear,
         sales: data.sales,
         purchases: data.purchases,
         netCashflow: data.netCashflow,
-        stockBalance: data.stockBalance,
+        stockBalance: data.stockBalance
+      });
+      
+      setTooltip({
+        x: rect.left - svgRect.left + rect.width / 2,
+        y: rect.top - svgRect.top,
+        month: data.monthYear,
+        sales: data.sales || 0,
+        purchases: data.purchases || 0,
+        netCashflow: data.netCashflow || 0,
+        stockBalance: data.stockBalance || 0,
         show: true
       });
       setHoveredPoint({ type, index });
@@ -290,8 +298,8 @@ export default function CashflowChart() {
       </div>
 
       {/* Chart Container */}
-      <div className="relative w-full overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="w-full overflow-x-auto p-4">
+      <div className="relative w-full overflow-visible bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="w-full overflow-x-auto overflow-y-visible p-4">
           <svg
             className="w-full min-w-[900px]"
             viewBox={`0 0 ${chartWidth} ${chartHeight}`}
@@ -622,52 +630,64 @@ export default function CashflowChart() {
       {/* Custom Tooltip */}
       {tooltip.show && (
         <div
-          className="absolute z-50 pointer-events-none transition-all duration-200"
+          className="absolute pointer-events-none"
           style={{
             left: `${tooltip.x}px`,
-            top: `${tooltip.y - 10}px`,
-            transform: 'translate(-50%, -100%)'
+            top: `${tooltip.y - 20}px`,
+            transform: 'translate(-50%, -100%)',
+            zIndex: 9999
           }}
         >
-          <div className="bg-gray-900 text-white rounded-md shadow-xl p-3 min-w-[180px] border border-gray-700">
-            <div className="font-bold text-xs mb-2 text-gray-200 border-b border-gray-700 pb-1.5">
+          <div className="bg-[#1a1a1a] text-white rounded-xl shadow-2xl px-4 py-3 w-[220px] border-2 border-gray-600">
+            {/* Month Header */}
+            <div className="font-bold text-sm mb-3 text-white pb-2 border-b-2 border-gray-600">
               {tooltip.month}
             </div>
-            <div className="space-y-1.5 text-[11px]">
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                  <span className="text-gray-300">Sales</span>
-                </span>
-                <span className="font-bold text-emerald-400">{formatFullCurrency(tooltip.sales)}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
-                  <span className="text-gray-300">Purchases</span>
-                </span>
-                <span className="font-bold text-rose-400">{formatFullCurrency(tooltip.purchases)}</span>
-              </div>
-              <div className="pt-1.5 mt-1.5 border-t border-gray-700">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
-                    <span className="text-gray-300">Stock Balance</span>
-                  </span>
-                  <span className="font-bold text-blue-400">{formatFullCurrency(tooltip.stockBalance)}</span>
+            
+            {/* All Metrics - Fixed Layout */}
+            <div className="space-y-2.5">
+              {/* Sales */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0"></div>
+                  <span className="text-gray-100 text-xs font-medium">Sales</span>
                 </div>
+                <span className="font-bold text-emerald-400 text-xs">{formatFullCurrency(tooltip.sales)}</span>
               </div>
-              <div className="pt-1.5 mt-1.5 border-t border-gray-700">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-gray-300">Net Flow</span>
-                  <span className={`font-bold ${tooltip.netCashflow >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {tooltip.netCashflow >= 0 ? '+' : ''}{formatFullCurrency(tooltip.netCashflow)}
-                  </span>
+              
+              {/* Purchases */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-rose-500 flex-shrink-0"></div>
+                  <span className="text-gray-100 text-xs font-medium">Purchases</span>
                 </div>
+                <span className="font-bold text-rose-400 text-xs">{formatFullCurrency(tooltip.purchases)}</span>
+              </div>
+              
+              {/* Stock Balance */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0"></div>
+                  <span className="text-gray-100 text-xs font-medium">Stock Balance</span>
+                </div>
+                <span className="font-bold text-blue-400 text-xs">{formatFullCurrency(tooltip.stockBalance)}</span>
+              </div>
+              
+              {/* Divider */}
+              <div className="border-t-2 border-gray-600 my-2"></div>
+              
+              {/* Net Flow */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-100 text-xs font-bold">Net Flow</span>
+                <span className={`font-bold text-xs ${tooltip.netCashflow >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {tooltip.netCashflow >= 0 ? '+' : ''}{formatFullCurrency(tooltip.netCashflow)}
+                </span>
               </div>
             </div>
+            
+            {/* Arrow */}
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
-              <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-gray-900"></div>
+              <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent border-t-[#1a1a1a]"></div>
             </div>
           </div>
         </div>

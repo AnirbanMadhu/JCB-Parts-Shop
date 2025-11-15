@@ -5,7 +5,7 @@ export default function GetStartedPage() {
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Get Started</h1>
         <div className="bg-white rounded-lg shadow-sm p-6">
           <p className="text-gray-600 mb-4">
-            Welcome to S.P.TRADERS AND BUILDERS - JCB Parts Shop Management System
+            Welcome to S.P.TRADERS AND BUILDERS - Shop Management System
           </p>
           <div className="space-y-4">
             <div className="border-l-4 border-blue-500 pl-4">
