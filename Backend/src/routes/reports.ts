@@ -500,4 +500,115 @@ router.get('/profit-loss', async (req, res) => {
   }
 });
 
+// Balance Sheet (Assets, Liabilities, Equity)
+router.get('/balance-sheet', async (req, res) => {
+  const { asOfDate } = req.query as {
+    asOfDate?: string;
+  };
+
+  try {
+    // Use provided date or current date
+    const balanceDate = asOfDate ? new Date(asOfDate) : new Date();
+    balanceDate.setHours(23, 59, 59, 999);
+
+    // Get all purchase and sales invoices up to the balance date
+    const [purchases, sales, stockValue] = await Promise.all([
+      prisma.invoice.aggregate({
+        where: {
+          type: 'PURCHASE',
+          status: { notIn: ['CANCELLED', 'DRAFT'] },
+          date: { lte: balanceDate }
+        },
+        _sum: { total: true, paidAmount: true }
+      }),
+      prisma.invoice.aggregate({
+        where: {
+          type: 'SALE',
+          status: { notIn: ['CANCELLED', 'DRAFT'] },
+          date: { lte: balanceDate }
+        },
+        _sum: { total: true, paidAmount: true }
+      }),
+      // Calculate current stock value (inventory)
+      prisma.$queryRaw<Array<{ totalValue: number }>>`
+        SELECT 
+          COALESCE(SUM(
+            CASE 
+              WHEN it.direction = 'IN' THEN it.quantity * p.mrp
+              ELSE 0
+            END
+          ), 0) - COALESCE(SUM(
+            CASE 
+              WHEN it.direction = 'OUT' THEN it.quantity * p.mrp
+              ELSE 0
+            END
+          ), 0) as "totalValue"
+        FROM "Part" p
+        LEFT JOIN "InventoryTransaction" it ON it."partId" = p.id
+        LEFT JOIN "InvoiceItem" ii ON ii.id = it."invoiceItemId"
+        LEFT JOIN "Invoice" i ON i.id = ii."invoiceId"
+        WHERE p."isDeleted" = false
+          AND (i.id IS NULL OR i.date <= ${balanceDate})
+      `
+    ]);
+
+    const totalPurchases = purchases._sum.total || new Decimal(0);
+    const totalSales = sales._sum.total || new Decimal(0);
+    const purchasesPaid = purchases._sum.paidAmount || new Decimal(0);
+    const salesPaid = sales._sum.paidAmount || new Decimal(0);
+    
+    // Calculate receivables (sales not yet paid)
+    const accountsReceivable = totalSales.sub(salesPaid);
+    
+    // Calculate payables (purchases not yet paid)
+    const accountsPayable = totalPurchases.sub(purchasesPaid);
+    
+    // Inventory value
+    const inventory = new Decimal(stockValue[0]?.totalValue || 0);
+    
+    // Cash in hand (simplified: sales paid - purchases paid)
+    const cash = salesPaid.sub(purchasesPaid);
+    
+    // Total Assets
+    const totalAssets = cash.add(accountsReceivable).add(inventory);
+    
+    // Retained Earnings (cumulative profit)
+    const retainedEarnings = totalSales.sub(totalPurchases);
+    
+    // Total Liabilities
+    const totalLiabilities = accountsPayable;
+    
+    // Total Equity (Assets - Liabilities)
+    const totalEquity = totalAssets.sub(totalLiabilities);
+
+    res.json({
+      asOfDate: balanceDate.toISOString().split('T')[0],
+      assets: {
+        currentAssets: {
+          cash: Number(cash),
+          accountsReceivable: Number(accountsReceivable),
+          inventory: Number(inventory),
+          total: Number(totalAssets)
+        },
+        total: Number(totalAssets)
+      },
+      liabilities: {
+        currentLiabilities: {
+          accountsPayable: Number(accountsPayable),
+          total: Number(totalLiabilities)
+        },
+        total: Number(totalLiabilities)
+      },
+      equity: {
+        retainedEarnings: Number(retainedEarnings),
+        total: Number(totalEquity)
+      },
+      totalLiabilitiesAndEquity: Number(totalLiabilities.add(totalEquity))
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to generate balance sheet' });
+  }
+});
+
 export default router;

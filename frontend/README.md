@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# S.P.TRADERS AND BUILDERS - Frontend
+
+A Next.js-based management system for JCB parts shop operations.
+
+## Project Structure
+
+This project follows Next.js best practices with a well-organized structure. See [STRUCTURE.md](./STRUCTURE.md) for detailed documentation.
+
+```
+src/
+├── app/              # Next.js App Router (routes and pages)
+├── components/       # Shared/reusable components
+├── lib/             # Utilities, API clients, constants
+├── hooks/           # Custom React hooks
+└── types/           # TypeScript type definitions
+```
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ 
+- npm, yarn, pnpm, or bun
+- Backend API running on http://localhost:4001
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env
+
+# Update .env with your API URL if different from default
+```
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Create production build
+npm run build
+
+# Start production server
+npm start
+```
+
+## Key Features
+
+- **Dashboard**: Real-time business metrics and charts
+- **Common**: Manage customers, suppliers, and inventory items
+- **Sales**: Sales invoices and payment tracking
+- **Purchases**: Purchase invoices and payment tracking
+- **Reports**: Balance sheet and P&L reports
+
+## Technology Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS 4
+- **Icons**: Lucide React
+- **Runtime**: React 19
+
+## Project Organization
+
+### Route-Specific Components
+Components used by a single route are co-located in `_components` folders:
+```
+app/dashboard/_components/
+  ├── DashboardCard.tsx
+  └── SalesChart.tsx
+```
+
+### Shared Components
+Reusable components are in `src/components/`:
+```
+components/ui/
+  ├── CustomerForm.tsx
+  └── Toast.tsx
+```
+
+### Import Aliases
+Use TypeScript path aliases for clean imports:
+```tsx
+import { formatCurrency } from '@/lib/utils';
+import { Customer } from '@/types';
+import Button from '@/components/ui/Button';
+```
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm start` - Start production server
+- `npm run lint` - Run ESLint
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:4001` |
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Project Structure Guide](./STRUCTURE.md)
+- [TypeScript Docs](https://www.typescriptlang.org/docs/)
+- [Tailwind CSS](https://tailwindcss.com/docs)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Follow the established project structure
+2. Use TypeScript for type safety
+3. Co-locate route-specific components
+4. Use path aliases for imports
+5. Write descriptive commit messages
