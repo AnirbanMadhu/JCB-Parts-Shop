@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BackButton from "./BackButton";
+import { useToast } from "@/hooks/useToast";
+import ToastContainer from "./ToastContainer";
 import { 
   Mail, 
   Phone, 
@@ -45,6 +47,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
 export default function CustomerDetails({ customer, invoices }: Props) {
   const router = useRouter();
+  const { success, error, toasts, removeToast } = useToast();
 
   const handleDelete = async () => {
     if (!confirm(`Are you sure you want to delete "${customer.name}"? This action cannot be undone.`)) {
@@ -57,19 +60,19 @@ export default function CustomerDetails({ customer, invoices }: Props) {
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to delete customer');
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to delete customer');
       }
 
-      alert('Customer deleted successfully');
+      success('Customer deleted successfully');
       router.push('/common/customers');
-    } catch (error: any) {
-      alert('Error deleting customer: ' + error.message);
+    } catch (err: any) {
+      error('Error deleting customer: ' + err.message);
     }
   };
 
   const totalInvoices = invoices.length;
-  const totalPurchased = invoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+  const totalPurchased = invoices.reduce((sum, inv) => sum + Number(inv.total || 0), 0);
   const paidInvoices = invoices.filter(inv => inv.status === 'PAID').length;
   const pendingInvoices = invoices.filter(inv => inv.status !== 'PAID' && inv.status !== 'CANCELLED').length;
 
@@ -296,6 +299,7 @@ export default function CustomerDetails({ customer, invoices }: Props) {
           </div>
         </div>
       </div>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

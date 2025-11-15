@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { Item } from "@/lib/api";
 import BackButton from "./BackButton";
-import { Filter, Plus, Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
+import ToastContainer from "./ToastContainer";
+import ConfirmDialog from "./ConfirmDialog";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/useToast";
 
 type Props = {
   items: Item[];
@@ -15,29 +18,48 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
 export default function ItemsList({ items }: Props) {
   const router = useRouter();
+  const { toasts, removeToast, success, error } = useToast();
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const hasRows = items && items.length > 0;
+  const [searchTerm, setSearchTerm] = useState("");
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    itemId: number;
+    itemName: string;
+  }>({ isOpen: false, itemId: 0, itemName: "" });
 
-  const handleDelete = async (id: number, itemName: string) => {
-    if (!confirm(`Are you sure you want to delete "${itemName}"? This action cannot be undone.`)) {
-      return;
-    }
+  const filteredItems = useMemo(() => {
+    if (!searchTerm.trim()) return items;
 
-    setDeletingId(id);
+    const term = searchTerm.toLowerCase().trim();
+    return items.filter(item => 
+      item.partNumber.toLowerCase().includes(term) ||
+      item.itemName.toLowerCase().includes(term)
+    );
+  }, [items, searchTerm]);
+
+  const hasRows = filteredItems && filteredItems.length > 0;
+
+  const handleDelete = (id: number, itemName: string) => {
+    setConfirmDialog({ isOpen: true, itemId: id, itemName });
+  };
+
+  const confirmDelete = async () => {
+    const { itemId, itemName } = confirmDialog;
+    setDeletingId(itemId);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/parts/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/parts/${itemId}`, {
         method: 'DELETE',
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to delete item');
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to delete item');
       }
 
-      alert('Item deleted successfully');
+      success(`Item "${itemName}" deleted successfully`);
       router.refresh();
-    } catch (error: any) {
-      alert('Error deleting item: ' + error.message);
+    } catch (err: any) {
+      error(err.message || 'Error deleting item');
     } finally {
       setDeletingId(null);
     }
@@ -45,24 +67,38 @@ export default function ItemsList({ items }: Props) {
 
   return (
     <div className="min-h-screen bg-white">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BackButton />
           <h1 className="text-[17px] font-semibold text-gray-900">Items</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200">
-            Export
-          </button>
-          <button className="flex items-center gap-2 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200">
-            <Filter className="w-4 h-4" />
-            Filter
-          </button>
-          <Link href="/common/items/new" className="p-2 bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors inline-flex">
-            <Plus className="w-4 h-4" />
-          </Link>
-        </div>
+        <Link href="/common/items/new" className="p-2 bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors inline-flex">
+          <Plus className="w-4 h-4" />
+        </Link>
       </header>
+
+      {/* Search Bar */}
+      <div className="px-6 pt-6">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by part number or item name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
 
       <div className="px-6 py-6">
         <div className="bg-white">
@@ -74,7 +110,9 @@ export default function ItemsList({ items }: Props) {
                   <rect x="18" y="18" width="40" height="48" rx="2" fill="white" stroke="currentColor" strokeWidth="1.5" />
                 </svg>
               </div>
-              <p className="text-sm text-gray-400 mb-5">No items found</p>
+              <p className="text-sm text-gray-400 mb-5">
+                {searchTerm ? 'No items found matching your search' : 'No items found'}
+              </p>
               <Link href="/common/items/new" className="px-5 py-2 bg-[#2c3e50] text-white text-sm font-medium rounded-md hover:bg-[#1a252f] transition-colors">
                 Add Item
               </Link>
@@ -90,7 +128,7 @@ export default function ItemsList({ items }: Props) {
                 <div className="text-xs font-medium text-gray-500 text-right">Stock</div>
                 <div className="text-xs font-medium text-gray-500 text-center">Actions</div>
               </div>
-              {items.map((item, i) => (
+              {filteredItems.map((item, i) => (
                 <div key={item.id} className="grid grid-cols-[60px_repeat(5,1fr)_120px] gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
                   <div className="text-sm text-gray-900">{i + 1}</div>
                   <div className="text-sm text-gray-900">{item.partNumber}</div>
@@ -135,6 +173,17 @@ export default function ItemsList({ items }: Props) {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, itemId: 0, itemName: "" })}
+        onConfirm={confirmDelete}
+        title="Delete Item"
+        message={`Are you sure you want to delete "${confirmDialog.itemName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

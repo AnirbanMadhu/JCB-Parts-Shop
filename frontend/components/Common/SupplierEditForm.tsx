@@ -4,6 +4,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BackButton from "./BackButton";
+import ToastContainer from "./ToastContainer";
+import { useToast } from "@/hooks/useToast";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
@@ -23,6 +25,7 @@ type Props = {
 
 export default function SupplierEditForm({ supplier }: Props) {
   const router = useRouter();
+  const { toasts, removeToast, success, error } = useToast();
   const [formData, setFormData] = useState({
     name: supplier.name || "",
     email: supplier.email || "",
@@ -43,15 +46,15 @@ export default function SupplierEditForm({ supplier }: Props) {
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to update supplier');
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to update supplier');
       }
 
-      alert('Supplier updated successfully');
+      success('Supplier updated successfully');
       router.push(`/common/suppliers/${supplier.id}`);
       router.refresh();
-    } catch (error: any) {
-      alert('Error updating supplier: ' + error.message);
+    } catch (err: any) {
+      error(err.message || 'Error updating supplier');
     }
   };
 
@@ -66,20 +69,21 @@ export default function SupplierEditForm({ supplier }: Props) {
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to delete supplier');
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to delete supplier');
       }
 
-      alert('Supplier deleted successfully');
+      success('Supplier deleted successfully');
       router.push('/common');
       router.refresh();
-    } catch (error: any) {
-      alert('Error deleting supplier: ' + error.message);
+    } catch (err: any) {
+      error(err.message || 'Error deleting supplier');
     }
   };
 
   return (
     <div className="min-h-screen bg-white">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BackButton />

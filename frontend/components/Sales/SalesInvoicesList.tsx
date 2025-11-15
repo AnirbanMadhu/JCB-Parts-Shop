@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { Invoice } from "@/lib/api";
 import BackButton from "../Common/BackButton";
-import ActionButton from "../Common/ActionButton";
 
 type Props = {
   invoices: Invoice[];
@@ -19,18 +18,12 @@ export default function SalesInvoicesList({ invoices }: Props) {
           <BackButton />
           <h1 className="text-[17px] font-semibold text-gray-900">Sales Invoice</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200">
-            Export
-          </button>
-          <button className="flex items-center gap-2 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            Filter
-          </button>
-          <ActionButton href="/sales/invoices/new" label="+" />
-        </div>
+        <Link href="/sales/invoices/new" className="flex items-center gap-2 px-4 py-1.5 text-sm bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          New Invoice
+        </Link>
       </header>
 
       {/* Table Container */}
@@ -83,7 +76,7 @@ export default function SalesInvoicesList({ invoices }: Props) {
                   <div className="text-sm text-gray-900">{i + 1}</div>
                   <div className="text-sm">
                     <Link href={`/sales/invoices/${inv.id}`} className="text-blue-600 hover:underline font-medium">
-                      {inv.number}
+                      {inv.invoiceNumber}
                     </Link>
                   </div>
                   <div className="text-sm">
@@ -109,7 +102,7 @@ export default function SalesInvoicesList({ invoices }: Props) {
                       </Link>
                     )}
                   </div>
-                  <div className="text-sm text-gray-900">{inv.supplierName}</div>
+                  <div className="text-sm text-gray-900">{inv.customer?.name || '-'}</div>
                   <div className="text-sm text-gray-900">
                     {new Date(inv.date).toLocaleString('en-IN', {
                       year: 'numeric',

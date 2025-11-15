@@ -3,8 +3,13 @@
 
 import Link from "next/link";
 import BackButton from "./BackButton";
-import { Search, Plus } from "lucide-react";
+import ToastContainer from "./ToastContainer";
+import { Search, Plus, Edit, Trash2 } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/useToast";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
 type Supplier = {
   id: number;
@@ -21,7 +26,34 @@ type Props = {
 };
 
 export default function SuppliersList({ suppliers }: Props) {
+  const router = useRouter();
+  const { toasts, removeToast, success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+
+  const handleDelete = async (e: React.MouseEvent, id: number, name: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!confirm(`Are you sure you want to delete supplier "${name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/suppliers/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to delete supplier');
+      }
+
+      success(`Supplier "${name}" deleted successfully`);
+      router.refresh();
+    } catch (err: any) {
+      error(err.message || 'Error deleting supplier');
+    }
+  };
 
   const filteredSuppliers = useMemo(() => {
     if (!searchTerm.trim()) return suppliers;
@@ -41,6 +73,7 @@ export default function SuppliersList({ suppliers }: Props) {
 
   return (
     <div className="min-h-screen bg-white">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BackButton />
@@ -95,34 +128,51 @@ export default function SuppliersList({ suppliers }: Props) {
           ) : (
             <>
               {/* Table Header */}
-              <div className="grid grid-cols-[60px_1fr_200px_180px_200px_1fr] gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <div className="grid grid-cols-[60px_1fr_200px_180px_200px_1fr_100px] gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200">
                 <div className="text-xs font-medium text-gray-500">#</div>
                 <div className="text-xs font-medium text-gray-500">Supplier Name</div>
                 <div className="text-xs font-medium text-gray-500">Contact Person</div>
                 <div className="text-xs font-medium text-gray-500">Phone</div>
                 <div className="text-xs font-medium text-gray-500">Email</div>
                 <div className="text-xs font-medium text-gray-500">GSTIN</div>
+                <div className="text-xs font-medium text-gray-500 text-center">Actions</div>
               </div>
               {/* Table Body */}
               <div className="max-h-[600px] overflow-y-auto">
                 {filteredSuppliers.map((supplier, i) => (
-                  <Link
+                  <div
                     key={supplier.id}
-                    href={`/common/suppliers/${supplier.id}`}
-                    className="grid grid-cols-[60px_1fr_200px_180px_200px_1fr] gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                    className="grid grid-cols-[60px_1fr_200px_180px_200px_1fr_100px] gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
                   >
                     <div className="text-sm text-gray-900">{i + 1}</div>
-                    <div className="text-sm">
-                      <div className="font-medium text-gray-900">{supplier.name}</div>
+                    <Link href={`/common/suppliers/${supplier.id}`} className="text-sm">
+                      <div className="font-medium text-gray-900 hover:text-blue-600">{supplier.name}</div>
                       {supplier.address && (
                         <div className="text-xs text-gray-500 truncate">{supplier.address}</div>
                       )}
-                    </div>
+                    </Link>
                     <div className="text-sm text-gray-900">{supplier.contactPerson || '-'}</div>
                     <div className="text-sm text-gray-900">{supplier.phone}</div>
                     <div className="text-sm text-gray-600">{supplier.email || '-'}</div>
                     <div className="text-sm text-gray-600 font-mono">{supplier.gstin || '-'}</div>
-                  </Link>
+                    <div className="flex items-center justify-center gap-2">
+                      <Link
+                        href={`/common/suppliers/${supplier.id}/edit`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title="Edit supplier"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Link>
+                      <button
+                        onClick={(e) => handleDelete(e, supplier.id, supplier.name)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Delete supplier"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
             </>

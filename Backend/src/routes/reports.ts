@@ -453,15 +453,21 @@ router.get('/profit-loss', async (req, res) => {
   };
 
   try {
-    const where: any = {};
+    const where: any = {
+      status: { notIn: ['CANCELLED', 'DRAFT'] }
+    };
     
     if (startDate || endDate) {
       where.date = {};
       if (startDate) {
-        where.date.gte = new Date(startDate);
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        where.date.gte = start;
       }
       if (endDate) {
-        where.date.lte = new Date(endDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);  // Include the entire end date
+        where.date.lte = end;
       }
     }
 

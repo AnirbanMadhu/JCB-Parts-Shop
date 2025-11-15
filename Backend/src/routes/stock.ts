@@ -34,7 +34,10 @@ router.get('/:partId', async (req, res) => {
 // Optional: list stock for all parts (for report like your Excel)
 router.get('/', async (_req, res) => {
   try {
-    const parts = await prisma.part.findMany({ orderBy: { partNumber: 'asc' } });
+    const parts = await prisma.part.findMany({ 
+      where: { isDeleted: false },
+      orderBy: { partNumber: 'asc' } 
+    });
 
     const stockPromises = parts.map(async (p) => {
       const [incoming, outgoing] = await Promise.all([

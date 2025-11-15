@@ -40,13 +40,14 @@ router.get('/', async (req, res) => {
     const suppliers = await prisma.supplier.findMany({
       where: search
         ? {
+            isDeleted: false,
             OR: [
               { name: { contains: search, mode: 'insensitive' } },
               { gstin: { contains: search, mode: 'insensitive' } },
               { phone: { contains: search, mode: 'insensitive' } }
             ]
           }
-        : undefined,
+        : { isDeleted: false },
       orderBy: { name: 'asc' }
     });
 
@@ -121,7 +122,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete supplier
+// Delete supplier (soft delete)
 router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id);
 
@@ -130,15 +131,13 @@ router.delete('/:id', async (req, res) => {
   }
 
   try {
-    await prisma.supplier.delete({ where: { id } });
-    res.json({ success: true, message: 'Supplier deleted' });
+    const supplier = await prisma.supplier.update({
+      where: { id },
+      data: { isDeleted: true }
+    });
+    res.json({ success: true, message: 'Supplier deleted successfully' });
   } catch (e: any) {
     console.error(e);
-    if (e.code === 'P2003') {
-      return res.status(400).json({ 
-        error: 'Cannot delete supplier with existing invoices' 
-      });
-    }
     res.status(500).json({ error: 'Failed to delete supplier' });
   }
 });

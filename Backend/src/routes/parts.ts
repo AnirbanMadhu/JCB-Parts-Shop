@@ -65,12 +65,13 @@ router.get('/search', async (req, res) => {
     const parts = await prisma.part.findMany({
       where: q
         ? {
+            isDeleted: false,
             OR: [
               { partNumber: { contains: q, mode: 'insensitive' } },
               { itemName: { contains: q, mode: 'insensitive' } }
             ]
           }
-        : undefined,
+        : { isDeleted: false },
       take: 50,
       orderBy: { partNumber: 'asc' }
     });
@@ -141,7 +142,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete part
+// Delete part (soft delete)
 router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id);
 
@@ -150,15 +151,13 @@ router.delete('/:id', async (req, res) => {
   }
 
   try {
-    await prisma.part.delete({ where: { id } });
-    res.json({ success: true, message: 'Part deleted' });
+    const part = await prisma.part.update({
+      where: { id },
+      data: { isDeleted: true }
+    });
+    res.json({ success: true, message: 'Part deleted successfully' });
   } catch (e: any) {
     console.error(e);
-    if (e.code === 'P2003') {
-      return res.status(400).json({ 
-        error: 'Cannot delete part with existing invoices or transactions' 
-      });
-    }
     res.status(500).json({ error: 'Failed to delete part' });
   }
 });

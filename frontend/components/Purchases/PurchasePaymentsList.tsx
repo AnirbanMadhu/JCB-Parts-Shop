@@ -4,9 +4,11 @@
 import Link from "next/link";
 import BackButton from "../Common/BackButton";
 import PaymentStatusModal from "../Sales/PaymentStatusModal";
+import ToastContainer from "../Common/ToastContainer";
 import { Search, Calendar, DollarSign } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/useToast";
 
 type PurchaseInvoice = {
   id: number;
@@ -37,6 +39,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
 export default function PurchasePaymentsList({ payments }: Props) {
   const router = useRouter();
+  const { toasts, removeToast, success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -76,12 +79,18 @@ export default function PurchasePaymentsList({ payments }: Props) {
 
   // Calculate totals
   const totalAmount = filteredPayments.reduce((sum, payment) => sum + Number(payment.total), 0);
-  const paidAmount = filteredPayments
-    .filter(p => p.status === 'PAID')
-    .reduce((sum, payment) => sum + Number(payment.total), 0);
-  const pendingAmount = filteredPayments
-    .filter(p => p.status === 'SUBMITTED')
-    .reduce((sum, payment) => sum + Number(payment.total), 0);
+  const paidAmount = filteredPayments.reduce((sum, payment) => {
+    if (payment.paidAmount && payment.paidAmount > 0) {
+      return sum + Number(payment.paidAmount);
+    }
+    return sum;
+  }, 0);
+  const pendingAmount = filteredPayments.reduce((sum, payment) => {
+    const due = payment.dueAmount !== undefined && payment.dueAmount !== null 
+      ? Number(payment.dueAmount) 
+      : Number(payment.total) - (payment.paidAmount ? Number(payment.paidAmount) : 0);
+    return sum + due;
+  }, 0);
 
   const handleOpenPaymentModal = (invoice: PurchaseInvoice) => {
     setSelectedInvoice(invoice);
@@ -97,20 +106,21 @@ export default function PurchasePaymentsList({ payments }: Props) {
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to update payment');
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to update payment');
       }
 
-      alert('Payment status updated successfully');
+      success('Payment status updated successfully');
       router.refresh();
-    } catch (error: any) {
-      alert('Error updating payment: ' + error.message);
-      throw error;
+    } catch (err: any) {
+      error(err.message || 'Error updating payment');
+      throw err;
     }
   };
 
   return (
     <div className="min-h-screen bg-white">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -143,7 +153,7 @@ export default function PurchasePaymentsList({ payments }: Props) {
               ₹{paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
             <p className="text-xs text-green-600 mt-1">
-              {filteredPayments.filter(p => p.status === 'PAID').length} invoice(s)
+              {filteredPayments.filter(p => p.paidAmount && p.paidAmount > 0).length} payment(s)
             </p>
           </div>
           <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
@@ -152,7 +162,12 @@ export default function PurchasePaymentsList({ payments }: Props) {
               ₹{pendingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
             <p className="text-xs text-orange-600 mt-1">
-              {filteredPayments.filter(p => p.status === 'SUBMITTED').length} invoice(s)
+              {filteredPayments.filter(p => {
+                const due = p.dueAmount !== undefined && p.dueAmount !== null 
+                  ? Number(p.dueAmount) 
+                  : Number(p.total) - (p.paidAmount ? Number(p.paidAmount) : 0);
+                return due > 0;
+              }).length} invoice(s)
             </p>
           </div>
         </div>

@@ -3,11 +3,23 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
 export type Invoice = {
   id: string;
-  number: string;
+  invoiceNumber: string;
   status: "DRAFT" | "SUBMITTED" | "PAID" | "CANCELLED";
-  supplierName: string;
   date: string;
   total: number;
+  supplier?: {
+    id: number;
+    name: string;
+  };
+  customer?: {
+    id: number;
+    name: string;
+    indexId?: string;
+  };
+  type: "PURCHASE" | "SALE";
+  paymentStatus?: string;
+  paidAmount?: number;
+  dueAmount?: number;
 };
 
 export type Customer = {

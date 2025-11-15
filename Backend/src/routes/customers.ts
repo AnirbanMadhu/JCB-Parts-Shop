@@ -60,6 +60,7 @@ router.get('/', async (req, res) => {
     const customers = await prisma.customer.findMany({
       where: search
         ? {
+            isDeleted: false,
             OR: [
               { name: { contains: search, mode: 'insensitive' } },
               { indexId: { contains: search, mode: 'insensitive' } },
@@ -67,7 +68,7 @@ router.get('/', async (req, res) => {
               { phone: { contains: search, mode: 'insensitive' } }
             ]
           }
-        : undefined,
+        : { isDeleted: false },
       orderBy: { id: 'asc' }
     });
 
@@ -141,7 +142,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete customer
+// Delete customer (soft delete)
 router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id);
 
@@ -150,15 +151,13 @@ router.delete('/:id', async (req, res) => {
   }
 
   try {
-    await prisma.customer.delete({ where: { id } });
-    res.json({ success: true, message: 'Customer deleted' });
+    const customer = await prisma.customer.update({
+      where: { id },
+      data: { isDeleted: true }
+    });
+    res.json({ success: true, message: 'Customer deleted successfully' });
   } catch (e: any) {
     console.error(e);
-    if (e.code === 'P2003') {
-      return res.status(400).json({ 
-        error: 'Cannot delete customer with existing invoices' 
-      });
-    }
     res.status(500).json({ error: 'Failed to delete customer' });
   }
 });

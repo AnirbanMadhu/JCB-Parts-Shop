@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { Customer } from "@/lib/api";
 import BackButton from "../Common/BackButton";
+import ToastContainer from "../Common/ToastContainer";
 import { Filter, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/useToast";
 
 type Props = {
   customers: Customer[];
@@ -15,6 +17,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
 export default function CustomersList({ customers }: Props) {
   const router = useRouter();
+  const { toasts, removeToast, success, error } = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -46,14 +49,14 @@ export default function CustomersList({ customers }: Props) {
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to delete customer');
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to delete customer');
       }
 
-      alert('Customer deleted successfully');
+      success(`Customer "${name}" deleted successfully`);
       router.refresh();
-    } catch (error: any) {
-      alert('Error deleting customer: ' + error.message);
+    } catch (err: any) {
+      error(err.message || 'Error deleting customer');
     } finally {
       setDeletingId(null);
     }
@@ -61,24 +64,17 @@ export default function CustomersList({ customers }: Props) {
 
   return (
     <div className="min-h-screen bg-white">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BackButton />
           <h1 className="text-[17px] font-semibold text-gray-900">Customers</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200">
-            Export
-          </button>
-          <button className="flex items-center gap-2 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200">
-            <Filter className="w-4 h-4" />
-            Filter
-          </button>
-          <Link href="/common/customers/new" className="p-2 bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors inline-flex">
-            <Plus className="w-4 h-4" />
-          </Link>
-        </div>
+        <Link href="/common/customers/new" className="flex items-center gap-2 px-4 py-1.5 text-sm bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors">
+          <Plus className="w-4 h-4" />
+          New Customer
+        </Link>
       </header>
 
       {/* Search Bar */}
