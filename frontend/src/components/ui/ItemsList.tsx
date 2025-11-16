@@ -68,7 +68,7 @@ export default function ItemsList({ items }: Props) {
   return (
     <div className="min-h-screen bg-white">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
-      <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
+      <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BackButton />
           <h1 className="text-[17px] font-semibold text-gray-900">Items</h1>

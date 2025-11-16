@@ -5,7 +5,7 @@ import Link from "next/link";
 import BackButton from "@/components/ui/BackButton";
 import PaymentStatusModal from "@/app/sales/_components/PaymentStatusModal";
 import ToastContainer from "@/components/ui/ToastContainer";
-import { Search, Calendar, DollarSign } from "lucide-react";
+import { Search, Calendar, Pencil } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
@@ -345,7 +345,7 @@ export default function PurchasePaymentsList({ payments }: Props) {
                         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                         title="Edit Payment Status"
                       >
-                        <DollarSign className="w-4 h-4" />
+                        <Pencil className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

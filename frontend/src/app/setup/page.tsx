@@ -1,11 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import UserManagement from '@/components/ui/UserManagement';
 
 export default function SetupPage() {
   const [salesAllowEditSubmitted, setSalesAllowEditSubmitted] = useState(false);
   const [purchasesAllowEditSubmitted, setPurchasesAllowEditSubmitted] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const { isAdmin } = useAuth();
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -37,7 +41,8 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Setup</h1>
         <div className="bg-white rounded-lg shadow-sm p-6">
@@ -45,6 +50,13 @@ export default function SetupPage() {
             Configure your system settings and preferences
           </p>
           <div className="space-y-6">
+            {/* User Management - Admin Only */}
+            {isAdmin() && (
+              <div className="border-b border-gray-200 pb-6">
+                <UserManagement />
+              </div>
+            )}
+
             {/* Sales Configuration */}
             <div className="border-b border-gray-200 pb-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">Sales Configuration</h2>
@@ -114,6 +126,7 @@ export default function SetupPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

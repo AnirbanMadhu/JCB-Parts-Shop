@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from "react";
 import InvoicePrint from "@/components/ui/InvoicePrint";
 import { useSettings } from "@/hooks/useSettings";
 
@@ -36,6 +37,16 @@ interface InvoiceViewProps {
 
 export default function InvoiceView({ invoice }: InvoiceViewProps) {
   const { settings, isLoaded } = useSettings();
+  
+  // Set document title for PDF filename
+  useEffect(() => {
+    const originalTitle = document.title;
+    document.title = `${invoice.invoiceNumber}.pdf`;
+    
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [invoice.invoiceNumber]);
   
   const handlePrint = () => {
     window.print();

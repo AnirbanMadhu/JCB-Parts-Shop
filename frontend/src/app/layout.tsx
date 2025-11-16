@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/app/dashboard/_components/Sidebar";
+import { AuthProvider } from "@/contexts/AuthContext";
+import AppLayout from "./_components/AppLayout";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,10 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased bg-gray-50`}>
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <main className="flex-1 ml-[213px]">{children}</main>
-        </div>
+        <AuthProvider>
+          <AppLayout>{children}</AppLayout>
+        </AuthProvider>
       </body>
     </html>
   );

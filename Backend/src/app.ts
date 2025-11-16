@@ -7,6 +7,8 @@ import stockRouter from './routes/stock';
 import suppliersRouter from './routes/suppliers';
 import customersRouter from './routes/customers';
 import reportsRouter from './routes/reports';
+import authRouter from './routes/auth';
+import usersRouter from './routes/users';
 
 const app = express();
 
@@ -30,6 +32,8 @@ app.get('/api/health', (_req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', authRouter);
+app.use('/api/users', usersRouter);
 app.use('/api/parts', partsRouter);
 app.use('/api/invoices', invoicesRouter);
 app.use('/api/stock', stockRouter);

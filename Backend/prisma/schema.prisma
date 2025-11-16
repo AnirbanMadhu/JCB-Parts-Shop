@@ -7,6 +7,64 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  ADMIN
+  USER
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String    // hashed password
+  name      String
+  role      UserRole  @default(USER)
+  isActive  Boolean   @default(true)
+  
+  // Invitation tracking
+  invitedBy    Int?
+  inviter      User?     @relation("UserInvitations", fields: [invitedBy], references: [id])
+  invitedUsers User[]    @relation("UserInvitations")
+  
+  // Password reset
+  passwordResetTokens PasswordResetToken[]
+  
+  // First login and password change tracking
+  mustChangePassword Boolean  @default(false)
+  lastPasswordChange DateTime?
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([email])
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+}
+
+model PasswordChangeOTP {
+  id        Int      @id @default(autoincrement())
+  otp       String
+  userId    Int
+  email     String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([otp])
+  @@index([userId])
+}
+
 model Part {
   id           Int       @id @default(autoincrement())
   partNumber   String    @unique
