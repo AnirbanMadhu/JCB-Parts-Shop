@@ -1,6 +1,8 @@
 import PurchaseInvoicesList from "@/app/purchases/_components/PurchaseInvoicesList";
 import { fetchPurchaseInvoices } from "@/lib/api";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: "Purchase Invoices",
   description: "Manage purchase invoices",

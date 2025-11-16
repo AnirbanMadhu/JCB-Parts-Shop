@@ -36,6 +36,7 @@ model Supplier {
   phone         String?
   gstin         String?
   state         String?
+  stateCode     String?
   isDeleted     Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -52,6 +53,7 @@ model Customer {
   phone     String?
   gstin     String?
   state     String?
+  stateCode String?
   isDeleted Boolean   @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -101,6 +103,14 @@ model Invoice {
   roundOff        Decimal  @db.Decimal(12, 2)
   total           Decimal  @db.Decimal(12, 2)
   note            String?
+
+  // Additional invoice details
+  deliveryNote      String?
+  buyerOrderNo      String?
+  dispatchDocNo     String?
+  deliveryNoteDate  DateTime?
+  dispatchedThrough String?
+  termsOfDelivery   String?
 
   // Payment tracking
   paymentStatus  PaymentStatus @default(UNPAID)

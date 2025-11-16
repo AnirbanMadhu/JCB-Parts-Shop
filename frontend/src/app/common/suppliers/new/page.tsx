@@ -1,5 +1,7 @@
 import SupplierForm from "@/components/ui/SupplierForm";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: "Add Supplier",
   description: "Add a new supplier",

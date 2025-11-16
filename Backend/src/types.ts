@@ -29,6 +29,12 @@ export interface InvoiceCreateBody {
   discountPercent?: number;
   cgstPercent?: number;
   sgstPercent?: number;
+  deliveryNote?: string;
+  buyerOrderNo?: string;
+  dispatchDocNo?: string;
+  deliveryNoteDate?: string;
+  dispatchedThrough?: string;
+  termsOfDelivery?: string;
 }
 
 export interface SupplierCreateBody {

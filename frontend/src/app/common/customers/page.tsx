@@ -1,6 +1,8 @@
 import CustomersList from "@/components/ui/CustomersList";
 import { fetchCustomers } from "@/lib/api";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: "Customers",
   description: "Manage customers",

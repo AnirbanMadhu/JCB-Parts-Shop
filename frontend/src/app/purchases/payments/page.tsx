@@ -2,6 +2,8 @@ import PurchasePaymentsList from "@/app/purchases/_components/PurchasePaymentsLi
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: "Purchase Payments",
   description: "Manage purchase payments",

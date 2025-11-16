@@ -79,6 +79,12 @@ router.post('/', async (req, res) => {
           sgstAmount,
           roundOff,
           total: roundedTotal,
+          deliveryNote: body.deliveryNote,
+          buyerOrderNo: body.buyerOrderNo,
+          dispatchDocNo: body.dispatchDocNo,
+          deliveryNoteDate: body.deliveryNoteDate ? new Date(body.deliveryNoteDate) : null,
+          dispatchedThrough: body.dispatchedThrough,
+          termsOfDelivery: body.termsOfDelivery,
           items: {
             create: itemsData
           }
@@ -347,7 +353,21 @@ router.patch('/:id', async (req, res) => {
     return res.status(400).json({ error: 'Invalid invoice ID. Must be a number.' });
   }
 
-  const { paymentStatus, paidAmount, dueAmount, paymentDate, paymentMethod, paymentNote, note } = req.body;
+  const { 
+    paymentStatus, 
+    paidAmount, 
+    dueAmount, 
+    paymentDate, 
+    paymentMethod, 
+    paymentNote, 
+    note,
+    deliveryNote,
+    buyerOrderNo,
+    dispatchDocNo,
+    deliveryNoteDate,
+    dispatchedThrough,
+    termsOfDelivery
+  } = req.body;
 
   try {
     const invoice = await prisma.invoice.findUnique({ where: { id } });
@@ -365,6 +385,12 @@ router.patch('/:id', async (req, res) => {
     if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod || null;
     if (paymentNote !== undefined) updateData.paymentNote = paymentNote || null;
     if (note !== undefined) updateData.note = note || null;
+    if (deliveryNote !== undefined) updateData.deliveryNote = deliveryNote || null;
+    if (buyerOrderNo !== undefined) updateData.buyerOrderNo = buyerOrderNo || null;
+    if (dispatchDocNo !== undefined) updateData.dispatchDocNo = dispatchDocNo || null;
+    if (deliveryNoteDate !== undefined) updateData.deliveryNoteDate = deliveryNoteDate ? new Date(deliveryNoteDate) : null;
+    if (dispatchedThrough !== undefined) updateData.dispatchedThrough = dispatchedThrough || null;
+    if (termsOfDelivery !== undefined) updateData.termsOfDelivery = termsOfDelivery || null;
 
     const updatedInvoice = await prisma.invoice.update({
       where: { id },

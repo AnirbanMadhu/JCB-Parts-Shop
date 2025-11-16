@@ -2,6 +2,8 @@ import ProfitAndLossReport from "@/app/reports/_components/ProfitAndLossReport";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: "Profit and Loss",
   description: "View profit and loss report",

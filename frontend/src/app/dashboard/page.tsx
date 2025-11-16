@@ -4,6 +4,8 @@ import CashflowChart from "./_components/CashflowChart";
 import SalesChart from "./_components/SalesChart";
 import PurchaseChart from "./_components/PurchaseChart";
 
+export const dynamic = 'force-dynamic';
+
 export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">

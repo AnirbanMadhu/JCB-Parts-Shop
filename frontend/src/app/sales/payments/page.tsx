@@ -2,6 +2,8 @@ import SalesPaymentsList from "@/app/sales/_components/SalesPaymentsList";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
+export const dynamic = 'force-dynamic';
+
 async function fetchSalesInvoices() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/invoices?type=SALE`, {

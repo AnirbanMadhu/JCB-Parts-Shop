@@ -5,6 +5,8 @@ import { Package, Tag, Hash, DollarSign, Layers } from "lucide-react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
+export const dynamic = 'force-dynamic';
+
 type Props = {
   params: Promise<{
     id: string;

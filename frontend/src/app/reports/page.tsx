@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export default function ReportsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">

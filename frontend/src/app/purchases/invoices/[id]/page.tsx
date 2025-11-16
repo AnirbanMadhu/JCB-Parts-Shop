@@ -1,4 +1,8 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { notFound } from "next/navigation";
+import { useSettings } from '@/hooks/useSettings';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
@@ -8,22 +12,51 @@ type Props = {
   }>;
 };
 
-async function fetchInvoice(id: string) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/invoices/${id}`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    console.error('Failed to fetch invoice:', error);
-    return null;
-  }
-}
+export default function PurchaseInvoiceDetailPage({ params }: Props) {
+  const [invoice, setInvoice] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [invoiceId, setInvoiceId] = useState<string | null>(null);
+  const { settings, isLoaded } = useSettings();
 
-export default async function PurchaseInvoiceDetailPage({ params }: Props) {
-  const { id } = await params;
-  const invoice = await fetchInvoice(id);
+  useEffect(() => {
+    params.then(({ id }) => {
+      setInvoiceId(id);
+    });
+  }, [params]);
+
+  useEffect(() => {
+    if (!invoiceId) return;
+
+    async function fetchInvoice() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/invoices/${invoiceId}`, {
+          cache: 'no-store',
+        });
+        if (!res.ok) {
+          setLoading(false);
+          return;
+        }
+        const data = await res.json();
+        setInvoice(data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Failed to fetch invoice:', error);
+        setLoading(false);
+      }
+    }
+
+    fetchInvoice();
+  }, [invoiceId]);
+
+  if (loading || !isLoaded) {
+    return (
+      <div className="min-h-screen bg-white p-6">
+        <div className="text-center py-12">
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   
   if (!invoice) {
     notFound();
@@ -164,7 +197,7 @@ export default async function PurchaseInvoiceDetailPage({ params }: Props) {
           >
             Back to Invoices
           </a>
-          {invoice.status === 'DRAFT' && (
+          {isLoaded && (settings.purchases.allowEditSubmitted || invoice.status === 'DRAFT') && (
             <a
               href={`/purchases/invoices/${invoice.id}/edit`}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"

@@ -1,13 +1,17 @@
 // components/Purchases/PurchaseInvoicesList.tsx
+'use client';
+
 import Link from "next/link";
 import { Invoice } from "@/lib/api";
 import BackButton from "@/components/ui/BackButton";
+import { useSettings } from "@/hooks/useSettings";
 
 type Props = {
   invoices: Invoice[];
 };
 
 export default function PurchaseInvoicesList({ invoices }: Props) {
+  const { settings, isLoaded } = useSettings();
   const hasRows = invoices && invoices.length > 0;
 
   return (
@@ -93,7 +97,7 @@ export default function PurchaseInvoicesList({ invoices }: Props) {
                     >
                       {inv.status}
                     </span>
-                    {inv.status === "DRAFT" && (
+                    {isLoaded && (settings.purchases.allowEditSubmitted || inv.status === "DRAFT") && (
                       <Link
                         href={`/purchases/invoices/${inv.id}/edit`}
                         className="ml-2 text-xs text-blue-600 hover:underline"
