@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import BackButton from "@/components/ui/BackButton";
-import { Package, Tag, Hash, DollarSign, Layers } from "lucide-react";
+import { Package, Tag, Hash, IndianRupee, Layers } from "lucide-react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
@@ -124,7 +124,7 @@ export default async function ItemDetailPage({ params }: Props) {
 
             {item.mrp && (
               <div className="flex items-start gap-3">
-                <DollarSign className="w-5 h-5 text-gray-400 mt-0.5" />
+                <IndianRupee className="w-5 h-5 text-gray-400 mt-0.5" />
                 <div>
                   <p className="text-xs text-gray-500">MRP</p>
                   <p className="text-sm text-gray-900 font-semibold">
@@ -136,7 +136,7 @@ export default async function ItemDetailPage({ params }: Props) {
 
             {item.rtl && (
               <div className="flex items-start gap-3">
-                <DollarSign className="w-5 h-5 text-gray-400 mt-0.5" />
+                <IndianRupee className="w-5 h-5 text-gray-400 mt-0.5" />
                 <div>
                   <p className="text-xs text-gray-500">Retail Price</p>
                   <p className="text-sm text-gray-900 font-semibold">

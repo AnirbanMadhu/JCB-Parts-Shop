@@ -94,6 +94,7 @@ export async function fetchItems(): Promise<Item[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/stock`, {
       cache: 'no-store',
+      next: { revalidate: 0 }
     });
     if (!res.ok) return [];
     return await res.json();

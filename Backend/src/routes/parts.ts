@@ -147,14 +147,19 @@ router.put('/:id', async (req, res) => {
         unit,
         mrp: body.mrp,
         rtl: body.rtl,
-        barcode: body.barcode,
-        qrCode: body.qrCode
+        barcode: body.barcode || null,
+        qrCode: body.qrCode || null
       }
     });
 
     res.json(part);
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
+    // Handle unique constraint violations
+    if (e.code === 'P2002') {
+      const field = e.meta?.target?.[0] || 'field';
+      return res.status(400).json({ error: `${field} already exists. Please use a different value.` });
+    }
     res.status(500).json({ error: 'Failed to update part' });
   }
 });

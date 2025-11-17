@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useToast } from "@/hooks/useToast";
+import ToastContainer from "./ToastContainer";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
@@ -21,6 +23,7 @@ type ItemFormData = {
 
 export default function ItemEditForm({ item }: { item: any }) {
   const router = useRouter();
+  const { toasts, removeToast, success, error } = useToast();
   const [saving, setSaving] = useState(false);
   
   const [formData, setFormData] = useState<ItemFormData>({
@@ -44,27 +47,43 @@ export default function ItemEditForm({ item }: { item: any }) {
     e.preventDefault();
     
     if (!formData.partNumber || !formData.itemName || !formData.hsnCode) {
-      alert('Part Number, Item Name, and HSN Code are required');
+      error('Part Number, Item Name, and HSN Code are required');
       return;
     }
 
     setSaving(true);
     try {
+      // Prepare data - convert empty strings to null for optional fields
+      const submitData = {
+        ...formData,
+        barcode: formData.barcode || null,
+        qrCode: formData.qrCode || null,
+        description: formData.description || null,
+      };
+
       const res = await fetch(`${API_BASE_URL}/api/parts/${item.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to update item');
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to update item');
       }
 
-      alert('Item updated successfully');
-      router.push('/common/items');
-    } catch (error: any) {
-      alert('Error updating item: ' + error.message);
+      const updatedItem = await res.json();
+      success('Item updated successfully');
+      
+      // Refresh the router to show updated data
+      router.refresh();
+      
+      // Redirect after a short delay
+      setTimeout(() => {
+        router.push('/common/items');
+      }, 1500);
+    } catch (err: any) {
+      error(err.message || 'Error updating item');
     } finally {
       setSaving(false);
     }
@@ -72,6 +91,7 @@ export default function ItemEditForm({ item }: { item: any }) {
 
   return (
     <div className="min-h-screen bg-white">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/common/items" className="text-sm text-blue-600 hover:underline">

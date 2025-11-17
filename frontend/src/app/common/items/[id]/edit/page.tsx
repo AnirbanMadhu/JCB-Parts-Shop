@@ -3,11 +3,13 @@ import ItemEditForm from "@/components/ui/ItemEditForm";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 async function getItem(id: string) {
   try {
     const res = await fetch(`${API_BASE_URL}/api/parts/${id}`, {
       cache: 'no-store',
+      next: { revalidate: 0 }
     });
     if (!res.ok) return null;
     return await res.json();
