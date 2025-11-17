@@ -5,7 +5,7 @@ import { Item } from "@/lib/api";
 import BackButton from "./BackButton";
 import ToastContainer from "./ToastContainer";
 import ConfirmDialog from "./ConfirmDialog";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Pencil, Trash2, Search } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
@@ -21,6 +21,9 @@ export default function ItemsList({ items }: Props) {
   const { toasts, removeToast, success, error } = useToast();
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingStockId, setEditingStockId] = useState<number | null>(null);
+  const [stockValues, setStockValues] = useState<{ [key: number]: number }>({});
+  const [updatingStockId, setUpdatingStockId] = useState<number | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     itemId: number;
@@ -65,6 +68,45 @@ export default function ItemsList({ items }: Props) {
     }
   };
 
+  const handleStockUpdate = async (itemId: number, itemName: string) => {
+    const newStock = stockValues[itemId];
+    if (newStock === undefined || newStock < 0) {
+      error('Please enter a valid stock quantity');
+      return;
+    }
+
+    setUpdatingStockId(itemId);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/stock/${itemId}/adjust`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity: newStock }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to update stock');
+      }
+
+      success(`Stock for "${itemName}" updated to ${newStock}`);
+      setEditingStockId(null);
+      router.refresh();
+    } catch (err: any) {
+      error(err.message || 'Error updating stock');
+    } finally {
+      setUpdatingStockId(null);
+    }
+  };
+
+  const startEditingStock = (itemId: number, currentStock: number) => {
+    setEditingStockId(itemId);
+    setStockValues({ ...stockValues, [itemId]: currentStock });
+  };
+
+  const cancelEditingStock = () => {
+    setEditingStockId(null);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
@@ -73,9 +115,6 @@ export default function ItemsList({ items }: Props) {
           <BackButton />
           <h1 className="text-[17px] font-semibold text-gray-900">Items</h1>
         </div>
-        <Link href="/common/items/new" className="p-2 bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors inline-flex">
-          <Plus className="w-4 h-4" />
-        </Link>
       </header>
 
       {/* Search Bar */}
@@ -113,9 +152,6 @@ export default function ItemsList({ items }: Props) {
               <p className="text-sm text-gray-400 mb-5">
                 {searchTerm ? 'No items found matching your search' : 'No items found'}
               </p>
-              <Link href="/common/items/new" className="px-5 py-2 bg-[#2c3e50] text-white text-sm font-medium rounded-md hover:bg-[#1a252f] transition-colors">
-                Add Item
-              </Link>
             </div>
           ) : (
             <>
@@ -145,10 +181,47 @@ export default function ItemsList({ items }: Props) {
                       maximumFractionDigits: 2,
                     })}
                   </div>
-                  <div className={`text-sm font-semibold text-right ${
-                    item.stock > 10 ? 'text-green-600' : item.stock > 0 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {item.stock}
+                  <div className="text-right">
+                    {editingStockId === item.id ? (
+                      <div className="flex items-center justify-end gap-1">
+                        <input
+                          type="number"
+                          min="0"
+                          value={stockValues[item.id] ?? item.stock}
+                          onChange={(e) => setStockValues({ ...stockValues, [item.id]: parseInt(e.target.value) || 0 })}
+                          className="w-16 px-2 py-1 text-sm border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-right"
+                          disabled={updatingStockId === item.id}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleStockUpdate(item.id, item.itemName);
+                            if (e.key === 'Escape') cancelEditingStock();
+                          }}
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleStockUpdate(item.id, item.itemName)}
+                          disabled={updatingStockId === item.id}
+                          className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={cancelEditingStock}
+                          disabled={updatingStockId === item.id}
+                          className="text-xs px-2 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 disabled:opacity-50"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => startEditingStock(item.id, item.stock)}
+                        className={`text-sm font-semibold hover:underline ${
+                          item.stock > 10 ? 'text-green-600' : item.stock > 0 ? 'text-yellow-600' : 'text-red-600'
+                        }`}
+                      >
+                        {item.stock}
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center justify-center gap-2">
                     <Link

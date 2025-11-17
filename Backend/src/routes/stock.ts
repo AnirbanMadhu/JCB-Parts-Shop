@@ -31,6 +31,59 @@ router.get('/:partId', async (req, res) => {
   }
 });
 
+// Adjust stock for a part (manual stock correction)
+router.post('/:partId/adjust', async (req, res) => {
+  const partId = Number(req.params.partId);
+  const { quantity } = req.body;
+
+  if (isNaN(partId)) {
+    return res.status(400).json({ error: 'Invalid part ID' });
+  }
+
+  if (typeof quantity !== 'number' || quantity < 0) {
+    return res.status(400).json({ error: 'Quantity must be a non-negative number' });
+  }
+
+  try {
+    // Get current stock
+    const [incoming, outgoing] = await Promise.all([
+      prisma.inventoryTransaction.aggregate({
+        where: { partId, direction: 'IN' },
+        _sum: { quantity: true }
+      }),
+      prisma.inventoryTransaction.aggregate({
+        where: { partId, direction: 'OUT' },
+        _sum: { quantity: true }
+      })
+    ]);
+
+    const currentStock = (incoming._sum.quantity ?? 0) - (outgoing._sum.quantity ?? 0);
+    const difference = quantity - currentStock;
+
+    if (difference !== 0) {
+      // Create adjustment transaction
+      await prisma.inventoryTransaction.create({
+        data: {
+          partId,
+          direction: difference > 0 ? 'IN' : 'OUT',
+          quantity: Math.abs(difference),
+        }
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      partId, 
+      previousStock: currentStock, 
+      newStock: quantity,
+      adjustment: difference
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to adjust stock' });
+  }
+});
+
 // Optional: list stock for all parts (for report like your Excel)
 router.get('/', async (_req, res) => {
   try {
