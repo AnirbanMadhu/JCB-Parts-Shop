@@ -51,17 +51,34 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Search by partNumber or barcode (used when scanning)
+// Search by partNumber, barcode, or QR code (used when scanning)
 router.get('/search', async (req, res) => {
-  const { q, barcode } = req.query as { q?: string; barcode?: string };
+  const { q, barcode, qrCode } = req.query as { q?: string; barcode?: string; qrCode?: string };
 
   try {
+    // Search by barcode
     if (barcode) {
-      const part = await prisma.part.findUnique({ where: { barcode } });
-      if (!part) return res.status(404).json({ error: 'Part not found' });
+      const part = await prisma.part.findUnique({ 
+        where: { barcode },
+      });
+      if (!part || part.isDeleted) {
+        return res.status(404).json({ error: 'Part not found' });
+      }
       return res.json(part);
     }
 
+    // Search by QR code
+    if (qrCode) {
+      const part = await prisma.part.findUnique({ 
+        where: { qrCode },
+      });
+      if (!part || part.isDeleted) {
+        return res.status(404).json({ error: 'Part not found' });
+      }
+      return res.json(part);
+    }
+
+    // General search by part number or item name
     const parts = await prisma.part.findMany({
       where: q
         ? {

@@ -12,6 +12,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "S.P.TRADERS AND BUILDERS - Dashboard",
   description: "JCB Parts Shop Management System",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

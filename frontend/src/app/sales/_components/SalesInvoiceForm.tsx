@@ -3,6 +3,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import ScannerInput from "@/app/purchases/_components/ScannerInput";
+import BarcodeScanner from "@/components/features/BarcodeScanner";
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/hooks/useToast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -64,6 +67,8 @@ export default function SalesInvoiceForm() {
   const [notes, setNotes] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [highlightedRow, setHighlightedRow] = useState<number | null>(null);
+  const toast = useToast();
   
   // For part search suggestions
   const [partSearchQuery, setPartSearchQuery] = useState("");
@@ -82,9 +87,18 @@ export default function SalesInvoiceForm() {
   const handleScan = async (code: string) => {
     const exists = lines.findIndex((l) => l.code === code);
     if (exists >= 0) {
+      // Item already exists - increment quantity (auto-grouping)
+      const existingItem = lines[exists];
       setLines((prev) =>
         prev.map((l, i) => (i === exists ? { ...l, qty: l.qty + 1 } : l))
       );
+      
+      // Highlight the updated row
+      setHighlightedRow(exists);
+      setTimeout(() => setHighlightedRow(null), 1500);
+      
+      // Show success notification
+      toast.success(`✓ Quantity increased: ${existingItem.name} (Qty: ${existingItem.qty + 1})`);
       return;
     }
 
@@ -103,8 +117,15 @@ export default function SalesInvoiceForm() {
           discount: 0,
         },
       ]);
+      
+      // Highlight the new row
+      setHighlightedRow(lines.length);
+      setTimeout(() => setHighlightedRow(null), 1500);
+      
+      // Show success notification
+      toast.success(`✓ Item added: ${p.itemName}`);
     } catch (error) {
-      alert("Part not found: " + code);
+      toast.error(`✗ Part not found: ${code}`);
     }
   };
 
@@ -234,6 +255,16 @@ export default function SalesInvoiceForm() {
 
   return (
     <div className="p-6">
+      {/* Toast notifications */}
+      {toast.toasts.map((t) => (
+        <Toast
+          key={t.id}
+          message={t.message}
+          type={t.type}
+          onClose={() => toast.removeToast(t.id)}
+        />
+      ))}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/sales/invoices" className="text-sm underline">
@@ -336,11 +367,13 @@ export default function SalesInvoiceForm() {
 
       {/* Scanner */}
       <div className="mt-8 rounded-xl border p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="font-medium">Add Items</h2>
-          <span className="text-xs text-neutral-500">
-            Search by part number, barcode, or name
-          </span>
+          <BarcodeScanner 
+            onScan={handleScan}
+            enabled={true}
+            showIndicator={true}
+          />
         </div>
         <div className="mt-3 relative">
           <div className="flex gap-2">
@@ -349,7 +382,7 @@ export default function SalesInvoiceForm() {
                 type="text"
                 value={partSearchQuery}
                 onChange={(e) => setPartSearchQuery(e.target.value)}
-                placeholder="Type part number, barcode, or name..."
+                placeholder="Scan barcode or manually type part number/name..."
                 className="w-full rounded-lg border px-3 py-2"
               />
               {isSearching && (
@@ -399,8 +432,11 @@ export default function SalesInvoiceForm() {
               Add
             </button>
           </div>
-          <div className="mt-2 text-xs text-neutral-500">
-            Or use barcode scanner - scan will automatically add the item
+          <div className="mt-2 text-xs text-neutral-500 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span><strong>Primary:</strong> Scan barcode with scanner - auto-detects and adds item instantly. <strong>Fallback:</strong> Manually type if barcode not available.</span>
           </div>
         </div>
 
@@ -429,8 +465,14 @@ export default function SalesInvoiceForm() {
               {lines.map((l, i) => {
                 const net = l.price - l.discount;
                 const lineTotal = l.qty * net + (l.qty * net * l.taxRate) / 100;
+                const isHighlighted = highlightedRow === i;
                 return (
-                  <tr key={l.code} className="border-t">
+                  <tr 
+                    key={l.code} 
+                    className={`border-t transition-all duration-500 ${
+                      isHighlighted ? 'bg-green-100 animate-pulse' : 'hover:bg-gray-50'
+                    }`}
+                  >
                     <td className="px-3 py-2">{l.code}</td>
                     <td className="px-3 py-2">{l.name}</td>
                     <td className="px-3 py-2">{l.uom ?? "-"}</td>
