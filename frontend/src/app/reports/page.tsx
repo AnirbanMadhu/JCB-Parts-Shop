@@ -1,12 +1,19 @@
 import Link from "next/link";
+import { MonthlyCashflowChart } from "@/components/features/MonthlyCashflowChart";
 
 export const dynamic = 'force-dynamic';
 
 export default function ReportsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Reports</h1>
+        
+        {/* Chart Section */}
+        <div className="mb-8">
+          <MonthlyCashflowChart />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link
             href="/reports/profit-and-loss"

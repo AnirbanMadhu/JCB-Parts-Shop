@@ -4,7 +4,7 @@ A Next.js-based management system for JCB parts shop operations.
 
 ## Project Structure
 
-This project follows Next.js best practices with a well-organized structure. See [STRUCTURE.md](./STRUCTURE.md) for detailed documentation.
+This project follows Next.js best practices with a well-organized structure.
 
 ```
 src/
@@ -111,7 +111,6 @@ import Button from '@/components/ui/Button';
 ## Learn More
 
 - [Next.js Documentation](https://nextjs.org/docs)
-- [Project Structure Guide](./STRUCTURE.md)
 - [TypeScript Docs](https://www.typescriptlang.org/docs/)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 
