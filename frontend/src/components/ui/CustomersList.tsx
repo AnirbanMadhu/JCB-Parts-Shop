@@ -5,7 +5,7 @@ import { Customer } from "@/lib/api";
 import BackButton from "./BackButton";
 import ToastContainer from "./ToastContainer";
 import { Filter, Plus, Pencil, Trash2, Search } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 
@@ -20,6 +20,20 @@ export default function CustomersList({ customers }: Props) {
   const { toasts, removeToast, success, error } = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcut: Ctrl+F to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Filter customers based on search term (name or ID)
   const filteredCustomers = useMemo(() => {
@@ -82,6 +96,7 @@ export default function CustomersList({ customers }: Props) {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="Search by name, ID....."
             value={searchTerm}

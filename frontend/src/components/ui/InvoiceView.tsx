@@ -29,6 +29,12 @@ interface Invoice {
   dispatchedThrough?: string;
   termsOfDelivery?: string;
   status?: string;
+  paymentStatus?: string;
+  paidAmount?: string | number;
+  dueAmount?: string | number;
+  paymentDate?: string;
+  paymentMethod?: string;
+  paymentNote?: string;
 }
 
 interface InvoiceViewProps {
@@ -108,6 +114,34 @@ export default function InvoiceView({ invoice }: InvoiceViewProps) {
                       </span>
                     </p>
                   </div>
+                  {invoice.buyerOrderNo && (
+                    <div>
+                      <span className="text-xs text-gray-500">Buyer Order No:</span>
+                      <p className="text-sm">{invoice.buyerOrderNo}</p>
+                    </div>
+                  )}
+                  {invoice.dispatchDocNo && (
+                    <div>
+                      <span className="text-xs text-gray-500">Dispatch Doc No:</span>
+                      <p className="text-sm">{invoice.dispatchDocNo}</p>
+                    </div>
+                  )}
+                  {invoice.deliveryNoteDate && (
+                    <div>
+                      <span className="text-xs text-gray-500">Delivery Note Date:</span>
+                      <p className="text-sm">{new Date(invoice.deliveryNoteDate).toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                      })}</p>
+                    </div>
+                  )}
+                  {invoice.dispatchedThrough && (
+                    <div>
+                      <span className="text-xs text-gray-500">Dispatched Through:</span>
+                      <p className="text-sm">{invoice.dispatchedThrough}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -127,6 +161,96 @@ export default function InvoiceView({ invoice }: InvoiceViewProps) {
                 </div>
               </div>
             </div>
+
+            {/* Payment Information Section */}
+            {invoice.paymentStatus && (
+              <div className="border-t pt-6 mb-6">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Payment Information</h3>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-xs text-gray-500">Payment Status:</span>
+                      <p className="text-sm">
+                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
+                          invoice.paymentStatus === 'PAID' ? 'bg-green-100 text-green-800' :
+                          invoice.paymentStatus === 'PARTIAL' ? 'bg-orange-100 text-orange-800' :
+                          invoice.paymentStatus === 'ON_CREDIT' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {invoice.paymentStatus === 'PAID' ? 'Paid' :
+                           invoice.paymentStatus === 'PARTIAL' ? 'Partially Paid' :
+                           invoice.paymentStatus === 'ON_CREDIT' ? 'On Credit' :
+                           'Unpaid'}
+                        </span>
+                      </p>
+                    </div>
+                    {invoice.paidAmount !== undefined && invoice.paidAmount !== null && Number(invoice.paidAmount) > 0 && (
+                      <div>
+                        <span className="text-xs text-gray-500">Paid Amount:</span>
+                        <p className="text-sm font-semibold text-green-600">₹{Number(invoice.paidAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      </div>
+                    )}
+                    {invoice.dueAmount !== undefined && invoice.dueAmount !== null && Number(invoice.dueAmount) > 0 && (
+                      <div>
+                        <span className="text-xs text-gray-500">Due Amount:</span>
+                        <p className="text-sm font-semibold text-orange-600">₹{Number(invoice.dueAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {invoice.paymentDate && (
+                      <div>
+                        <span className="text-xs text-gray-500">Payment Date:</span>
+                        <p className="text-sm">{new Date(invoice.paymentDate).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric'
+                        })}</p>
+                      </div>
+                    )}
+                    {invoice.paymentMethod && (
+                      <div>
+                        <span className="text-xs text-gray-500">Payment Method:</span>
+                        <p className="text-sm">{invoice.paymentMethod}</p>
+                      </div>
+                    )}
+                    {invoice.paymentNote && (
+                      <div>
+                        <span className="text-xs text-gray-500">Payment Note:</span>
+                        <p className="text-sm">{invoice.paymentNote}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Additional Details Section */}
+            {(invoice.deliveryNote || invoice.termsOfDelivery || invoice.note) && (
+              <div className="border-t pt-6 mb-6">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Additional Details</h3>
+                <div className="space-y-2">
+                  {invoice.deliveryNote && (
+                    <div>
+                      <span className="text-xs text-gray-500">Delivery Note:</span>
+                      <p className="text-sm">{invoice.deliveryNote}</p>
+                    </div>
+                  )}
+                  {invoice.termsOfDelivery && (
+                    <div>
+                      <span className="text-xs text-gray-500">Terms of Delivery:</span>
+                      <p className="text-sm">{invoice.termsOfDelivery}</p>
+                    </div>
+                  )}
+                  {invoice.note && (
+                    <div>
+                      <span className="text-xs text-gray-500">Note:</span>
+                      <p className="text-sm">{invoice.note}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="border-t pt-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Items</h3>

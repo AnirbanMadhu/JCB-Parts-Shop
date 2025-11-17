@@ -6,7 +6,7 @@ import BackButton from "@/components/ui/BackButton";
 import PaymentStatusModal from "@/app/sales/_components/PaymentStatusModal";
 import ToastContainer from "@/components/ui/ToastContainer";
 import { Search, Calendar, Pencil } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 
@@ -45,6 +45,20 @@ export default function PurchasePaymentsList({ payments }: Props) {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedInvoice, setSelectedInvoice] = useState<PurchaseInvoice | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcut: Ctrl+F to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Filter payments based on search term and filters
   const filteredPayments = useMemo(() => {
@@ -175,6 +189,7 @@ export default function PurchasePaymentsList({ payments }: Props) {
           <div className="relative md:col-span-2">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Search by invoice number, supplier, or remarks..."
               value={searchTerm}
