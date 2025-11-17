@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { User, InviteUserData } from '@/types/auth';
 import { authFetch } from '@/lib/auth';
 import { UserPlus, Edit2, Trash2, Key } from 'lucide-react';
+import ConfirmDialog from './ConfirmDialog';
+import ToastContainer from './ToastContainer';
+import { useToast } from '@/hooks/useToast';
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -18,6 +21,12 @@ export default function UserManagement() {
   });
   const [inviteError, setInviteError] = useState('');
   const [inviteSuccess, setInviteSuccess] = useState('');
+  const { toasts, removeToast, success, error: showError } = useToast();
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    userId: number;
+    userName: string;
+  }>({ isOpen: false, userId: 0, userName: '' });
 
   useEffect(() => {
     fetchUsers();
@@ -82,23 +91,25 @@ export default function UserManagement() {
   };
 
   const handleDeleteUser = async (userId: number, userName: string) => {
-    if (!confirm(`Are you sure you want to delete user "${userName}"?`)) {
-      return;
-    }
+    setConfirmDialog({ isOpen: true, userId, userName });
+  };
 
+  const confirmDelete = async () => {
+    const { userId, userName } = confirmDialog;
     try {
       const response = await authFetch(`/users/${userId}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
+        success(`User "${userName}" deleted successfully`);
         fetchUsers();
       } else {
         const data = await response.json();
-        alert(data.error || 'Failed to delete user');
+        showError(data.error || 'Failed to delete user');
       }
     } catch (err) {
-      alert('Failed to delete user');
+      showError('Failed to delete user');
     }
   };
 
@@ -112,6 +123,7 @@ export default function UserManagement() {
 
   return (
     <div className="space-y-6">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold text-gray-800">User Management</h2>
         <button
@@ -288,6 +300,17 @@ export default function UserManagement() {
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, userId: 0, userName: '' })}
+        onConfirm={confirmDelete}
+        title="Delete User"
+        message={`Are you sure you want to delete user "${confirmDialog.userName}"?`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }
