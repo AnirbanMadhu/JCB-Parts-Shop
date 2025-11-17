@@ -223,7 +223,7 @@ router.put('/:id', async (req, res) => {
   }
 
   try {
-    // Check if invoice exists and is DRAFT
+    // Check if invoice exists
     const existingInvoice = await prisma.invoice.findUnique({
       where: { id },
       include: { items: true }
@@ -233,8 +233,10 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Invoice not found' });
     }
 
-    if (existingInvoice.status !== InvoiceStatus.DRAFT) {
-      return res.status(400).json({ error: 'Only DRAFT invoices can be edited' });
+    // Check if editing is allowed based on status and settings
+    const allowEditSubmitted = body.allowEditSubmitted ?? false;
+    if (existingInvoice.status !== InvoiceStatus.DRAFT && !allowEditSubmitted) {
+      return res.status(400).json({ error: 'Only DRAFT invoices can be edited. Enable "Allow Editing of Submitted Invoices" in Setup to edit submitted invoices.' });
     }
 
     const result = await prisma.$transaction(async (tx) => {

@@ -35,6 +35,7 @@ export interface InvoiceCreateBody {
   deliveryNoteDate?: string;
   dispatchedThrough?: string;
   termsOfDelivery?: string;
+  allowEditSubmitted?: boolean;
 }
 
 export interface SupplierCreateBody {

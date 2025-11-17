@@ -352,7 +352,7 @@ export default function SalesPaymentsList({ payments }: Props) {
                         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                         title="Edit Payment Status"
                       >
-                        <DollarSign className="w-4 h-4" />
+                        <Edit className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

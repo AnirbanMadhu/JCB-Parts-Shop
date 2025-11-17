@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/useToast";
+import { useSettings } from "@/hooks/useSettings";
+import ToastContainer from "@/components/ui/ToastContainer";
 
 type Line = {
   code: string;
@@ -47,6 +50,8 @@ async function fetchProductByCode(code: string) {
 
 export default function SalesInvoiceEditForm({ invoice }: { invoice: any }) {
   const router = useRouter();
+  const { toasts, removeToast, success, error: showError } = useToast();
+  const { settings } = useSettings();
 
   const [number, setNumber] = useState<string>(invoice.invoiceNumber);
   const [date, setDate] = useState<string>(() =>
@@ -113,7 +118,7 @@ export default function SalesInvoiceEditForm({ invoice }: { invoice: any }) {
         },
       ]);
     } catch (error: any) {
-      alert(error.message || "Part not found. Please check the code and try again.");
+      showError(error.message || "Part not found. Please check the code and try again.");
     }
   };
 
@@ -127,7 +132,7 @@ export default function SalesInvoiceEditForm({ invoice }: { invoice: any }) {
 
   const save = async (submit: boolean) => {
     if (!customer || lines.length === 0) {
-      alert("Please select a customer and add at least one item");
+      showError("Please select a customer and add at least one item");
       return;
     }
 
@@ -151,7 +156,8 @@ export default function SalesInvoiceEditForm({ invoice }: { invoice: any }) {
         })),
         discountPercent: 0,
         cgstPercent,
-        sgstPercent
+        sgstPercent,
+        allowEditSubmitted: settings.sales.allowEditSubmitted
       };
 
       const res = await fetch(`${API_BASE_URL}/api/invoices/${invoice.id}`, {
@@ -165,9 +171,12 @@ export default function SalesInvoiceEditForm({ invoice }: { invoice: any }) {
         throw new Error(error.error || "Failed to update invoice");
       }
 
-      router.push("/sales/invoices");
+      success(`Invoice ${submit ? 'submitted' : 'saved'} successfully`);
+      setTimeout(() => {
+        router.push("/sales/invoices");
+      }, 1000);
     } catch (error: any) {
-      alert("Error updating invoice: " + error.message);
+      showError(error.message || "Failed to update invoice");
     } finally {
       setSaving(false);
     }
@@ -230,6 +239,7 @@ export default function SalesInvoiceEditForm({ invoice }: { invoice: any }) {
 
   return (
     <div className="p-6">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/sales/invoices" className="text-sm underline">
