@@ -16,6 +16,7 @@ import {
   User,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { APP_NAME } from "@/lib/constants";
 
 const mainMenuItems = [
   { icon: Wrench, label: "Get Started", href: "/get-started" },
@@ -87,7 +88,7 @@ export default function Sidebar() {
           height={40}
           className="flex-shrink-0"
         />
-        <h1 className="text-lg font-semibold text-gray-800 leading-tight">S.P.TRADERS AND BUILDERS</h1>
+        <h1 className="text-lg font-semibold text-gray-800 leading-tight">{APP_NAME}</h1>
       </div>
 
       {/* Main Menu */}

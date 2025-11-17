@@ -143,9 +143,6 @@ export default function SalesPaymentsList({ payments }: Props) {
           <h1 className="text-[17px] font-semibold text-gray-900">Sales Payments</h1>
         </div>
         <div className="flex items-center gap-2">
-          <button className="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200">
-            Export
-          </button>
           <Link href="/sales/invoices/new" className="px-4 py-1.5 text-sm bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors">
             New Sale
           </Link>

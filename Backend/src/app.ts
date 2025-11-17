@@ -3,6 +3,7 @@ import cors from 'cors';
 import { json } from 'express';
 import partsRouter from './routes/parts';
 import invoicesRouter from './routes/invoices';
+import invoicesBulkRouter from './routes/invoices-bulk';
 import stockRouter from './routes/stock';
 import suppliersRouter from './routes/suppliers';
 import customersRouter from './routes/customers';
@@ -35,6 +36,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/parts', partsRouter);
+app.use('/api/invoices/bulk', invoicesBulkRouter);
 app.use('/api/invoices', invoicesRouter);
 app.use('/api/stock', stockRouter);
 app.use('/api/suppliers', suppliersRouter);

@@ -18,7 +18,7 @@ export default function GetStartedPage() {
             <div className="mb-6 animate-scale-in relative w-80 h-64">
               <Image 
                 src="/logo.svg" 
-                alt="SP Traders and Builders Logo" 
+                alt="S.P.TRADERS AND BUILDERS Logo" 
                 fill
                 className="animate-float object-contain"
                 priority
@@ -27,7 +27,7 @@ export default function GetStartedPage() {
             
             {/* Welcome Text */}
             <h2 className="text-2xl md:text-3xl font-bold text-[#6b4423] mb-3 animate-slide-up text-center">
-              Welcome to S P TRADERS AND BUILDERS
+              Welcome to S.P.TRADERS AND BUILDERS
             </h2>
             <p className="text-lg text-gray-600 mb-6 text-center max-w-2xl animate-slide-up-delay">
               Your Complete Shop Management System for Seamless Business Operations
