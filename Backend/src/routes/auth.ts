@@ -140,6 +140,7 @@ router.post(
           name: user.name,
           role: user.role,
           mustChangePassword: user.mustChangePassword,
+          createdAt: user.createdAt,
         },
         token,
       });

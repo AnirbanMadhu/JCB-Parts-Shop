@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import UserManagement from '@/components/ui/UserManagement';
+import EditInvoiceDetails from '@/components/features/EditInvoiceDetails';
 
 export default function SetupPage() {
   const [salesAllowEditSubmitted, setSalesAllowEditSubmitted] = useState(false);
@@ -111,6 +112,11 @@ export default function SetupPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Edit Invoice Details */}
+            <div className="border-b border-gray-200 pb-6">
+              <EditInvoiceDetails />
             </div>
 
             {/* System Information */}
