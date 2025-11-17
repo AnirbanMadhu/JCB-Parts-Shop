@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BackButton from "./BackButton";
 import ToastContainer from "./ToastContainer";
+import ConfirmDialog from "./ConfirmDialog";
 import { useToast } from "@/hooks/useToast";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
@@ -34,6 +35,7 @@ export default function SupplierEditForm({ supplier }: Props) {
     gstin: supplier.gstin || "",
     contactPerson: supplier.contactPerson || "",
   });
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,10 +61,6 @@ export default function SupplierEditForm({ supplier }: Props) {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this supplier? This action cannot be undone.')) {
-      return;
-    }
-
     try {
       const res = await fetch(`${API_BASE_URL}/api/suppliers/${supplier.id}`, {
         method: 'DELETE',
@@ -90,7 +88,7 @@ export default function SupplierEditForm({ supplier }: Props) {
           <h1 className="text-[17px] font-semibold text-gray-900">Edit Supplier</h1>
         </div>
         <button
-          onClick={handleDelete}
+          onClick={() => setShowDeleteDialog(true)}
           className="px-4 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors border border-red-200"
         >
           Delete Supplier
@@ -212,6 +210,17 @@ export default function SupplierEditForm({ supplier }: Props) {
           </div>
         </form>
       </div>
+
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDelete}
+        title="Delete Supplier"
+        message={`Are you sure you want to delete "${supplier.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }
