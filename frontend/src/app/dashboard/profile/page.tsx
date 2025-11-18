@@ -281,7 +281,7 @@ export default function ProfilePage() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium cursor-pointer"
                     >
                       {isLoading ? "Sending OTP..." : "Send Verification Code"}
                     </button>

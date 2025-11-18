@@ -83,6 +83,7 @@ export default function PurchaseInvoiceForm() {
   const [saving, setSaving] = useState(false);
   const [highlightedRow, setHighlightedRow] = useState<number | null>(null);
   const toast = useToast();
+  const { success, error: toastError } = toast;
   
   // For part search suggestions
   const [partSearchQuery, setPartSearchQuery] = useState("");
@@ -112,7 +113,7 @@ export default function PurchaseInvoiceForm() {
       setTimeout(() => setHighlightedRow(null), 1500);
       
       // Show success notification
-      toast.success(`✓ Quantity increased: ${existingItem.name} (Qty: ${existingItem.qty + 1})`);
+      success(`✓ Quantity increased: ${existingItem.name} (Qty: ${existingItem.qty + 1})`);
       return;
     }
 
@@ -155,7 +156,7 @@ export default function PurchaseInvoiceForm() {
 
   const save = async (submit: boolean) => {
     if (!supplier || lines.length === 0) {
-      alert("Please select a supplier and add at least one item");
+      toastError("Please select a supplier and add at least one item");
       return;
     }
 
@@ -202,10 +203,10 @@ export default function PurchaseInvoiceForm() {
       if (submit) {
         router.push("/purchases/invoices");
       } else {
-        alert("Invoice saved successfully!");
+        success("Invoice saved successfully!");
       }
     } catch (error: any) {
-      alert("Error saving invoice: " + error.message);
+      toastError("Error saving invoice: " + error.message);
     } finally {
       setSaving(false);
     }

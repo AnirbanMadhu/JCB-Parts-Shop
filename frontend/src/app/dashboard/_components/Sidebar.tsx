@@ -16,6 +16,7 @@ import {
   Building2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { APP_NAME } from "@/lib/constants";
 import {
   Sidebar,
@@ -186,9 +187,12 @@ export default function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild tooltip={`${user?.name || 'User'} - Profile`}>
               <Link href="/dashboard/profile" className="group-data-[collapsible=icon]:!p-2">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                  <User className="w-[18px] h-[18px]" />
-                </div>
+                <Avatar className="h-8 w-8 shrink-0">
+                  <AvatarImage src={user?.avatar} alt={user?.name || 'User'} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                    {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{user?.name || 'User'}</span>
                   <span className="truncate text-xs opacity-70">{user?.role || 'Admin'}</span>

@@ -134,15 +134,15 @@ export default function InvoicePrint({
     <>
       {/* Title */}
       <div className="text-center border-b-2 border-black py-1">
-        <h1 className="text-sm font-bold">Tax Invoice</h1>
+        <h1 className="text-sm font-bold text-black">Tax Invoice</h1>
       </div>
 
       {/* Company & Invoice Info */}
       <div className="grid grid-cols-2 border-b-2 border-black">
         {/* Left: Company Details */}
         <div className="border-r-2 border-black p-2">
-          <div className="font-bold text-xs mb-1">{companyName}</div>
-          <div className="text-[9px]">
+          <div className="font-bold text-xs mb-1 text-black">{companyName}</div>
+          <div className="text-[9px] text-black">
             <div>PROP: SUKANTA PAUL</div>
             <div>ROY GATE PALASHI, MAJHI PARA</div>
             <div>GSTIN/UIN: {companyGstin}</div>
@@ -155,18 +155,18 @@ export default function InvoicePrint({
           <div className="border-b border-black p-1.5">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <span className="text-[9px] font-semibold">Invoice No.</span>
-                <div className="text-[9px] mt-0.5">{invoice.invoiceNumber}</div>
+                <span className="text-[9px] font-semibold text-black">Invoice No.</span>
+                <div className="text-[9px] mt-0.5 text-black">{invoice.invoiceNumber}</div>
               </div>
               <div>
-                <span className="text-[9px] font-semibold">Dated</span>
-                <div className="text-[9px] mt-0.5">{formatDate(invoice.date)}</div>
+                <span className="text-[9px] font-semibold text-black">Dated</span>
+                <div className="text-[9px] mt-0.5 text-black">{formatDate(invoice.date)}</div>
               </div>
             </div>
           </div>
           <div className="p-1.5">
-            <div className="text-[9px] font-semibold">Delivery Note</div>
-            <div className="text-[9px] mt-0.5">{invoice.deliveryNote || ''}</div>
+            <div className="text-[9px] font-semibold text-black">Delivery Note</div>
+            <div className="text-[9px] mt-0.5 text-black">{invoice.deliveryNote || ''}</div>
           </div>
         </div>
       </div>
@@ -175,8 +175,8 @@ export default function InvoicePrint({
       <div className="grid grid-cols-2 border-b-2 border-black">
         {/* Consignee (Ship to) */}
         <div className="border-r-2 border-black p-2">
-          <div className="text-[9px] font-bold mb-1">Consignee (Ship to)</div>
-          <div className="text-[9px]">
+          <div className="text-[9px] font-bold mb-1 text-black">Consignee (Ship to)</div>
+          <div className="text-[9px] text-black">
             <div className="font-semibold mb-0.5">NAME: {invoice.customer?.name || ''}</div>
             {invoice.customer?.address && (
               <div className="mb-0.5">Address: {invoice.customer.address}</div>
@@ -196,24 +196,24 @@ export default function InvoicePrint({
         {/* Buyer Info */}
         <div>
           <div className="border-b border-black p-1.5">
-            <div className="text-[9px] font-semibold">Buyer's Order No.</div>
-            <div className="text-[9px] mt-0.5">{invoice.buyerOrderNo || ''}</div>
+            <div className="text-[9px] font-semibold text-black">Buyer's Order No.</div>
+            <div className="text-[9px] mt-0.5 text-black">{invoice.buyerOrderNo || ''}</div>
           </div>
           <div className="border-b border-black p-1.5">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <div className="text-[9px] font-semibold">Dispatch Doc No.</div>
-                <div className="text-[9px] mt-0.5">{invoice.dispatchDocNo || ''}</div>
+                <div className="text-[9px] font-semibold text-black">Dispatch Doc No.</div>
+                <div className="text-[9px] mt-0.5 text-black">{invoice.dispatchDocNo || ''}</div>
               </div>
               <div>
-                <div className="text-[9px] font-semibold">Delivery Note Date</div>
-                <div className="text-[9px] mt-0.5">{invoice.deliveryNoteDate ? formatDate(invoice.deliveryNoteDate) : ''}</div>
+                <div className="text-[9px] font-semibold text-black">Delivery Note Date</div>
+                <div className="text-[9px] mt-0.5 text-black">{invoice.deliveryNoteDate ? formatDate(invoice.deliveryNoteDate) : ''}</div>
               </div>
             </div>
           </div>
           <div className="p-1.5">
-            <div className="text-[9px] font-semibold">Dispatched through</div>
-            <div className="text-[9px] mt-0.5">{invoice.dispatchedThrough || ''}</div>
+            <div className="text-[9px] font-semibold text-black">Dispatched through</div>
+            <div className="text-[9px] mt-0.5 text-black">{invoice.dispatchedThrough || ''}</div>
           </div>
         </div>
       </div>
@@ -221,8 +221,8 @@ export default function InvoicePrint({
       {/* Buyer Bill To Info */}
       <div className="grid grid-cols-2 border-b-2 border-black">
         <div className="border-r-2 border-black p-2">
-          <div className="text-[9px] font-bold mb-1">Buyer (Bill to): {invoice.customer?.name || ''}</div>
-          <div className="text-[9px]">
+          <div className="text-[9px] font-bold mb-1 text-black">Buyer (Bill to): {invoice.customer?.name || ''}</div>
+          <div className="text-[9px] text-black">
             {invoice.customer?.address && (
               <div className="mb-0.5">Address: {invoice.customer.address}</div>
             )}
@@ -235,8 +235,8 @@ export default function InvoicePrint({
           </div>
         </div>
         <div className="p-2">
-          <div className="text-[9px] font-semibold">Terms of Delivery</div>
-          <div className="text-[9px] mt-0.5">{invoice.termsOfDelivery || ''}</div>
+          <div className="text-[9px] font-semibold text-black">Terms of Delivery</div>
+          <div className="text-[9px] mt-0.5 text-black">{invoice.termsOfDelivery || ''}</div>
         </div>
       </div>
     </>
@@ -244,15 +244,15 @@ export default function InvoicePrint({
 
   const ItemsTableHeader = () => (
     <thead>
-      <tr className="border-b-2 border-black">
-        <th className="border-r border-black p-1 text-left text-[9px] font-bold w-10">Sl<br/>No</th>
-        <th className="border-r border-black p-1 text-left text-[9px] font-bold">Product Code</th>
-        <th className="border-r border-black p-1 text-left text-[9px] font-bold">Description of Goods</th>
-        <th className="border-r border-black p-1 text-left text-[9px] font-bold">HSN/SAC</th>
-        <th className="border-r border-black p-1 text-center text-[9px] font-bold">Quantity</th>
-        <th className="border-r border-black p-1 text-center text-[9px] font-bold">Rate</th>
-        <th className="border-r border-black p-1 text-center text-[9px] font-bold">per</th>
-        <th className="p-1 text-right text-[9px] font-bold">Amount</th>
+      <tr className="border-b-2 border-black bg-white">
+        <th className="border-r border-black p-1 text-left text-[9px] font-bold w-10 text-black">Sl<br/>No</th>
+        <th className="border-r border-black p-1 text-left text-[9px] font-bold text-black">Product Code</th>
+        <th className="border-r border-black p-1 text-left text-[9px] font-bold text-black">Description of Goods</th>
+        <th className="border-r border-black p-1 text-left text-[9px] font-bold text-black">HSN/SAC</th>
+        <th className="border-r border-black p-1 text-center text-[9px] font-bold text-black">Quantity</th>
+        <th className="border-r border-black p-1 text-center text-[9px] font-bold text-black">Rate</th>
+        <th className="border-r border-black p-1 text-center text-[9px] font-bold text-black">per</th>
+        <th className="p-1 text-right text-[9px] font-bold text-black">Amount</th>
       </tr>
     </thead>
   );
@@ -313,15 +313,15 @@ export default function InvoicePrint({
                   <ItemsTableHeader />
                   <tbody>
                     {pageItems.map((item, index) => (
-                      <tr key={item.id} className="border-b border-black">
-                        <td className="border-r border-black p-1">{startIndex + index + 1}</td>
-                        <td className="border-r border-black p-1">{item.part?.partNumber || ''}</td>
-                        <td className="border-r border-black p-1">{item.part?.itemName || ''}</td>
-                        <td className="border-r border-black p-1 text-center">{item.hsnCode || item.part?.hsnCode || ''}</td>
-                        <td className="border-r border-black p-1 text-center">{item.quantity}</td>
-                        <td className="border-r border-black p-1 text-right">₹ {formatAmount(item.rate)}</td>
-                        <td className="border-r border-black p-1 text-center">{item.unit || item.part?.unit || ''}</td>
-                        <td className="p-1 text-right">{formatAmount(item.amount)}</td>
+                      <tr key={item.id} className="border-b border-black bg-white">
+                        <td className="border-r border-black p-1 text-black">{startIndex + index + 1}</td>
+                        <td className="border-r border-black p-1 text-black">{item.part?.partNumber || ''}</td>
+                        <td className="border-r border-black p-1 text-black">{item.part?.itemName || ''}</td>
+                        <td className="border-r border-black p-1 text-center text-black">{item.hsnCode || item.part?.hsnCode || ''}</td>
+                        <td className="border-r border-black p-1 text-center text-black">{item.quantity}</td>
+                        <td className="border-r border-black p-1 text-right text-black">₹ {formatAmount(item.rate)}</td>
+                        <td className="border-r border-black p-1 text-center text-black">{item.unit || item.part?.unit || ''}</td>
+                        <td className="p-1 text-right text-black">{formatAmount(item.amount)}</td>
                       </tr>
                     ))}
                     
@@ -350,60 +350,60 @@ export default function InvoicePrint({
                     <div className="border-r-2 border-black"></div>
                     <div>
                       <div className="grid grid-cols-2 border-b border-black">
-                        <div className="border-r border-black p-1 text-[9px] font-semibold text-right">Total Amount</div>
-                        <div className="p-1 text-[9px] text-right">{formatAmount(invoice.subtotal)}</div>
+                        <div className="border-r border-black p-1 text-[9px] font-semibold text-right text-black">Total Amount</div>
+                        <div className="p-1 text-[9px] text-right text-black">{formatAmount(invoice.subtotal)}</div>
                       </div>
                       {Number(invoice.discountPercent || 0) > 0 && (
                         <div className="grid grid-cols-2 border-b border-black">
-                          <div className="border-r border-black p-1 text-[9px] font-semibold text-right">
+                          <div className="border-r border-black p-1 text-[9px] font-semibold text-right text-black">
                             Discount @{invoice.discountPercent}%
                           </div>
-                          <div className="p-1 text-[9px] text-right">{formatAmount(invoice.discountAmount)}</div>
+                          <div className="p-1 text-[9px] text-right text-black">{formatAmount(invoice.discountAmount)}</div>
                         </div>
                       )}
                       <div className="grid grid-cols-2 border-b border-black">
-                        <div className="border-r border-black p-1 text-[9px] font-semibold text-right">Taxable Value</div>
-                        <div className="p-1 text-[9px] text-right">{formatAmount(invoice.taxableValue)}</div>
+                        <div className="border-r border-black p-1 text-[9px] font-semibold text-right text-black">Taxable Value</div>
+                        <div className="p-1 text-[9px] text-right text-black">{formatAmount(invoice.taxableValue)}</div>
                       </div>
                       {Number(invoice.cgstPercent || 0) > 0 && (
                         <div className="grid grid-cols-2 border-b border-black">
-                          <div className="border-r border-black p-1 text-[9px] font-semibold text-right">
+                          <div className="border-r border-black p-1 text-[9px] font-semibold text-right text-black">
                             CGST @{invoice.cgstPercent}%
                           </div>
-                          <div className="p-1 text-[9px] text-right">{formatAmount(invoice.cgstAmount)}</div>
+                          <div className="p-1 text-[9px] text-right text-black">{formatAmount(invoice.cgstAmount)}</div>
                         </div>
                       )}
                       {Number(invoice.sgstPercent || 0) > 0 && (
                         <div className="grid grid-cols-2 border-b border-black">
-                          <div className="border-r border-black p-1 text-[9px] font-semibold text-right">
+                          <div className="border-r border-black p-1 text-[9px] font-semibold text-right text-black">
                             SGST @{invoice.sgstPercent}%
                           </div>
-                          <div className="p-1 text-[9px] text-right">{formatAmount(invoice.sgstAmount)}</div>
+                          <div className="p-1 text-[9px] text-right text-black">{formatAmount(invoice.sgstAmount)}</div>
                         </div>
                       )}
                       <div className="grid grid-cols-2 border-b border-black">
-                        <div className="border-r border-black p-1 text-[9px] font-semibold text-right">Round off</div>
-                        <div className="p-1 text-[9px] text-right">{formatAmount(invoice.roundOff)}</div>
+                        <div className="border-r border-black p-1 text-[9px] font-semibold text-right text-black">Round off</div>
+                        <div className="p-1 text-[9px] text-right text-black">{formatAmount(invoice.roundOff)}</div>
                       </div>
                       <div className="grid grid-cols-2 border-b-2 border-black">
-                        <div className="border-r border-black p-1 text-[9px] font-bold text-right">Total</div>
-                        <div className="p-1 text-[9px] font-bold text-right">₹ {formatAmount(invoice.total)}</div>
+                        <div className="border-r border-black p-1 text-[9px] font-bold text-right text-black">Total</div>
+                        <div className="p-1 text-[9px] font-bold text-right text-black">₹ {formatAmount(invoice.total)}</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Amount in Words */}
                   <div className="border-b-2 border-black p-2">
-                    <div className="text-[9px] font-bold">Total Amount (In words)</div>
-                    <div className="text-[9px]">INR {totalInWords} only.</div>
+                    <div className="text-[9px] font-bold text-black">Total Amount (In words)</div>
+                    <div className="text-[9px] text-black">INR {totalInWords} only.</div>
                   </div>
 
                   {/* Footer with Declaration and Signature */}
                   <div className="grid grid-cols-2 min-h-[100px]">
                     {/* Declaration */}
                     <div className="border-r-2 border-black p-2">
-                      <div className="text-[9px] font-bold mb-1">Declaration</div>
-                      <div className="text-[9px]">
+                      <div className="text-[9px] font-bold mb-1 text-black">Declaration</div>
+                      <div className="text-[9px] text-black">
                         We declare that this invoice shows the actual price of the goods
                         described and that all particulars are true and correct.
                       </div>
@@ -411,7 +411,7 @@ export default function InvoicePrint({
 
                     {/* Signature */}
                     <div className="p-2 relative">
-                      <div className="text-[9px] text-right">
+                      <div className="text-[9px] text-right text-black">
                         <div className="font-bold mb-1">for {companyName}</div>
                         <div className="mt-16 pt-2">Authorised Signatory</div>
                       </div>
@@ -419,7 +419,7 @@ export default function InvoicePrint({
                   </div>
 
                   {/* Computer Generated Invoice Note */}
-                  <div className="text-center text-[9px] py-1 border-t-2 border-black">
+                  <div className="text-center text-[9px] py-1 border-t-2 border-black text-black">
                     This is a Computer Generated Invoice
                   </div>
                 </>
@@ -427,7 +427,7 @@ export default function InvoicePrint({
 
               {/* For non-last pages, show continuation note */}
               {!isLastPage && (
-                <div className="border-t-2 border-black p-2 text-center text-[9px] italic">
+                <div className="border-t-2 border-black p-2 text-center text-[9px] italic text-black">
                   Continued on next page...
                 </div>
               )}

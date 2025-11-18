@@ -69,6 +69,7 @@ export default function SalesInvoiceForm() {
   const [saving, setSaving] = useState(false);
   const [highlightedRow, setHighlightedRow] = useState<number | null>(null);
   const toast = useToast();
+  const { success, error: toastError } = toast;
   
   // For part search suggestions
   const [partSearchQuery, setPartSearchQuery] = useState("");
@@ -98,7 +99,7 @@ export default function SalesInvoiceForm() {
       setTimeout(() => setHighlightedRow(null), 1500);
       
       // Show success notification
-      toast.success(`✓ Quantity increased: ${existingItem.name} (Qty: ${existingItem.qty + 1})`);
+      success(`✓ Quantity increased: ${existingItem.name} (Qty: ${existingItem.qty + 1})`);
       return;
     }
 
@@ -123,9 +124,9 @@ export default function SalesInvoiceForm() {
       setTimeout(() => setHighlightedRow(null), 1500);
       
       // Show success notification
-      toast.success(`✓ Item added: ${p.itemName}`);
+      success(`✓ Item added: ${p.itemName}`);
     } catch (error) {
-      toast.error(`✗ Part not found: ${code}`);
+      toastError(`✗ Part not found: ${code}`);
     }
   };
 
@@ -139,7 +140,7 @@ export default function SalesInvoiceForm() {
 
   const save = async (submit: boolean) => {
     if (!customer || lines.length === 0) {
-      alert("Please select a customer and add at least one item");
+      toastError("Please select a customer and add at least one item");
       return;
     }
 
@@ -186,10 +187,10 @@ export default function SalesInvoiceForm() {
       if (submit) {
         router.push("/sales/invoices");
       } else {
-        alert("Invoice saved successfully!");
+        success("Invoice saved successfully!");
       }
     } catch (error: any) {
-      alert("Error saving invoice: " + error.message);
+      toastError("Error saving invoice: " + error.message);
     } finally {
       setSaving(false);
     }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import ScannerInput from "./ScannerInput";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/useToast";
 
 type Line = {
   code: string;
@@ -48,6 +49,7 @@ async function fetchProductByCode(code: string) {
 
 export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
   const router = useRouter();
+  const { success, error: toastError } = useToast();
 
   const [number, setNumber] = useState<string>(invoice.invoiceNumber);
   const [date, setDate] = useState<string>(() =>
@@ -114,7 +116,7 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
         },
       ]);
     } catch (error: any) {
-      alert(error.message || "Part not found. Please check the code and try again.");
+      toastError(error.message || "Part not found. Please check the code and try again.");
     }
   };
 
@@ -128,7 +130,7 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
 
   const save = async (submit: boolean) => {
     if (!supplier || lines.length === 0) {
-      alert("Please select a supplier and add at least one item");
+      toastError("Please select a supplier and add at least one item");
       return;
     }
 
@@ -168,7 +170,7 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
 
       router.push("/purchases/invoices");
     } catch (error: any) {
-      alert("Error updating invoice: " + error.message);
+      toastError("Error updating invoice: " + error.message);
     } finally {
       setSaving(false);
     }
