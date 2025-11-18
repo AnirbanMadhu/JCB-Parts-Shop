@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { User, InviteUserData } from '@/types/auth';
 import { authFetch } from '@/lib/auth';
-import { UserPlus, Edit2, Trash2, Key } from 'lucide-react';
+import { UserPlus, Edit2, Trash2, Key, Loader2 } from 'lucide-react';
 import ConfirmDialog from './ConfirmDialog';
 import ToastContainer from './ToastContainer';
 import { useToast } from '@/hooks/useToast';
+import { Progress } from './progress';
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -21,6 +22,8 @@ export default function UserManagement() {
   });
   const [inviteError, setInviteError] = useState('');
   const [inviteSuccess, setInviteSuccess] = useState('');
+  const [isInviting, setIsInviting] = useState(false);
+  const [inviteProgress, setInviteProgress] = useState(0);
   const { toasts, removeToast, success, error: showError } = useToast();
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -53,17 +56,32 @@ export default function UserManagement() {
     e.preventDefault();
     setInviteError('');
     setInviteSuccess('');
+    setIsInviting(true);
+    setInviteProgress(0);
 
     try {
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setInviteProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
       const response = await authFetch('/users/invite', {
         method: 'POST',
         body: JSON.stringify(inviteData),
       });
 
       const data = await response.json();
+      clearInterval(progressInterval);
+      setInviteProgress(100);
 
       if (response.ok) {
-        setInviteSuccess(`User ${data.user.name} invited successfully!`);
+        success(`User ${data.user.name} invited successfully! Invitation email sent.`);
         setInviteData({ email: '', name: '', password: '', role: 'USER' });
         setShowInviteForm(false);
         fetchUsers();
@@ -72,6 +90,9 @@ export default function UserManagement() {
       }
     } catch (err: any) {
       setInviteError('Failed to invite user');
+    } finally {
+      setIsInviting(false);
+      setTimeout(() => setInviteProgress(0), 1000);
     }
   };
 
@@ -214,17 +235,35 @@ export default function UserManagement() {
                 </select>
               </div>
             </div>
+            {isInviting && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>Sending invitation...</span>
+                  <span>{inviteProgress}%</span>
+                </div>
+                <Progress value={inviteProgress} className="h-2" />
+              </div>
+            )}
             <div className="flex gap-3">
               <button
                 type="submit"
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow-md"
+                disabled={isInviting}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
               >
-                Send Invitation
+                {isInviting ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  'Send Invitation'
+                )}
               </button>
               <button
                 type="button"
                 onClick={() => setShowInviteForm(false)}
-                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-all duration-200"
+                disabled={isInviting}
+                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Cancel
               </button>
