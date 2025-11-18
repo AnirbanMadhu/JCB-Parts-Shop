@@ -1,6 +1,21 @@
 "use client";
 
+import * as React from "react";
 import { useEffect, useState } from "react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 interface WeeklyData {
   weekNumber: number;
@@ -18,15 +33,6 @@ interface PurchaseChartData {
   weeks: WeeklyData[];
 }
 
-interface TooltipData {
-  x: number;
-  y: number;
-  week: string;
-  purchases: number;
-  invoiceCount: number;
-  show: boolean;
-}
-
 const formatCurrency = (value: number): string => {
   if (value >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
   if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
@@ -38,22 +44,39 @@ const formatFullCurrency = (value: number): string => {
   return `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 };
 
+const chartConfig = {
+  purchases: {
+    label: "Purchase Amount",
+    theme: {
+      light: "hsl(24, 95%, 53%)",
+      dark: "hsl(24, 90%, 58%)",
+    },
+  },
+  invoiceCount: {
+    label: "Invoice Count",
+    theme: {
+      light: "hsl(45, 93%, 47%)",
+      dark: "hsl(45, 88%, 55%)",
+    },
+  },
+} satisfies ChartConfig;
+
 export default function PurchaseChart() {
   const [purchaseData, setPurchaseData] = useState<PurchaseChartData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeChart, setActiveChart] = React.useState<keyof typeof chartConfig>("purchases");
   const [currentMonth, setCurrentMonth] = useState<{ year: number; month: number }>(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() + 1 };
   });
-  const [tooltip, setTooltip] = useState<TooltipData>({
-    x: 0,
-    y: 0,
-    week: '',
-    purchases: 0,
-    invoiceCount: 0,
-    show: false
-  });
-  const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+
+  const total = React.useMemo(
+    () => ({
+      purchases: purchaseData?.weeks.reduce((acc, curr) => acc + curr.purchases, 0) || 0,
+      invoiceCount: purchaseData?.weeks.reduce((acc, curr) => acc + curr.invoiceCount, 0) || 0,
+    }),
+    [purchaseData]
+  );
 
   useEffect(() => {
     fetchWeeklyPurchaseData();
@@ -103,247 +126,144 @@ export default function PurchaseChart() {
 
   if (loading) {
     return (
-      <div className="h-[200px] flex items-center justify-center">
-        <p className="text-sm text-gray-400">Loading purchase data...</p>
-      </div>
+      <Card>
+        <CardContent className="h-[300px] flex items-center justify-center">
+          <p className="text-sm text-muted-foreground">Loading purchase data...</p>
+        </CardContent>
+      </Card>
     );
   }
 
   if (!purchaseData || purchaseData.weeks.length === 0) {
     return (
-      <div className="h-[200px] flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
-        <div className="text-center">
-          <svg className="w-12 h-12 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          <p className="text-sm font-medium text-gray-500">No purchase data available</p>
-          <p className="text-xs text-gray-400 mt-1">Create purchase invoices to see the chart</p>
-        </div>
-      </div>
+      <Card>
+        <CardContent className="h-[300px] flex items-center justify-center">
+          <div className="text-center">
+            <svg className="w-12 h-12 mx-auto text-muted-foreground/30 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <p className="text-sm font-medium text-muted-foreground">No purchase data available</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Create purchase invoices to see the chart</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
-  const totalPurchases = purchaseData.weeks.reduce((sum, w) => sum + w.purchases, 0);
-  const totalInvoices = purchaseData.weeks.reduce((sum, w) => sum + w.invoiceCount, 0);
-  const averageWeeklyPurchases = totalPurchases / purchaseData.weeks.length;
-  const maxPurchases = Math.max(...purchaseData.weeks.map(w => w.purchases), 1);
-
-  const chartHeight = 180;
-  const chartWidth = 500;
-  const padding = { top: 20, right: 30, bottom: 40, left: 50 };
-  const plotHeight = chartHeight - padding.top - padding.bottom;
-  const plotWidth = chartWidth - padding.left - padding.right;
-
-  const barWidth = plotWidth / (purchaseData.weeks.length * 1.5);
-  const barSpacing = barWidth * 0.5;
-
-  const getBarHeight = (value: number) => {
-    return (value / maxPurchases) * plotHeight;
-  };
-
-  const gridLines = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-    const y = padding.top + plotHeight * (1 - ratio);
-    const value = maxPurchases * ratio;
-    return { y, value };
-  });
-
-  const handleBarHover = (
-    event: React.MouseEvent<SVGRectElement>,
-    week: WeeklyData,
-    index: number
-  ) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const svgRect = event.currentTarget.ownerSVGElement?.getBoundingClientRect();
-    
-    if (svgRect) {
-      setTooltip({
-        x: rect.left - svgRect.left + rect.width / 2,
-        y: rect.top - svgRect.top,
-        week: week.dateRange,
-        purchases: week.purchases,
-        invoiceCount: week.invoiceCount,
-        show: true
-      });
-      setHoveredBar(index);
-    }
-  };
-
-  const handleBarLeave = () => {
-    setTooltip(prev => ({ ...prev, show: false }));
-    setHoveredBar(null);
-  };
+  const averageWeeklyPurchases = total.purchases / purchaseData.weeks.length;
 
   return (
-    <div className="w-full space-y-3">
-      {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="p-2.5 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
-          <p className="text-[10px] font-semibold text-orange-600 uppercase tracking-wider mb-0.5">Total Purchases</p>
-          <p className="text-base font-bold text-orange-900">{formatFullCurrency(totalPurchases)}</p>
+    <Card className="py-0">
+      <CardHeader className="flex flex-col items-stretch border-b !p-0 sm:flex-row">
+        <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:!py-6">
+          <CardTitle>Purchase Chart</CardTitle>
+          <CardDescription>
+            {purchaseData.month} {purchaseData.year}
+          </CardDescription>
         </div>
-        <div className="p-2.5 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg border border-amber-200">
-          <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider mb-0.5">Invoices</p>
-          <p className="text-base font-bold text-amber-900">{totalInvoices}</p>
-        </div>
-        <div className="p-2.5 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200">
-          <p className="text-[10px] font-semibold text-red-600 uppercase tracking-wider mb-0.5">Avg/Week</p>
-          <p className="text-base font-bold text-red-900">{formatCurrency(averageWeeklyPurchases)}</p>
-        </div>
-      </div>
-
-      {/* Chart Title */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-bold text-gray-800">Weekly Purchase Overview</h3>
-          <p className="text-xs text-gray-500">{purchaseData.month} {purchaseData.year}</p>
-        </div>
-      </div>
-
-      {/* Chart Container */}
-      <div className="relative w-full bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-        <svg
-          className="w-full"
-          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-          preserveAspectRatio="xMidYMid meet"
-        >
-          {/* Gradient Definitions */}
-          <defs>
-            <linearGradient id="purchaseBarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#c2410c" />
-            </linearGradient>
-            <linearGradient id="purchaseBarHoverGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fb923c" />
-              <stop offset="100%" stopColor="#f97316" />
-            </linearGradient>
-            <filter id="purchaseBarShadow">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
-              <feOffset dx="0" dy="2" result="offsetblur"/>
-              <feComponentTransfer>
-                <feFuncA type="linear" slope="0.3"/>
-              </feComponentTransfer>
-              <feMerge>
-                <feMergeNode/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Grid lines and labels */}
-          {gridLines.map((line, i) => (
-            <g key={i}>
-              <line
-                x1={padding.left}
-                y1={line.y}
-                x2={chartWidth - padding.right}
-                y2={line.y}
-                stroke={i === 0 ? "#d1d5db" : "#e5e7eb"}
-                strokeWidth={i === 0 ? "1.5" : "1"}
-                strokeDasharray={i === 0 ? "0" : "5,5"}
-                opacity={i === 0 ? "0.8" : "0.5"}
-              />
-              <text
-                x={padding.left - 8}
-                y={line.y + 3}
-                textAnchor="end"
-                fontSize="10"
-                fill="#6b7280"
-                fontWeight="500"
-              >
-                {formatCurrency(line.value)}
-              </text>
-            </g>
-          ))}
-
-          {/* Bars */}
-          {purchaseData.weeks.map((week, i) => {
-            const x = padding.left + i * (barWidth + barSpacing) + barSpacing;
-            const barHeight = getBarHeight(week.purchases);
-            const y = padding.top + plotHeight - barHeight;
-            const isHovered = hoveredBar === i;
-
+        <div className="flex">
+          {(["purchases", "invoiceCount"] as const).map((key) => {
+            const chart = key as keyof typeof chartConfig;
             return (
-              <g key={i}>
-                {/* Bar */}
-                <rect
-                  x={x}
-                  y={y}
-                  width={barWidth}
-                  height={barHeight}
-                  fill={isHovered ? "url(#purchaseBarHoverGradient)" : "url(#purchaseBarGradient)"}
-                  rx="3"
-                  ry="3"
-                  filter="url(#purchaseBarShadow)"
-                  style={{ 
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease-in-out'
-                  }}
-                  onMouseEnter={(e) => handleBarHover(e, week, i)}
-                  onMouseLeave={handleBarLeave}
-                  opacity={isHovered ? "1" : "0.9"}
-                />
-                
-                {/* Value on top of bar */}
-                {week.purchases > 0 && (
-                  <text
-                    x={x + barWidth / 2}
-                    y={y - 5}
-                    textAnchor="middle"
-                    fontSize="9"
-                    fill="#374151"
-                    fontWeight="600"
-                  >
-                    {formatCurrency(week.purchases)}
-                  </text>
-                )}
-
-                {/* Week label */}
-                <text
-                  x={x + barWidth / 2}
-                  y={chartHeight - padding.bottom + 15}
-                  textAnchor="middle"
-                  fontSize="9"
-                  fill="#374151"
-                  fontWeight="600"
-                >
-                  {week.dateRange}
-                </text>
-              </g>
+              <button
+                key={chart}
+                data-active={activeChart === chart}
+                className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
+                onClick={() => setActiveChart(chart)}
+              >
+                <span className="text-muted-foreground text-xs uppercase">
+                  {chartConfig[chart].label}
+                </span>
+                <span className="text-lg leading-none font-bold sm:text-2xl">
+                  {key === "purchases" 
+                    ? formatCurrency(total[key])
+                    : total[key]
+                  }
+                </span>
+              </button>
             );
           })}
-        </svg>
-
-        {/* Custom Tooltip */}
-        {tooltip.show && (
-          <div
-            className="absolute z-50 pointer-events-none transition-all duration-200"
-            style={{
-              left: `${tooltip.x}px`,
-              top: `${tooltip.y - 10}px`,
-              transform: 'translate(-50%, -100%)'
+          <button
+            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6 bg-muted/30"
+          >
+            <span className="text-muted-foreground text-xs uppercase">
+              AVG/WEEK
+            </span>
+            <span className="text-lg leading-none font-bold sm:text-2xl">
+              {formatCurrency(averageWeeklyPurchases)}
+            </span>
+          </button>
+        </div>
+      </CardHeader>
+      <CardContent className="px-2 sm:p-6">
+        <ChartContainer
+          config={chartConfig}
+          className="aspect-auto h-[250px] w-full"
+        >
+          <BarChart
+            accessibilityLayer
+            data={purchaseData.weeks}
+            margin={{
+              left: 12,
+              right: 12,
             }}
           >
-            <div className="bg-gray-900 text-white rounded-md shadow-xl p-2.5 min-w-[140px] border border-gray-700">
-              <div className="font-bold text-xs mb-1.5 text-gray-200 border-b border-gray-700 pb-1">
-                {tooltip.week}
-              </div>
-              <div className="space-y-1 text-[11px]">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-gray-300">Purchases</span>
-                  <span className="font-bold text-orange-400">{formatFullCurrency(tooltip.purchases)}</span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-gray-300">Invoices</span>
-                  <span className="font-bold text-amber-400">{tooltip.invoiceCount}</span>
-                </div>
-              </div>
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
-                <div className="w-0 h-0 border-l-6 border-r-6 border-t-6 border-l-transparent border-r-transparent border-t-gray-900"></div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+            <CartesianGrid 
+              vertical={false} 
+              strokeDasharray="3 3" 
+              stroke="currentColor"
+              opacity={0.2}
+            />
+            <XAxis
+              dataKey="dateRange"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              minTickGap={32}
+              tick={{ fill: 'currentColor' }}
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              tick={{ fill: 'currentColor' }}
+              tickFormatter={formatCurrency}
+            />
+            <ChartTooltip
+              cursor={false}
+              content={
+                <ChartTooltipContent
+                  className="w-[150px]"
+                  labelFormatter={(value, payload) => {
+                    if (payload && payload[0]) {
+                      return payload[0].payload.dateRange;
+                    }
+                    return value;
+                  }}
+                  formatter={(value, name) => {
+                    if (name === "purchases") {
+                      return [formatFullCurrency(Number(value)), "Purchases"];
+                    }
+                    return [value, "Invoices"];
+                  }}
+                />
+              }
+            />
+            <Bar 
+              dataKey="purchases"
+              fill="var(--color-purchases)"
+              radius={[4, 4, 0, 0]}
+              hide={activeChart !== "purchases"}
+            />
+            <Bar 
+              dataKey="invoiceCount"
+              fill="var(--color-invoiceCount)"
+              radius={[4, 4, 0, 0]}
+              hide={activeChart !== "invoiceCount"}
+            />
+          </BarChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
   );
 }

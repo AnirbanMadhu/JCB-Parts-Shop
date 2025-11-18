@@ -2,18 +2,18 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import Image from "next/image";
 import {
-  Wrench,
+  Rocket,
   LayoutDashboard,
   ShoppingCart,
   ShoppingBag,
-  FileText,
+  Package,
   BarChart3,
   Settings,
   LogOut,
   User,
   ChevronRight,
+  Building2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { APP_NAME } from "@/lib/constants";
@@ -36,7 +36,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const mainMenuItems = [
-  { icon: Wrench, label: "Get Started", href: "/get-started" },
+  { icon: Rocket, label: "Get Started", href: "/get-started" },
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { 
     icon: ShoppingCart, 
@@ -57,7 +57,7 @@ const mainMenuItems = [
     ]
   },
   { 
-    icon: FileText, 
+    icon: Package, 
     label: "Common", 
     href: "/common",
     submenu: [
@@ -96,23 +96,17 @@ export default function AppSidebar() {
   return (
     <Sidebar collapsible="icon" variant="sidebar">
       {/* Logo Header */}
-      <SidebarHeader>
+      <SidebarHeader className="border-b border-sidebar-border" data-sidebar="header">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard" className="flex items-center gap-2">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Image 
-                    src="/icon.svg" 
-                    alt="Logo" 
-                    width={20} 
-                    height={20}
-                    className="flex-shrink-0"
-                  />
+            <SidebarMenuButton size="lg" asChild tooltip={APP_NAME}>
+              <Link href="/dashboard" className="group-data-[collapsible=icon]:!p-2">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
+                  <Building2 className="w-5 h-5" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{APP_NAME}</span>
-                  <span className="truncate text-xs text-sidebar-foreground/70">Parts & Inventory</span>
+                  <span className="truncate text-xs opacity-70">Parts & Inventory</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -143,9 +137,9 @@ export default function AppSidebar() {
                             tooltip={item.label}
                             isActive={isActive || isSubmenuActive}
                           >
-                            <Icon className="w-4 h-4" />
+                            <Icon className="w-[18px] h-[18px] shrink-0" />
                             <span>{item.label}</span>
-                            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                            <ChevronRight className="w-4 h-4 ml-auto shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
@@ -155,6 +149,7 @@ export default function AppSidebar() {
                                 <SidebarMenuSubButton
                                   asChild
                                   isActive={pathname === subItem.href}
+                                  className="h-9"
                                 >
                                   <Link href={subItem.href}>
                                     <span>{subItem.label}</span>
@@ -172,7 +167,7 @@ export default function AppSidebar() {
                         isActive={isActive}
                       >
                         <Link href={item.href}>
-                          <Icon className="w-4 h-4" />
+                          <Icon className="w-[18px] h-[18px] shrink-0" />
                           <span>{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
@@ -186,24 +181,28 @@ export default function AppSidebar() {
       </SidebarContent>
 
       {/* User Footer */}
-      <SidebarFooter>
+      <SidebarFooter className="border-t border-sidebar-border" data-sidebar="footer">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard/profile" className="flex items-center gap-2">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
-                  <User className="w-4 h-4" />
+            <SidebarMenuButton size="lg" asChild tooltip={`${user?.name || 'User'} - Profile`}>
+              <Link href="/dashboard/profile" className="group-data-[collapsible=icon]:!p-2">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                  <User className="w-[18px] h-[18px]" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user?.name}</span>
-                  <span className="truncate text-xs text-sidebar-foreground/70">{user?.role}</span>
+                  <span className="truncate font-semibold">{user?.name || 'User'}</span>
+                  <span className="truncate text-xs opacity-70">{user?.role || 'Admin'}</span>
                 </div>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout} className="text-red-600 hover:text-red-700 hover:bg-red-50">
-              <LogOut className="w-4 h-4" />
+            <SidebarMenuButton 
+              onClick={handleLogout} 
+              tooltip="Logout"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <LogOut className="w-[18px] h-[18px] shrink-0" />
               <span>Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

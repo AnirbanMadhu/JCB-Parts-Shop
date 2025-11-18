@@ -52,31 +52,31 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const icons = {
-    success: <CheckCircle className="w-5 h-5 text-green-600" />,
-    error: <AlertCircle className="w-5 h-5 text-red-600" />,
-    warning: <AlertTriangle className="w-5 h-5 text-yellow-600" />,
-    info: <Info className="w-5 h-5 text-blue-600" />
+    success: <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />,
+    error: <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />,
+    warning: <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />,
+    info: <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />
   };
 
   const backgrounds = {
-    success: 'bg-green-50 border-green-200',
-    error: 'bg-red-50 border-red-200',
-    warning: 'bg-yellow-50 border-yellow-200',
-    info: 'bg-blue-50 border-blue-200'
+    success: 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900',
+    error: 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900',
+    warning: 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-900',
+    info: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900'
   };
 
   const titleColors = {
-    success: 'text-green-900',
-    error: 'text-red-900',
-    warning: 'text-yellow-900',
-    info: 'text-blue-900'
+    success: 'text-green-900 dark:text-green-100',
+    error: 'text-red-900 dark:text-red-100',
+    warning: 'text-yellow-900 dark:text-yellow-100',
+    info: 'text-blue-900 dark:text-blue-100'
   };
 
   const messageColors = {
-    success: 'text-green-700',
-    error: 'text-red-700',
-    warning: 'text-yellow-700',
-    info: 'text-blue-700'
+    success: 'text-green-700 dark:text-green-300',
+    error: 'text-red-700 dark:text-red-300',
+    warning: 'text-yellow-700 dark:text-yellow-300',
+    info: 'text-blue-700 dark:text-blue-300'
   };
 
   return (
@@ -109,7 +109,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
                 </div>
                 <button
                   onClick={() => hideNotification(notification.id)}
-                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>

@@ -155,7 +155,8 @@ export default function EditInvoiceDetails() {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+      <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+        <span className="w-1 h-6 bg-primary rounded-full" />
         <FileEdit className="w-5 h-5" />
         Edit Invoice Details
       </h2>
@@ -171,13 +172,13 @@ export default function EditInvoiceDetails() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 placeholder="Enter invoice number (e.g., SAL-2025-001)"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-ring focus:border-ring"
               />
             </div>
             <button
               onClick={handleSearch}
               disabled={isSearching}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm hover:shadow-md"
             >
               <Search className="w-4 h-4" />
               {isSearching ? 'Searching...' : 'Search'}
@@ -186,22 +187,22 @@ export default function EditInvoiceDetails() {
 
           {/* Search Results */}
           {searchResults.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm max-h-60 overflow-y-auto">
+            <div className="bg-card border border-border rounded-lg shadow-sm max-h-60 overflow-y-auto">
               {searchResults.map((invoice) => (
                 <button
                   key={invoice.id}
                   onClick={() => handleSelectInvoice(invoice)}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                  className="w-full px-4 py-3 text-left hover:bg-accent border-b border-border last:border-b-0 transition-all duration-200"
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-medium text-gray-900">{invoice.invoiceNumber}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-medium text-foreground">{invoice.invoiceNumber}</p>
+                      <p className="text-sm text-muted-foreground">
                         {invoice.type === 'SALE' ? invoice.customer?.name : invoice.supplier?.name}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         {new Date(invoice.date).toLocaleDateString()}
                       </p>
                       <span className={`inline-block px-2 py-1 text-xs rounded-full ${
@@ -224,16 +225,16 @@ export default function EditInvoiceDetails() {
         {message && (
           <div className={`p-4 rounded-lg ${
             message.type === 'success' 
-              ? 'bg-green-50 text-green-800 border border-green-200' 
-              : 'bg-red-50 text-red-800 border border-red-200'
+              ? 'bg-green-500/10 border border-green-500/20' 
+              : 'bg-red-500/10 border border-red-500/20'
           }`}>
-            {message.text}
+            <p className="text-sm text-foreground">{message.text}</p>
           </div>
         )}
 
         {/* Edit Form */}
         {selectedInvoice && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 space-y-6">
+          <div className="bg-muted/50 border border-border rounded-lg p-6 space-y-6">
             {/* Invoice Info Header */}
             <div className="pb-4 border-b border-gray-300">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">

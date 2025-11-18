@@ -4,8 +4,9 @@ import { usePathname } from 'next/navigation';
 import AppSidebar from "@/app/dashboard/_components/Sidebar";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
   // Pages that don't need the sidebar
@@ -21,12 +22,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-full overflow-hidden">
         <AppSidebar />
         <SidebarInset className="flex flex-col flex-1 min-w-0">
-          <header className="sticky top-0 flex h-14 shrink-0 items-center gap-2 border-b bg-white px-4 z-20">
+          <header className="sticky top-0 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4 z-20">
             <SidebarTrigger className="-ml-1" />
             <div className="h-4 w-px bg-border" />
             <div className="flex flex-1 items-center gap-2">
               {/* You can add breadcrumb or page title here */}
             </div>
+            <ThemeToggle />
           </header>
           <main className="flex-1 overflow-auto bg-background">
             {children}
@@ -36,4 +38,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Toaster />
     </SidebarProvider>
   );
+}
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return <LayoutContent>{children}</LayoutContent>;
 }

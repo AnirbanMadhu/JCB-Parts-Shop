@@ -43,31 +43,36 @@ export default function SetupPage() {
 
   return (
     <ProtectedRoute>
-      <div className="h-full overflow-auto bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Setup</h1>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <p className="text-gray-600 mb-6">
+      <div className="h-full overflow-auto bg-background p-6">
+      <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Setup</h1>
+          <p className="text-muted-foreground">
             Configure your system settings and preferences
           </p>
+        </div>
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6 transition-all hover:shadow-md">
           <div className="space-y-6">
             {/* User Management - Admin Only */}
             {isAdmin() && (
-              <div className="border-b border-gray-200 pb-6">
+              <div className="border-b border-border pb-6">
                 <UserManagement />
               </div>
             )}
 
             {/* Sales Configuration */}
-            <div className="border-b border-gray-200 pb-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Sales Configuration</h2>
+            <div className="border-b border-border pb-6">
+              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <span className="w-1 h-6 bg-primary rounded-full" />
+                Sales Configuration
+              </h2>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border hover:border-primary/50 transition-all duration-200 group">
                   <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900 mb-1">
+                    <h3 className="text-sm font-medium text-foreground mb-1 group-hover:text-primary transition-colors">
                       Allow Editing of Submitted Invoices
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Enable this to allow modification and updates to sales invoices after they have been submitted (status is not DRAFT)
                     </p>
                   </div>
@@ -79,7 +84,7 @@ export default function SetupPage() {
                         checked={salesAllowEditSubmitted}
                         onChange={(e) => handleSalesToggle(e.target.checked)}
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-input peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary shadow-sm"></div>
                     </label>
                   </div>
                 </div>
@@ -87,15 +92,18 @@ export default function SetupPage() {
             </div>
 
             {/* Purchases Configuration */}
-            <div className="border-b border-gray-200 pb-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Purchases Configuration</h2>
+            <div className="border-b border-border pb-6">
+              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <span className="w-1 h-6 bg-primary rounded-full" />
+                Purchases Configuration
+              </h2>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border hover:border-primary/50 transition-all duration-200 group">
                   <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900 mb-1">
+                    <h3 className="text-sm font-medium text-foreground mb-1 group-hover:text-primary transition-colors">
                       Allow Editing of Submitted Invoices
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Enable this to allow modification and updates to purchase invoices after they have been submitted (status is not DRAFT)
                     </p>
                   </div>
@@ -107,7 +115,7 @@ export default function SetupPage() {
                         checked={purchasesAllowEditSubmitted}
                         onChange={(e) => handlePurchasesToggle(e.target.checked)}
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-input peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary shadow-sm"></div>
                     </label>
                   </div>
                 </div>
@@ -115,15 +123,18 @@ export default function SetupPage() {
             </div>
 
             {/* Edit Invoice Details */}
-            <div className="border-b border-gray-200 pb-6">
+            <div className="border-b border-border pb-6">
               <EditInvoiceDetails />
             </div>
 
             {/* System Information */}
             <div className="pt-2">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">System Information</h2>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
+              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <span className="w-1 h-6 bg-primary rounded-full" />
+                System Information
+              </h2>
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 backdrop-blur-sm">
+                <p className="text-sm text-foreground">
                   <strong>Note:</strong> Settings are saved automatically and will be applied immediately. 
                   When editing is enabled for submitted invoices, users will be able to modify invoices regardless of their status.
                 </p>

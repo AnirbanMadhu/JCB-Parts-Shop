@@ -133,16 +133,19 @@ export default function PurchasePaymentsList({ payments }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-background">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       {/* Header - Fixed */}
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
+      <header className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <BackButton />
-          <h1 className="text-[17px] font-semibold text-gray-900">Purchase Payments</h1>
+          <div className="flex items-center gap-2">
+            <span className="w-1 h-6 bg-primary rounded-full" />
+            <h1 className="text-[17px] font-semibold text-foreground">Purchase Payments</h1>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/purchases/invoices/new" className="px-4 py-1.5 text-sm bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors">
+          <Link href="/purchases/invoices/new" className="px-4 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
             + New Purchase
           </Link>
         </div>

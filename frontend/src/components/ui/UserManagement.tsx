@@ -125,10 +125,13 @@ export default function UserManagement() {
     <div className="space-y-6">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-800">User Management</h2>
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <span className="w-1 h-6 bg-primary rounded-full" />
+          User Management
+        </h2>
         <button
           onClick={() => setShowInviteForm(!showInviteForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow-md"
         >
           <UserPlus size={18} />
           Invite User
@@ -136,29 +139,29 @@ export default function UserManagement() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+          <p className="text-sm text-foreground">{error}</p>
         </div>
       )}
 
       {inviteSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-sm text-green-800">{inviteSuccess}</p>
+        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+          <p className="text-sm text-foreground">{inviteSuccess}</p>
         </div>
       )}
 
       {showInviteForm && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-md font-semibold text-gray-800 mb-4">Invite New User</h3>
+        <div className="bg-muted/50 border border-border rounded-lg p-6">
+          <h3 className="text-md font-semibold text-foreground mb-4">Invite New User</h3>
           <form onSubmit={handleInviteUser} className="space-y-4">
             {inviteError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-800">{inviteError}</p>
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                <p className="text-sm text-foreground">{inviteError}</p>
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Full Name
                 </label>
                 <input
@@ -166,12 +169,12 @@ export default function UserManagement() {
                   required
                   value={inviteData.name}
                   onChange={(e) => setInviteData({ ...inviteData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="John Doe"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Email
                 </label>
                 <input
@@ -179,12 +182,12 @@ export default function UserManagement() {
                   required
                   value={inviteData.email}
                   onChange={(e) => setInviteData({ ...inviteData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="user@example.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Password
                 </label>
                 <input
@@ -193,18 +196,18 @@ export default function UserManagement() {
                   minLength={6}
                   value={inviteData.password}
                   onChange={(e) => setInviteData({ ...inviteData, password: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="Minimum 6 characters"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Role
                 </label>
                 <select
                   value={inviteData.role}
                   onChange={(e) => setInviteData({ ...inviteData, role: e.target.value as 'ADMIN' | 'USER' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="USER">User</option>
                   <option value="ADMIN">Admin</option>
@@ -214,14 +217,14 @@ export default function UserManagement() {
             <div className="flex gap-3">
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow-md"
               >
                 Send Invitation
               </button>
               <button
                 type="button"
                 onClick={() => setShowInviteForm(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-all duration-200"
               >
                 Cancel
               </button>

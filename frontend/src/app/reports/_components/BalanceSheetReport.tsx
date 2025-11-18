@@ -48,87 +48,90 @@ export default function BalanceSheetReport({ data }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
+      <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <BackButton />
-          <h1 className="text-[17px] font-semibold text-gray-900">Balance Sheet</h1>
+          <div className="flex items-center gap-2">
+            <span className="w-1 h-6 bg-primary rounded-full" />
+            <h1 className="text-[17px] font-semibold text-foreground">Balance Sheet</h1>
+          </div>
         </div>
       </header>
 
       {/* Filter Section */}
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <div className="px-6 py-4 bg-muted/30 border-b border-border">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">As of Date</label>
+            <label className="text-sm font-medium text-foreground">As of Date</label>
             <input
               type="date"
               value={asOfDate}
               onChange={(e) => setAsOfDate(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
             />
           </div>
           <button
             onClick={handleFilter}
-            className="px-4 py-2 text-sm bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors"
+            className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
           >
             Apply Filter
           </button>
           {asOfDate && (
             <button
               onClick={handleReset}
-              className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors border border-gray-300"
+              className="px-4 py-2 text-sm text-muted-foreground hover:bg-muted rounded-md transition-all border border-border hover:border-primary"
             >
               Reset
             </button>
           )}
         </div>
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-muted-foreground mt-2">
           View your business financial position as of the selected date.
         </p>
       </div>
 
       {/* Balance Sheet Content */}
-      <div className="px-6 py-6">
+      <div className="px-6 py-6 animate-fade-in">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">As of {new Date(data.asOfDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</h2>
+          <h2 className="text-lg font-semibold text-foreground">As of {new Date(data.asOfDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</h2>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Assets Section */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-blue-50 border-b border-blue-200">
-              <h3 className="text-sm font-semibold text-blue-900">ASSETS</h3>
+          <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className="px-4 py-3 bg-primary/10 border-b border-border">
+              <h3 className="text-sm font-semibold text-primary">ASSETS</h3>
             </div>
             
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-border">
               {/* Current Assets */}
               <div className="px-4 py-3">
-                <div className="font-semibold text-sm text-gray-900 mb-3">Current Assets</div>
+                <div className="font-semibold text-sm text-foreground mb-3">Current Assets</div>
                 
                 <div className="ml-4 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Cash in Hand</span>
-                    <span className="text-sm text-gray-900">
+                    <span className="text-sm text-muted-foreground">Cash in Hand</span>
+                    <span className="text-sm text-foreground">
                       ₹{data.assets.currentAssets.cash.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Accounts Receivable</span>
-                    <span className="text-sm text-gray-900">
+                    <span className="text-sm text-muted-foreground">Accounts Receivable</span>
+                    <span className="text-sm text-foreground">
                       ₹{data.assets.currentAssets.accountsReceivable.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Inventory</span>
-                    <span className="text-sm text-gray-900">
+                    <span className="text-sm text-muted-foreground">Inventory</span>
+                    <span className="text-sm text-foreground">
                       ₹{data.assets.currentAssets.inventory.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                    <span className="text-sm font-medium text-gray-700">Total Current Assets</span>
-                    <span className="text-sm font-semibold text-gray-900">
+                  <div className="flex justify-between items-center pt-2 border-t border-border">
+                    <span className="text-sm font-medium text-foreground">Total Current Assets</span>
+                    <span className="text-sm font-semibold text-foreground">
                       ₹{data.assets.currentAssets.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -136,10 +139,10 @@ export default function BalanceSheetReport({ data }: Props) {
               </div>
 
               {/* Total Assets */}
-              <div className="px-4 py-3 bg-blue-50">
+              <div className="px-4 py-3 bg-primary/10">
                 <div className="flex justify-between items-center">
-                  <span className="text-base font-bold text-blue-900">TOTAL ASSETS</span>
-                  <span className="text-base font-bold text-blue-900">
+                  <span className="text-base font-bold text-primary">TOTAL ASSETS</span>
+                  <span className="text-base font-bold text-primary">
                     ₹{data.assets.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -148,26 +151,26 @@ export default function BalanceSheetReport({ data }: Props) {
           </div>
 
           {/* Liabilities and Equity Section */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-orange-50 border-b border-orange-200">
-              <h3 className="text-sm font-semibold text-orange-900">LIABILITIES & EQUITY</h3>
+          <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className="px-4 py-3 bg-destructive/10 border-b border-border">
+              <h3 className="text-sm font-semibold text-destructive">LIABILITIES & EQUITY</h3>
             </div>
             
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-border">
               {/* Current Liabilities */}
               <div className="px-4 py-3">
-                <div className="font-semibold text-sm text-gray-900 mb-3">Current Liabilities</div>
+                <div className="font-semibold text-sm text-foreground mb-3">Current Liabilities</div>
                 
                 <div className="ml-4 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Accounts Payable</span>
-                    <span className="text-sm text-gray-900">
+                    <span className="text-sm text-muted-foreground">Accounts Payable</span>
+                    <span className="text-sm text-foreground">
                       ₹{data.liabilities.currentLiabilities.accountsPayable.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                    <span className="text-sm font-medium text-gray-700">Total Current Liabilities</span>
-                    <span className="text-sm font-semibold text-gray-900">
+                  <div className="flex justify-between items-center pt-2 border-t border-border">
+                    <span className="text-sm font-medium text-foreground">Total Current Liabilities</span>
+                    <span className="text-sm font-semibold text-foreground">
                       ₹{data.liabilities.currentLiabilities.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -177,8 +180,8 @@ export default function BalanceSheetReport({ data }: Props) {
               {/* Total Liabilities */}
               <div className="px-4 py-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-bold text-gray-900">TOTAL LIABILITIES</span>
-                  <span className="text-sm font-bold text-gray-900">
+                  <span className="text-sm font-bold text-foreground">TOTAL LIABILITIES</span>
+                  <span className="text-sm font-bold text-foreground">
                     ₹{data.liabilities.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -186,18 +189,18 @@ export default function BalanceSheetReport({ data }: Props) {
 
               {/* Equity */}
               <div className="px-4 py-3">
-                <div className="font-semibold text-sm text-gray-900 mb-3">Equity</div>
+                <div className="font-semibold text-sm text-foreground mb-3">Equity</div>
                 
                 <div className="ml-4 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Retained Earnings</span>
-                    <span className="text-sm text-gray-900">
+                    <span className="text-sm text-muted-foreground">Retained Earnings</span>
+                    <span className="text-sm text-foreground">
                       ₹{data.equity.retainedEarnings.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                    <span className="text-sm font-medium text-gray-700">Total Equity</span>
-                    <span className="text-sm font-semibold text-gray-900">
+                  <div className="flex justify-between items-center pt-2 border-t border-border">
+                    <span className="text-sm font-medium text-foreground">Total Equity</span>
+                    <span className="text-sm font-semibold text-foreground">
                       ₹{data.equity.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -205,10 +208,10 @@ export default function BalanceSheetReport({ data }: Props) {
               </div>
 
               {/* Total Liabilities and Equity */}
-              <div className="px-4 py-3 bg-orange-50">
+              <div className="px-4 py-3 bg-destructive/10">
                 <div className="flex justify-between items-center">
-                  <span className="text-base font-bold text-orange-900">TOTAL LIABILITIES & EQUITY</span>
-                  <span className="text-base font-bold text-orange-900">
+                  <span className="text-base font-bold text-destructive">TOTAL LIABILITIES & EQUITY</span>
+                  <span className="text-base font-bold text-destructive">
                     ₹{data.totalLiabilitiesAndEquity.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -218,24 +221,24 @@ export default function BalanceSheetReport({ data }: Props) {
         </div>
 
         {/* Balance Check */}
-        <div className="mt-6 p-4 rounded-lg ${
+        <div className={`mt-6 p-4 rounded-lg border animate-slide-up ${
           Math.abs(data.assets.total - data.totalLiabilitiesAndEquity) < 0.01
-            ? 'bg-green-50 border border-green-200'
-            : 'bg-red-50 border border-red-200'
-        }">
+            ? 'bg-green-500/10 border-green-500/30'
+            : 'bg-red-500/10 border-red-500/30'
+        }`}>
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium ${
+            <span className={`text-sm font-medium ${
               Math.abs(data.assets.total - data.totalLiabilitiesAndEquity) < 0.01
-                ? 'text-green-900'
-                : 'text-red-900'
-            }">
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-red-600 dark:text-red-400'
+            }`}>
               Balance Check: Assets = Liabilities + Equity
             </span>
-            <span className="text-sm font-semibold ${
+            <span className={`text-sm font-semibold ${
               Math.abs(data.assets.total - data.totalLiabilitiesAndEquity) < 0.01
-                ? 'text-green-900'
-                : 'text-red-900'
-            }">
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-red-600 dark:text-red-400'
+            }`}>
               {Math.abs(data.assets.total - data.totalLiabilitiesAndEquity) < 0.01 ? '✓ Balanced' : '✗ Not Balanced'}
             </span>
           </div>

@@ -73,34 +73,34 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="min-h-screen bg-background flex items-center justify-center p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl w-full bg-white rounded-lg shadow-lg p-8"
+            className="max-w-2xl w-full bg-card rounded-lg shadow-lg p-8 border border-border"
           >
             <div className="flex items-center gap-4 mb-6">
-              <div className="p-3 bg-red-100 rounded-full">
-                <AlertTriangle className="w-8 h-8 text-red-600" />
+              <div className="p-3 bg-red-500/10 rounded-full">
+                <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-foreground">
                   Something went wrong
                 </h1>
-                <p className="text-gray-600 mt-1">
+                <p className="text-muted-foreground mt-1">
                   We're sorry for the inconvenience. Please try again.
                 </p>
               </div>
             </div>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <h2 className="font-semibold text-gray-900 mb-2">Error Details:</h2>
-                <pre className="text-sm text-red-600 overflow-auto max-h-40">
+              <div className="mb-6 p-4 bg-muted rounded-lg border border-border">
+                <h2 className="font-semibold text-foreground mb-2">Error Details:</h2>
+                <pre className="text-sm text-red-600 dark:text-red-400 overflow-auto max-h-40">
                   {this.state.error.toString()}
                 </pre>
                 {this.state.errorInfo && (
-                  <pre className="text-xs text-gray-600 mt-2 overflow-auto max-h-40">
+                  <pre className="text-xs text-muted-foreground mt-2 overflow-auto max-h-40">
                     {this.state.errorInfo.componentStack}
                   </pre>
                 )}
@@ -110,29 +110,29 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={this.handleReset}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
               >
                 <RefreshCw className="w-4 h-4" />
                 Try Again
               </button>
               <button
                 onClick={this.handleReload}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors font-medium"
               >
                 <RefreshCw className="w-4 h-4" />
                 Reload Page
               </button>
               <button
                 onClick={this.handleGoHome}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors font-medium"
               >
                 <Home className="w-4 h-4" />
                 Go to Dashboard
               </button>
             </div>
 
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-800">
+            <div className="mt-6 p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="text-sm text-foreground">
                 <strong>Tip:</strong> If this error persists, try clearing your browser cache or contact support.
               </p>
             </div>
