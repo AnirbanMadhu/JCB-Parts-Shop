@@ -40,8 +40,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout();
       } else {
         const data = await response.json();
-        setUser(data.user);
-        localStorage.setItem('auth_user', JSON.stringify(data.user));
+        // Preserve mustChangePassword flag from existing user data
+        const existingUserData = localStorage.getItem('auth_user');
+        let updatedUser = data.user;
+        
+        if (existingUserData) {
+          const existingUser = JSON.parse(existingUserData);
+          if (existingUser.mustChangePassword !== undefined) {
+            updatedUser = { ...data.user, mustChangePassword: existingUser.mustChangePassword };
+          }
+        }
+        
+        setUser(updatedUser);
+        localStorage.setItem('auth_user', JSON.stringify(updatedUser));
       }
     } catch (error) {
       console.error('Token verification failed:', error);

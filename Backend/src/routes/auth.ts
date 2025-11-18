@@ -166,6 +166,7 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
         name: true,
         role: true,
         isActive: true,
+        mustChangePassword: true,
         createdAt: true,
       },
     });

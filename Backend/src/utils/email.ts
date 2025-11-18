@@ -225,23 +225,26 @@ export const sendInvitationEmail = async (
             </div>
 
             <div class="warning-box">
-              <strong>⚠️ Important:</strong> You will be required to change your password after your first login for security purposes.
+              <strong>🔒 Important Security Notice:</strong>
+              <p style="margin: 10px 0;"><strong>This is a temporary password</strong> that you will use ONLY for your first login.</p>
+              <p style="margin: 10px 0;"><strong>You MUST change this password</strong> immediately after logging in.</p>
+              <p style="margin: 10px 0;">After setting your own password, you'll use it for all future logins.</p>
             </div>
 
-            <p>Click the button below to login:</p>
-            <a href="${loginUrl}" class="button">Login to JCB Parts Shop</a>
-            
-            <p>Or copy and paste this link into your browser:</p>
-            <p style="word-break: break-all;">${loginUrl}</p>
-
-            <h3>Next Steps:</h3>
-            <ol>
-              <li>Click the login link above</li>
-              <li>Enter your email and temporary password</li>
-              <li>You'll be prompted to create a new password</li>
-              <li>Set a strong password that you can remember</li>
-              <li>Start using the system</li>
+            <h3>📝 How to Get Started:</h3>
+            <ol style="line-height: 1.8;">
+              <li><strong>Click the "Login Now" button below</strong></li>
+              <li>Enter your email and the temporary password shown above</li>
+              <li>You'll be automatically redirected to create your own secure password</li>
+              <li>After changing your password, you're all set to use the system!</li>
             </ol>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${loginUrl}" class="button" style="font-size: 16px; font-weight: bold;">🚀 Login Now</a>
+            </div>
+            
+            <p style="font-size: 12px; color: #666; text-align: center;">Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; text-align: center; background-color: #f5f5f5; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;">${loginUrl}</p>
 
             <p>If you have any questions or need assistance, please contact your administrator.</p>
 
@@ -265,16 +268,18 @@ Your Login Credentials:
 Email / Login ID: ${email}
 Temporary Password: ${password}
 
-IMPORTANT: You will be required to change your password after your first login for security purposes.
+🔒 IMPORTANT SECURITY NOTICE:
+This is a TEMPORARY password for your first login ONLY.
+You MUST change this password immediately after logging in.
+After setting your own password, you'll use it for all future logins.
+
+📝 How to Get Started:
+1. Go to the login page: ${loginUrl}
+2. Enter your email and the temporary password above
+3. You'll be automatically redirected to create your own secure password
+4. After changing your password, you're all set to use the system!
 
 Login URL: ${loginUrl}
-
-Next Steps:
-1. Click the login link above
-2. Enter your email and temporary password
-3. You'll be prompted to create a new password
-4. Set a strong password that you can remember
-5. Start using the system
 
 If you have any questions or need assistance, please contact your administrator.
 

@@ -19,6 +19,7 @@ export default function ChangePasswordPage() {
 
   useEffect(() => {
     if (!isAuthenticated()) {
+      console.log('User not authenticated, redirecting to login');
       router.push('/login');
       return;
     }
@@ -27,7 +28,10 @@ export default function ChangePasswordPage() {
     const userData = localStorage.getItem('auth_user');
     if (userData) {
       const parsedUser = JSON.parse(userData);
-      setIsMandatory(parsedUser.mustChangePassword === true);
+      const mustChange = parsedUser.mustChangePassword === true;
+      console.log('Change password page - User data:', parsedUser);
+      console.log('Must change password:', mustChange);
+      setIsMandatory(mustChange);
     }
   }, [isAuthenticated, router]);
 
@@ -55,7 +59,24 @@ export default function ChangePasswordPage() {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('http://localhost:4000/api/auth/change-password', {
+      
+      if (!token) {
+        setError('Authentication token not found. Please login again.');
+        setIsLoading(false);
+        return;
+      }
+
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+      
+      console.log('Changing password...');
+      console.log('API URL:', API_URL);
+      console.log('Is mandatory:', isMandatory);
+      console.log('Request body:', { 
+        hasCurrentPassword: !!currentPassword, 
+        hasNewPassword: !!newPassword 
+      });
+
+      const response = await fetch(`${API_URL}/api/auth/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,25 +89,31 @@ export default function ChangePasswordPage() {
       });
 
       const data = await response.json();
+      console.log('Response status:', response.status);
+      console.log('Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to change password');
       }
 
-      setIsSuccess(true);
-
+      console.log('Password changed successfully!');
+      
       // Update user data to remove mustChangePassword flag
       const userData = localStorage.getItem('auth_user');
       if (userData) {
         const parsedUser = JSON.parse(userData);
         parsedUser.mustChangePassword = false;
         localStorage.setItem('auth_user', JSON.stringify(parsedUser));
+        console.log('Updated user data in localStorage:', parsedUser);
       }
 
-      // Redirect after successful password change
+      setIsSuccess(true);
+
+      // Immediate redirect after successful password change
+      console.log('Redirecting to dashboard...');
       setTimeout(() => {
-        router.push('/dashboard');
-      }, 2000);
+        router.replace('/dashboard');
+      }, 1500);
     } catch (err: any) {
       setError(err.message || 'Failed to change password. Please try again.');
     } finally {
@@ -107,21 +134,21 @@ export default function ChangePasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
+      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8 animate-fade-in">
           <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            <h2 className="mt-6 text-center text-3xl font-bold text-foreground">
               Password changed successfully
             </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
+            <p className="mt-2 text-center text-sm text-muted-foreground">
               JCB Parts Shop Management System
             </p>
           </div>
-          <div className="rounded-md bg-green-50 p-4">
+          <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-4 shadow-lg">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-5 w-5 text-green-400"
+                  className="h-5 w-5 text-green-500"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -133,10 +160,10 @@ export default function ChangePasswordPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-green-800">
+                <h3 className="text-sm font-medium text-green-500">
                   Your password has been changed successfully!
                 </h3>
-                <div className="mt-2 text-sm text-green-700">
+                <div className="mt-2 text-sm text-green-500/80">
                   <p>You can now use your new password to login.</p>
                   <p className="mt-2">Redirecting to dashboard...</p>
                 </div>
@@ -149,13 +176,13 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 animate-fade-in">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {isMandatory ? 'Change Your Password' : 'Change Password'}
+          <h2 className="mt-6 text-center text-3xl font-bold text-foreground">
+            {isMandatory ? '🔒 Change Your Password' : 'Change Password'}
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-muted-foreground">
             {isMandatory
               ? 'For security purposes, you must change your password before continuing'
               : 'Update your account password'}
@@ -163,11 +190,11 @@ export default function ChangePasswordPage() {
         </div>
 
         {isMandatory && (
-          <div className="rounded-md bg-yellow-50 p-4">
+          <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/20 p-4 shadow-lg">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-5 w-5 text-yellow-400"
+                  className="h-5 w-5 text-yellow-500"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -179,10 +206,10 @@ export default function ChangePasswordPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">
+                <h3 className="text-sm font-medium text-yellow-500">
                   Password Change Required
                 </h3>
-                <div className="mt-2 text-sm text-yellow-700">
+                <div className="mt-2 text-sm text-yellow-500/80">
                   <p>
                     This is your first login with a temporary password. Please create a new
                     password to secure your account.
@@ -195,11 +222,11 @@ export default function ChangePasswordPage() {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
+            <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 shadow-lg">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg
-                    className="h-5 w-5 text-red-400"
+                    className="h-5 w-5 text-red-500"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
@@ -211,7 +238,7 @@ export default function ChangePasswordPage() {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                  <h3 className="text-sm font-medium text-red-500">{error}</h3>
                 </div>
               </div>
             </div>
@@ -220,7 +247,7 @@ export default function ChangePasswordPage() {
           <div className="space-y-4">
             {!isMandatory && (
               <div>
-                <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="current-password" className="block text-sm font-medium text-foreground mb-1">
                   Current Password
                 </label>
                 <input
@@ -229,7 +256,7 @@ export default function ChangePasswordPage() {
                   type="password"
                   autoComplete="current-password"
                   required={!isMandatory}
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  className="appearance-none relative block w-full px-3 py-2 border border-input bg-background placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors sm:text-sm shadow-sm"
                   placeholder="Enter current password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
@@ -238,7 +265,7 @@ export default function ChangePasswordPage() {
             )}
 
             <div>
-              <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="new-password" className="block text-sm font-medium text-foreground mb-1">
                 New Password
               </label>
               <input
@@ -247,7 +274,7 @@ export default function ChangePasswordPage() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-2 border border-input bg-background placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors sm:text-sm shadow-sm"
                 placeholder="Enter new password (min. 6 characters)"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -255,7 +282,7 @@ export default function ChangePasswordPage() {
             </div>
 
             <div>
-              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="confirm-password" className="block text-sm font-medium text-foreground mb-1">
                 Confirm New Password
               </label>
               <input
@@ -264,7 +291,7 @@ export default function ChangePasswordPage() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-2 border border-input bg-background placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors sm:text-sm shadow-sm"
                 placeholder="Confirm new password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -276,15 +303,15 @@ export default function ChangePasswordPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
             >
-              {isLoading ? 'Changing password...' : 'Change Password'}
+              {isLoading ? 'Changing password...' : '✓ Change Password'}
             </button>
             {!isMandatory && (
               <button
                 type="button"
                 onClick={handleCancel}
-                className="flex-1 flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="flex-1 flex justify-center py-2 px-4 border border-input text-sm font-medium rounded-md text-foreground bg-background hover:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-all shadow-sm"
               >
                 Cancel
               </button>
@@ -293,7 +320,7 @@ export default function ChangePasswordPage() {
 
           {!isMandatory && (
             <div className="text-center">
-              <Link href="/change-password-otp" className="text-sm text-blue-600 hover:text-blue-500">
+              <Link href="/change-password-otp" className="text-sm text-primary hover:text-primary/80 transition-colors">
                 Don&apos;t remember current password? Use email verification
               </Link>
             </div>
@@ -304,7 +331,7 @@ export default function ChangePasswordPage() {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="text-sm text-gray-600 hover:text-gray-500"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Logout and return to login
               </button>
