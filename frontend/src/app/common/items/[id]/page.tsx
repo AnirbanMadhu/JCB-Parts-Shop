@@ -51,7 +51,7 @@ export default async function ItemDetailPage({ params }: Props) {
   const stock = stockData.stock || 0;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="h-full overflow-auto bg-white">
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BackButton />

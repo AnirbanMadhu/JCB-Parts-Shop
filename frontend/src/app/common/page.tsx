@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 export default function CommonPage() {
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="h-full overflow-auto bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Common</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

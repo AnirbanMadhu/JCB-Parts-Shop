@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 export default function GetStartedPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div className="h-full overflow-auto bg-gradient-to-br from-gray-50 to-gray-100 p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header Section */}
         <div className="text-center mb-8">

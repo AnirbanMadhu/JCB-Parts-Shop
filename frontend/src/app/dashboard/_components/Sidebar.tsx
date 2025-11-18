@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 import Image from "next/image";
 import {
   Wrench,
@@ -14,9 +13,27 @@ import {
   Settings,
   LogOut,
   User,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { APP_NAME } from "@/lib/constants";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarRail,
+} from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const mainMenuItems = [
   { icon: Wrench, label: "Get Started", href: "/get-started" },
@@ -61,10 +78,9 @@ const mainMenuItems = [
   { icon: Settings, label: "Setup", href: "/setup" },
 ];
 
-export default function Sidebar() {
+export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [openMenu, setOpenMenu] = useState<string | null>("Sales");
   const { user, logout, isAuthenticated } = useAuth();
 
   const handleLogout = () => {
@@ -78,98 +94,123 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-[213px] bg-[#f5f5f5] border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0">
-      {/* Logo */}
-      <div className="p-4 pb-6 flex items-center gap-3">
-        <Image 
-          src="/icon.svg" 
-          alt="Logo" 
-          width={40} 
-          height={40}
-          className="flex-shrink-0"
-        />
-        <h1 className="text-lg font-semibold text-gray-800 leading-tight">{APP_NAME}</h1>
-      </div>
+    <Sidebar collapsible="icon" variant="sidebar">
+      {/* Logo Header */}
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <Image 
+                    src="/icon.svg" 
+                    alt="Logo" 
+                    width={20} 
+                    height={20}
+                    className="flex-shrink-0"
+                  />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">{APP_NAME}</span>
+                  <span className="truncate text-xs text-sidebar-foreground/70">Parts & Inventory</span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
 
-      {/* Main Menu */}
-      <nav className="flex-1 px-2">
-        {mainMenuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href;
-          const isSubmenuActive = item.submenu?.some(sub => pathname === sub.href);
-          const isMenuOpen = openMenu === item.label;
-          
-          return (
-            <div key={item.label}>
-              {item.submenu ? (
-                <>
-                  <button
-                    onClick={() => setOpenMenu(isMenuOpen ? null : item.label)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-md mb-1 w-full text-left transition-colors ${
-                      isActive || isSubmenuActive
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </button>
-                  {isMenuOpen && (
-                    <div className="ml-6 mb-1">
-                      {item.submenu.map((subItem) => (
-                        <Link
-                          key={subItem.label}
-                          href={subItem.href}
-                          className={`flex items-center gap-3 px-3 py-2 rounded-md mb-1 text-sm transition-colors ${
-                            pathname === subItem.href
-                              ? "text-gray-900 font-medium"
-                              : "text-gray-600 hover:text-gray-900"
-                          }`}
-                        >
-                          {subItem.label}
+      {/* Main Navigation */}
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainMenuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                const isSubmenuActive = item.submenu?.some(sub => pathname === sub.href);
+                
+                return (
+                  <SidebarMenuItem key={item.label}>
+                    {item.submenu ? (
+                      <Collapsible
+                        defaultOpen={isSubmenuActive}
+                        className="group/collapsible"
+                      >
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            tooltip={item.label}
+                            isActive={isActive || isSubmenuActive}
+                          >
+                            <Icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.submenu.map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.label}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={pathname === subItem.href}
+                                >
+                                  <Link href={subItem.href}>
+                                    <span>{subItem.label}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ) : (
+                      <SidebarMenuButton
+                        asChild
+                        tooltip={item.label}
+                        isActive={isActive}
+                      >
+                        <Link href={item.href}>
+                          <Icon className="w-4 h-4" />
+                          <span>{item.label}</span>
                         </Link>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-md mb-1 transition-colors ${
-                    isActive
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="text-sm font-medium">{item.label}</span>
-                </Link>
-              )}
-            </div>
-          );
-        })}
-      </nav>
+                      </SidebarMenuButton>
+                    )}
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
 
-      {/* User Info & Logout */}
-      <div className="p-4 border-t border-gray-200">
-        <Link
-          href="/dashboard/profile"
-          className="flex items-center gap-3 mb-3 px-3 py-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
-        >
-          <User className="w-5 h-5 text-gray-600" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
-            <p className="text-xs text-gray-500 truncate">{user?.role}</p>
-          </div>
-        </Link>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 rounded-md w-full text-left text-red-600 hover:bg-red-50 transition-colors"
-        >
-          <LogOut className="w-5 h-5" />
-          <span className="text-sm font-medium">Logout</span>
-        </button>
-      </div>
-    </aside>
+      {/* User Footer */}
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link href="/dashboard/profile" className="flex items-center gap-2">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
+                  <User className="w-4 h-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">{user?.name}</span>
+                  <span className="truncate text-xs text-sidebar-foreground/70">{user?.role}</span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+      
+      <SidebarRail />
+    </Sidebar>
   );
 }

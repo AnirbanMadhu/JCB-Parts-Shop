@@ -62,7 +62,8 @@ export default function PaymentStatusModal({
   const handlePaymentStatusChange = (status: string) => {
     setPaymentStatus(status);
     if (status === "PAID") {
-      setPaidAmount(invoice.total.toString());
+      // Set paid amount to the actual total invoice amount
+      setPaidAmount(Number(invoice.total).toFixed(2));
     } else if (status === "UNPAID") {
       setPaidAmount("0");
     }

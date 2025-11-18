@@ -15,9 +15,9 @@ export default function SalesInvoicesList({ invoices }: Props) {
   const hasRows = invoices && invoices.length > 0;
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
+    <div className="flex flex-col h-full">
+      {/* Header - Fixed */}
+      <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BackButton />
           <h1 className="text-[17px] font-semibold text-gray-900">Sales Invoice</h1>
@@ -30,10 +30,9 @@ export default function SalesInvoicesList({ invoices }: Props) {
         </Link>
       </header>
 
-      {/* Table Container */}
-      <div className="px-6 py-6">
-        <div className="bg-white">
-          {!hasRows ? (
+      {/* Table Container - Scrollable */}
+      <div className="flex-1 overflow-auto px-6 py-6">
+        <div className="bg-white">{!hasRows ? (
             // Empty State
             <div className="flex flex-col items-center justify-center py-32">
               <div className="mb-4">

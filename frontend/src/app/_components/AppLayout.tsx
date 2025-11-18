@@ -1,8 +1,9 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import Sidebar from "@/app/dashboard/_components/Sidebar";
-import { StockAlertsWidget } from "@/components/features/StockAlertsWidget";
+import AppSidebar from "@/app/dashboard/_components/Sidebar";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,10 +17,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 ml-[213px] overflow-y-auto">{children}</main>
-      <StockAlertsWidget />
-    </div>
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex h-screen w-full overflow-hidden">
+        <AppSidebar />
+        <SidebarInset className="flex flex-col flex-1 min-w-0">
+          <header className="sticky top-0 flex h-14 shrink-0 items-center gap-2 border-b bg-white px-4 z-20">
+            <SidebarTrigger className="-ml-1" />
+            <div className="h-4 w-px bg-border" />
+            <div className="flex flex-1 items-center gap-2">
+              {/* You can add breadcrumb or page title here */}
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto bg-background">
+            {children}
+          </main>
+        </SidebarInset>
+      </div>
+      <Toaster />
+    </SidebarProvider>
   );
 }
