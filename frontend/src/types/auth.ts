@@ -6,6 +6,7 @@ export interface User {
   isActive?: boolean;
   createdAt?: string;
   mustChangePassword?: boolean;
+  avatar?: string;
 }
 
 export interface AuthContextType {
