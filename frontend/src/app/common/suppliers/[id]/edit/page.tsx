@@ -1,7 +1,6 @@
 import SupplierEditForm from "@/components/ui/SupplierEditForm";
 import { notFound } from "next/navigation";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+import { API_BASE_URL } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 

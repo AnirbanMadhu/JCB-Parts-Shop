@@ -2,10 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthContextType } from '@/types/auth';
+import { API_BASE_URL } from '@/lib/constants';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -81,6 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('auth_token', data.token);
       localStorage.setItem('auth_user', JSON.stringify(data.user));
       
+      // Set cookie for middleware (7 days expiry)
+      document.cookie = `auth_token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      
       // Return user data so caller can check mustChangePassword
       return data.user;
     } catch (error) {
@@ -109,6 +111,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(data.token);
       localStorage.setItem('auth_token', data.token);
       localStorage.setItem('auth_user', JSON.stringify(data.user));
+      
+      // Set cookie for middleware (7 days expiry)
+      document.cookie = `auth_token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
@@ -120,6 +125,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
+    
+    // Clear cookie
+    document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
   };
 
   const isAdmin = () => {

@@ -1,12 +1,14 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/constants';
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Toast from "@/components/ui/Toast";
 import { useToast } from "@/hooks/useToast";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 
 type CustomerFormData = {
   name: string;

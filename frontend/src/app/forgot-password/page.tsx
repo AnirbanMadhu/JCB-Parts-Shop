@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '@/lib/constants';
+
 'use client';
 
 import { useState } from 'react';
@@ -22,7 +24,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001'}/api/auth/forgot-password`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

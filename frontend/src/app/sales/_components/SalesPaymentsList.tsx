@@ -1,6 +1,7 @@
-// components/Sales/SalesPaymentsList.tsx
 "use client";
 
+// components/Sales/SalesPaymentsList.tsx
+import { API_BASE_URL } from '@/lib/constants';
 import Link from "next/link";
 import BackButton from "@/components/ui/BackButton";
 import PaymentStatusModal from "./PaymentStatusModal";
@@ -36,7 +37,7 @@ type Props = {
   payments: SalesInvoice[];
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 
 export default function SalesPaymentsList({ payments }: Props) {
   const router = useRouter();

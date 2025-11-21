@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_BASE_URL } from '@/lib/constants';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -16,7 +17,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Check system status
-    fetch('http://localhost:4001/api/auth/status')
+    fetch(`${API_BASE_URL}/api/auth/status`)
       .then(res => res.json())
       .then(data => {
         setSystemStatus(data);
@@ -36,26 +37,19 @@ export default function LoginPage() {
     try {
       const userData = await login(email, password);
       
-      console.log('Login successful, user data:', userData);
-      console.log('Must change password:', userData.mustChangePassword);
+      // Set cookie for middleware
+      document.cookie = `auth_token=${localStorage.getItem('auth_token')}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
       
       // Stop loading state before redirect
       setIsLoading(false);
       
       // Check if user must change password
       if (userData.mustChangePassword === true) {
-        console.log('Redirecting to change-password page');
-        // Use setTimeout to ensure state updates complete
-        setTimeout(() => {
-          router.push('/change-password');
-        }, 100);
+        router.push('/change-password');
         return;
       }
       
-      console.log('Redirecting to dashboard');
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 100);
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Failed to login. Please check your credentials.');
       setIsLoading(false);

@@ -1,12 +1,14 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/constants';
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/hooks/useToast";
 import ToastContainer from "./ToastContainer";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 
 type ItemFormData = {
   partNumber: string;

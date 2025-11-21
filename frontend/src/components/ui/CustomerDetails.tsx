@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/constants';
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BackButton from "./BackButton";
@@ -43,7 +45,7 @@ type Props = {
   invoices: Invoice[];
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 
 export default function CustomerDetails({ customer, invoices }: Props) {
   const router = useRouter();

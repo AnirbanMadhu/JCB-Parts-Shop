@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import SalesInvoiceEditForm from "@/app/sales/_components/SalesInvoiceEditForm";
 import { useSettings } from '@/hooks/useSettings';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+import { API_BASE_URL } from '@/lib/constants';
 
 export default function EditSalesInvoicePage({ 
   params 

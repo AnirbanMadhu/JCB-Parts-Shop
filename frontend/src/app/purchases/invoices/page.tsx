@@ -1,54 +1,12 @@
 'use client';
 
-import { useEffect, useState } from "react";
 import PurchaseInvoicesList from "@/app/purchases/_components/PurchaseInvoicesList";
-import { Invoice } from "@/lib/api";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+import { useInvoices } from "@/hooks/useAPI";
 
 export default function PurchaseInvoicesPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: invoices, isLoading, error } = useInvoices('PURCHASE');
 
-  const fetchInvoices = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/invoices?type=PURCHASE`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setInvoices(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch purchase invoices:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchInvoices();
-    
-    // Refresh data when page becomes visible
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchInvoices();
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-
-  if (loading && invoices.length === 0) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -58,6 +16,16 @@ export default function PurchaseInvoicesPage() {
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center text-destructive">
+          <p>Failed to load invoices. Please try again.</p>
+        </div>
+      </div>
+    );
+  }
   
-  return <PurchaseInvoicesList invoices={invoices} />;
+  return <PurchaseInvoicesList invoices={invoices || []} />;
 }

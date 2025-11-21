@@ -1,5 +1,7 @@
 'use client';
 
+import { API_BASE_URL } from '@/lib/constants';
+
 import { useState } from 'react';
 import { FileEdit, Search, Calendar, FileText, Truck, Package } from 'lucide-react';
 import { useNotification } from '@/components/NotificationProvider';
@@ -37,7 +39,7 @@ export default function EditInvoiceDetails() {
   const [dispatchedThrough, setDispatchedThrough] = useState('');
   const [termsOfDelivery, setTermsOfDelivery] = useState('');
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+  
 
   const handleSearch = async (query?: string) => {
     const searchText = query !== undefined ? query : searchQuery;
@@ -52,7 +54,7 @@ export default function EditInvoiceDetails() {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${API_URL}/api/invoices`, {
+      const response = await fetch(`${API_BASE_URL}/api/invoices`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -123,7 +125,7 @@ export default function EditInvoiceDetails() {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${API_URL}/api/invoices/${selectedInvoice.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/invoices/${selectedInvoice.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

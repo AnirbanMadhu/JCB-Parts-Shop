@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '@/lib/constants';
+
 // components/Common/SupplierEditForm.tsx
 "use client";
 
@@ -8,7 +10,7 @@ import ToastContainer from "./ToastContainer";
 import ConfirmDialog from "./ConfirmDialog";
 import { useToast } from "@/hooks/useToast";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 
 type Supplier = {
   id: number;

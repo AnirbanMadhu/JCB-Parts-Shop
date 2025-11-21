@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/constants';
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
@@ -139,7 +140,7 @@ export default function CashflowChart() {
   const fetchCashflowData = async () => {
     try {
       setLoading(true);
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+      
       const response = await fetch(
         `${API_BASE_URL}/api/reports/cashflow?year=${currentMonth.year}&month=${currentMonth.month}`
       );

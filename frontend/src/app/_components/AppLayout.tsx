@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { Suspense } from 'react';
 import AppSidebar from "@/app/dashboard/_components/Sidebar";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
@@ -10,11 +11,16 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
   // Pages that don't need the sidebar
-  const publicPages = ['/login', '/register', '/forgot-password', '/reset-password', '/change-password', '/change-password-otp'];
+  const publicPages = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/change-password', '/change-password-otp'];
   const isPublicPage = publicPages.includes(pathname) || pathname.startsWith('/reset-password');
 
   if (isPublicPage) {
-    return <>{children}</>;
+    return (
+      <>
+        {children}
+        <Toaster />
+      </>
+    );
   }
 
   return (

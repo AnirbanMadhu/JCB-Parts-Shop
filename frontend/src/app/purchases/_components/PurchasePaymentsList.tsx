@@ -1,5 +1,8 @@
-// components/Purchases/PurchasePaymentsList.tsx
 "use client";
+
+import { API_BASE_URL } from '@/lib/constants';
+
+// components/Purchases/PurchasePaymentsList.tsx
 
 import Link from "next/link";
 import BackButton from "@/components/ui/BackButton";
@@ -35,7 +38,7 @@ type Props = {
   payments: PurchaseInvoice[];
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 
 export default function PurchasePaymentsList({ payments }: Props) {
   const router = useRouter();

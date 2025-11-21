@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '@/lib/constants';
+
 // components/Purchases/PurchaseInvoiceForm.tsx
 "use client";
 
@@ -22,7 +24,7 @@ type Line = {
 
 type Supplier = { id: number; name: string };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 
 async function fetchProductByCode(code: string) {
   // Search by barcode first, then by part number

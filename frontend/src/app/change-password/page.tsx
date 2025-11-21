@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '@/lib/constants';
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -66,17 +68,17 @@ export default function ChangePasswordPage() {
         return;
       }
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+      
       
       console.log('Changing password...');
-      console.log('API URL:', API_URL);
+      console.log('API URL:', API_BASE_URL);
       console.log('Is mandatory:', isMandatory);
       console.log('Request body:', { 
         hasCurrentPassword: !!currentPassword, 
         hasNewPassword: !!newPassword 
       });
 
-      const response = await fetch(`${API_URL}/api/auth/change-password`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

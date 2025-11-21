@@ -1,5 +1,24 @@
-// lib/api.ts - Server-side API utilities
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+// lib/api.ts - Server and Client-side API utilities
+import { cookies } from 'next/headers';
+import { API_BASE_URL } from '@/lib/constants';
+
+// Helper to get auth headers for server-side requests
+async function getAuthHeaders(): Promise<HeadersInit> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+    };
+  } catch {
+    // In client-side context, cookies() is not available
+    return {
+      'Content-Type': 'application/json',
+    };
+  }
+}
 
 export type Invoice = {
   id: number;
@@ -53,8 +72,11 @@ export type Payment = {
 // Server-side data fetching functions
 export async function fetchPurchaseInvoices(): Promise<Invoice[]> {
   try {
+    const headers = await getAuthHeaders();
     const res = await fetch(`${API_BASE_URL}/api/invoices?type=PURCHASE`, {
+      headers,
       cache: 'no-store', // Always fetch fresh data
+      next: { revalidate: 0 },
     });
     if (!res.ok) return [];
     return await res.json();
@@ -66,8 +88,11 @@ export async function fetchPurchaseInvoices(): Promise<Invoice[]> {
 
 export async function fetchSalesInvoices(): Promise<Invoice[]> {
   try {
+    const headers = await getAuthHeaders();
     const res = await fetch(`${API_BASE_URL}/api/invoices?type=SALE`, {
+      headers,
       cache: 'no-store',
+      next: { revalidate: 0 },
     });
     if (!res.ok) return [];
     return await res.json();
@@ -79,8 +104,11 @@ export async function fetchSalesInvoices(): Promise<Invoice[]> {
 
 export async function fetchCustomers(): Promise<Customer[]> {
   try {
+    const headers = await getAuthHeaders();
     const res = await fetch(`${API_BASE_URL}/api/customers`, {
+      headers,
       cache: 'no-store',
+      next: { revalidate: 0 },
     });
     if (!res.ok) return [];
     return await res.json();
@@ -92,7 +120,9 @@ export async function fetchCustomers(): Promise<Customer[]> {
 
 export async function fetchItems(): Promise<Item[]> {
   try {
+    const headers = await getAuthHeaders();
     const res = await fetch(`${API_BASE_URL}/api/stock`, {
+      headers,
       cache: 'no-store',
       next: { revalidate: 0 }
     });
@@ -106,8 +136,11 @@ export async function fetchItems(): Promise<Item[]> {
 
 export async function fetchPurchasePayments(): Promise<Payment[]> {
   try {
+    const headers = await getAuthHeaders();
     const res = await fetch(`${API_BASE_URL}/api/payments?type=PURCHASE`, {
+      headers,
       cache: 'no-store',
+      next: { revalidate: 0 },
     });
     if (!res.ok) return [];
     return await res.json();
@@ -119,8 +152,11 @@ export async function fetchPurchasePayments(): Promise<Payment[]> {
 
 export async function fetchSalesPayments(): Promise<Payment[]> {
   try {
+    const headers = await getAuthHeaders();
     const res = await fetch(`${API_BASE_URL}/api/payments?type=SALE`, {
+      headers,
       cache: 'no-store',
+      next: { revalidate: 0 },
     });
     if (!res.ok) return [];
     return await res.json();

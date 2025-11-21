@@ -1,5 +1,8 @@
-// components/Common/SuppliersList.tsx
 "use client";
+
+import { API_BASE_URL } from '@/lib/constants';
+
+// components/Common/SuppliersList.tsx
 
 import Link from "next/link";
 import BackButton from "./BackButton";
@@ -10,7 +13,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 
 type Supplier = {
   id: number;

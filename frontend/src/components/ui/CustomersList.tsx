@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/constants';
+
 import Link from "next/link";
 import { Customer } from "@/lib/api";
 import BackButton from "./BackButton";
@@ -14,7 +16,7 @@ type Props = {
   customers: Customer[];
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 
 export default function CustomersList({ customers }: Props) {
   const router = useRouter();

@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/constants';
+
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -13,7 +15,7 @@ export default function DashboardHeader() {
     // Fetch stock balance and net flow data
     const fetchData = async () => {
       try {
-        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+        
         
         // Fetch invoices to calculate net flow
         const salesRes = await fetch(`${API_BASE_URL}/api/invoices?type=SALE`);

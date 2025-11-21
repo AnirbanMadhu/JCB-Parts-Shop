@@ -1,6 +1,5 @@
 import ItemEditForm from "@/components/ui/ItemEditForm";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+import { API_BASE_URL } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

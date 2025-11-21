@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '@/lib/constants';
+
 // components/Common/SupplierForm.tsx
 "use client";
 
@@ -7,7 +9,7 @@ import Toast from "@/components/ui/Toast";
 import { useToast } from "@/hooks/useToast";
 import BackButton from "./BackButton";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 
 export default function SupplierForm() {
   const router = useRouter();

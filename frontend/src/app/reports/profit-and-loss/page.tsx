@@ -1,6 +1,7 @@
 import ProfitAndLossReport from "@/app/reports/_components/ProfitAndLossReport";
+import { API_BASE_URL } from '@/lib/constants';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 
 export const dynamic = 'force-dynamic';
 

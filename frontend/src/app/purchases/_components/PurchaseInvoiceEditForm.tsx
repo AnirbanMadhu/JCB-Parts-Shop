@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/constants';
+
 import { useEffect, useMemo, useState } from "react";
 import ScannerInput from "./ScannerInput";
 import Link from "next/link";
@@ -19,7 +21,7 @@ type Line = {
 
 type Supplier = { id: number; name: string };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+
 
 async function fetchProductByCode(code: string) {
   try {

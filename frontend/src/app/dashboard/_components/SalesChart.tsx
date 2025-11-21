@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE_URL } from '@/lib/constants';
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
@@ -106,7 +107,7 @@ export default function SalesChart() {
   const fetchWeeklySalesData = async () => {
     try {
       setLoading(true);
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+      
       const response = await fetch(
         `${API_BASE_URL}/api/reports/weekly-sales?year=${currentMonth.year}&month=${currentMonth.month}`
       );
