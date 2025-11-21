@@ -34,7 +34,7 @@ type Props = {
 
 export default function BalanceSheetReport({ data }: Props) {
   const router = useRouter();
-  const [asOfDate, setAsOfDate] = useState(data.asOfDate || "");
+  const [asOfDate, setAsOfDate] = useState(data.asOfDate || new Date().toISOString().split('T')[0]);
 
   const handleFilter = () => {
     const params = new URLSearchParams();
@@ -69,7 +69,7 @@ export default function BalanceSheetReport({ data }: Props) {
               type="date"
               value={asOfDate}
               onChange={(e) => setAsOfDate(e.target.value)}
-              className="px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+              className="px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all [color-scheme:light] dark:[color-scheme:dark]"
             />
           </div>
           <button

@@ -283,12 +283,12 @@ export default function SalesInvoiceEditForm({ invoice }: { invoice: any }) {
           />
         </div>
         <div className="flex flex-col">
-          <label className="text-xs text-neutral-500">Date</label>
+          <label className="text-xs text-neutral-500 dark:text-neutral-400">Date</label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="rounded-lg border px-3 py-2"
+            className="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white px-3 py-2 [color-scheme:light] dark:[color-scheme:dark]"
           />
         </div>
         <div className="flex flex-col">

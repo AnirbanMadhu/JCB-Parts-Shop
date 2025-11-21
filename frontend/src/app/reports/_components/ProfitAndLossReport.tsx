@@ -22,8 +22,8 @@ export default function ProfitAndLossReport({ data }: Props) {
   
   // Set default dates if not provided
   const today = new Date().toISOString().split('T')[0];
-  const [startDate, setStartDate] = useState(data.startDate || "");
-  const [endDate, setEndDate] = useState(data.endDate || "");
+  const [startDate, setStartDate] = useState(data.startDate || today);
+  const [endDate, setEndDate] = useState(data.endDate || today);
 
   const handleFilter = () => {
     const params = new URLSearchParams();
@@ -62,7 +62,7 @@ export default function ProfitAndLossReport({ data }: Props) {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+              className="px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all [color-scheme:light] dark:[color-scheme:dark]"
               placeholder="Select start date"
             />
           </div>
@@ -72,7 +72,7 @@ export default function ProfitAndLossReport({ data }: Props) {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+              className="px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all [color-scheme:light] dark:[color-scheme:dark]"
               placeholder="Select end date"
             />
           </div>

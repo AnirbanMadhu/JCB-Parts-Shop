@@ -35,7 +35,7 @@ export default function EditInvoiceDetails() {
   const [deliveryNote, setDeliveryNote] = useState('');
   const [buyerOrderNo, setBuyerOrderNo] = useState('');
   const [dispatchDocNo, setDispatchDocNo] = useState('');
-  const [deliveryNoteDate, setDeliveryNoteDate] = useState('');
+  const [deliveryNoteDate, setDeliveryNoteDate] = useState(new Date().toISOString().split('T')[0]);
   const [dispatchedThrough, setDispatchedThrough] = useState('');
   const [termsOfDelivery, setTermsOfDelivery] = useState('');
 
@@ -331,7 +331,7 @@ export default function EditInvoiceDetails() {
                   type="date"
                   value={deliveryNoteDate}
                   onChange={(e) => setDeliveryNoteDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-ring focus:border-ring"
+                  className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-ring focus:border-ring [color-scheme:light] dark:[color-scheme:dark]"
                 />
               </div>
 
