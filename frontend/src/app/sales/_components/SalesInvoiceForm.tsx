@@ -118,6 +118,9 @@ export default function SalesInvoiceForm() {
   const [partSearchQuery, setPartSearchQuery] = useState("");
   const [partSuggestions, setPartSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  
+  // Track available stock for each part
+  const [partStock, setPartStock] = useState<Record<number, number>>({});
 
   const totals = useMemo(() => {
     const sub = lines.reduce((s, l) => s + l.qty * (l.price - l.discount), 0);
@@ -143,25 +146,55 @@ export default function SalesInvoiceForm() {
   }, [lines, discountType, discountValue]);
 
   const handleScan = async (code: string) => {
-    const exists = lines.findIndex((l) => l.code === code);
-    if (exists >= 0) {
-      // Item already exists - increment quantity (auto-grouping)
-      const existingItem = lines[exists];
-      setLines((prev) =>
-        prev.map((l, i) => (i === exists ? { ...l, qty: l.qty + 1 } : l))
-      );
-      
-      // Highlight the updated row
-      setHighlightedRow(exists);
-      setTimeout(() => setHighlightedRow(null), 1500);
-      
-      // Show success notification
-      success(`✓ Quantity increased: ${existingItem.name} (Qty: ${existingItem.qty + 1})`);
-      return;
-    }
-
     try {
       const p = await fetchProductByCode(code);
+      
+      // Check current stock
+      const stockRes = await fetch(`${API_BASE_URL}/api/stock/${p.id}`, { cache: "no-store" });
+      if (!stockRes.ok) {
+        toastError(`✗ Unable to check stock for ${p.itemName}`);
+        return;
+      }
+      
+      const stockData = await stockRes.json();
+      const availableStock = stockData.stock;
+      
+      // Store stock info
+      setPartStock(prev => ({ ...prev, [p.id]: availableStock }));
+      
+      // Check if item already exists in the invoice
+      const exists = lines.findIndex((l) => l.code === code);
+      
+      if (exists >= 0) {
+        // Item already exists - check if we can increment quantity
+        const existingItem = lines[exists];
+        const currentQtyInInvoice = lines.reduce((sum, l) => l.partId === p.id ? sum + l.qty : sum, 0);
+        
+        if (currentQtyInInvoice >= availableStock) {
+          toastError(`✗ Insufficient stock for ${existingItem.name}. Available: ${availableStock}, Already in invoice: ${currentQtyInInvoice}`);
+          return;
+        }
+        
+        setLines((prev) =>
+          prev.map((l, i) => (i === exists ? { ...l, qty: l.qty + 1 } : l))
+        );
+        
+        // Highlight the updated row
+        setHighlightedRow(exists);
+        setTimeout(() => setHighlightedRow(null), 1500);
+        
+        // Show success notification with stock info
+        success(`✓ Quantity increased: ${existingItem.name} (Qty: ${existingItem.qty + 1}, Available: ${availableStock})`);
+        return;
+      }
+      
+      // New item - check if stock is available
+      if (availableStock <= 0) {
+        toastError(`✗ Out of stock: ${p.itemName}. Available: ${availableStock}`);
+        return;
+      }
+      
+      // Add new item
       setLines((prev) => [
         ...prev,
         {
@@ -180,14 +213,25 @@ export default function SalesInvoiceForm() {
       setHighlightedRow(lines.length);
       setTimeout(() => setHighlightedRow(null), 1500);
       
-      // Show success notification
-      success(`✓ Item added: ${p.itemName}`);
+      // Show success notification with stock info
+      success(`✓ Item added: ${p.itemName} (Available: ${availableStock})`);
     } catch (error) {
       toastError(`✗ Part not found: ${code}`);
     }
   };
 
   const updateLine = (idx: number, patch: Partial<Line>) => {
+    // If updating quantity, check stock availability
+    if (patch.qty !== undefined) {
+      const line = lines[idx];
+      const availableStock = partStock[line.partId];
+      
+      if (availableStock !== undefined && patch.qty > availableStock) {
+        toastError(`✗ Insufficient stock for ${line.name}. Available: ${availableStock}`);
+        return;
+      }
+    }
+    
     setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
   };
 
@@ -198,6 +242,18 @@ export default function SalesInvoiceForm() {
   const save = async (submit: boolean) => {
     if (!customer || lines.length === 0) {
       toastError("Please select a customer and add at least one item");
+      return;
+    }
+    
+    // Validate stock for all items
+    const stockIssues = lines.filter(l => {
+      const availableStock = partStock[l.partId];
+      return availableStock !== undefined && l.qty > availableStock;
+    });
+    
+    if (stockIssues.length > 0) {
+      const itemNames = stockIssues.map(l => l.name).join(", ");
+      toastError(`✗ Insufficient stock for: ${itemNames}. Please adjust quantities.`);
       return;
     }
 
@@ -465,7 +521,7 @@ export default function SalesInvoiceForm() {
                     <button
                       key={part.id}
                       type="button"
-                      className="block w-full text-left px-4 py-3 hover:bg-gray-100 border-b last:border-b-0 border-gray-200 transition-colors bg-white"
+                      className="block w-full text-left px-4 py-3 hover:bg-gray-100 border-b last:border-b-0 border-gray-200 transition-colors bg-white cursor-pointer"
                       onClick={() => {
                         handleScan(part.partNumber);
                         setPartSearchQuery("");
@@ -527,12 +583,13 @@ export default function SalesInvoiceForm() {
 
         {/* Items Table */}
         <div className="mt-8 overflow-x-auto">
-          <table className="min-w-[960px] w-full text-sm">
+          <table className="min-w-[1060px] w-full text-sm">
             <thead className="bg-muted">
               <tr>
                 <th className="px-3 py-2 text-left text-foreground font-medium">Code</th>
                 <th className="px-3 py-2 text-left text-foreground font-medium">Name</th>
                 <th className="px-3 py-2 text-left text-foreground font-medium">UOM</th>
+                <th className="px-3 py-2 text-right text-foreground font-medium">Available</th>
                 <th className="px-3 py-2 text-right text-foreground font-medium">Qty</th>
                 <th className="px-3 py-2 text-right text-foreground font-medium">Price</th>
                 <th className="px-3 py-2 text-right text-foreground font-medium">Discount</th>
@@ -546,6 +603,8 @@ export default function SalesInvoiceForm() {
                 const net = l.price - l.discount;
                 const lineTotal = l.qty * net + (l.qty * net * l.taxRate) / 100;
                 const isHighlighted = highlightedRow === i;
+                const availableStock = partStock[l.partId];
+                const stockWarning = availableStock !== undefined && l.qty > availableStock;
                 return (
                   <tr 
                     key={l.code} 
@@ -557,15 +616,33 @@ export default function SalesInvoiceForm() {
                     <td className="px-3 py-2 text-foreground">{l.name}</td>
                     <td className="px-3 py-2 text-foreground">{l.uom ?? "-"}</td>
                     <td className="px-3 py-2 text-right">
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-20 rounded border border-border bg-background text-foreground px-2 py-1 text-right focus:outline-none focus:ring-1 focus:ring-primary"
-                        value={l.qty}
-                        onChange={(e) =>
-                          updateLine(i, { qty: Math.max(1, Number(e.target.value || 1)) })
-                        }
-                      />
+                      <span className={`font-medium ${
+                        availableStock === undefined ? 'text-muted-foreground' :
+                        availableStock <= 0 ? 'text-red-600' :
+                        availableStock < 5 ? 'text-orange-600' :
+                        'text-green-600'
+                      }`}>
+                        {availableStock ?? '...'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <div className="flex flex-col items-end gap-1">
+                        <input
+                          type="number"
+                          min={1}
+                          max={availableStock}
+                          className={`w-20 rounded border ${
+                            stockWarning ? 'border-red-500 bg-red-50' : 'border-border bg-background'
+                          } text-foreground px-2 py-1 text-right focus:outline-none focus:ring-1 focus:ring-primary`}
+                          value={l.qty}
+                          onChange={(e) =>
+                            updateLine(i, { qty: Math.max(1, Number(e.target.value || 1)) })
+                          }
+                        />
+                        {stockWarning && (
+                          <span className="text-xs text-red-600 whitespace-nowrap">Exceeds stock!</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-2 text-right">
                       <input

@@ -246,12 +246,12 @@ export default function PurchasePaymentsList({ payments }: Props) {
         </div>
       </div>
 
-      {/* Table Container */}
-      <div className="px-6 py-6">
-        <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+      {/* Table Container - Flex grow to fill remaining space */}
+      <div className="px-6 py-6 flex-1 flex flex-col min-h-0">
+        <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm flex flex-col flex-1">
           {!hasRows ? (
             /* Empty State */
-            <div className="flex flex-col items-center justify-center py-32">
+            <div className="flex flex-col items-center justify-center flex-1 py-16">
               <div className="mb-4">
                 <svg className="w-20 h-20 text-muted" viewBox="0 0 80 80" fill="none">
                   <rect x="22" y="14" width="40" height="48" rx="2" fill="hsl(var(--card))" stroke="currentColor" strokeWidth="1.5" />
@@ -277,8 +277,8 @@ export default function PurchasePaymentsList({ payments }: Props) {
                 <div className="text-xs font-medium text-muted-foreground text-right">Amount</div>
                 <div className="text-xs font-medium text-muted-foreground text-center">Actions</div>
               </div>
-              {/* Table Body */}
-              <div className="max-h-[600px] overflow-y-auto">
+              {/* Table Body - Flex grow to fill available space */}
+              <div className="flex-1 overflow-y-auto">
                 {filteredPayments.map((payment, i) => (
                   <div key={payment.id} className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 border-b border-border hover:bg-muted/50">
                     <div className="text-sm text-foreground">{i + 1}</div>

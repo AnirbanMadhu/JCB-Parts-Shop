@@ -458,7 +458,7 @@ export default function PurchaseInvoiceForm() {
                     <button
                       key={part.id}
                       type="button"
-                      className="block w-full text-left px-4 py-3 hover:bg-gray-100 border-b last:border-b-0 border-gray-200 transition-colors bg-white"
+                      className="block w-full text-left px-4 py-3 hover:bg-gray-100 border-b last:border-b-0 border-gray-200 transition-colors bg-white cursor-pointer"
                       onClick={() => {
                         handleScan(part.partNumber);
                         setPartSearchQuery("");
