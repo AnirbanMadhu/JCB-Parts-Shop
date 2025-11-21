@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/hooks/useToast";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
@@ -17,6 +19,7 @@ type CustomerFormData = {
 
 export default function CustomerEditForm({ customer }: { customer: any }) {
   const router = useRouter();
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
   
   const [formData, setFormData] = useState<CustomerFormData>({
@@ -36,7 +39,7 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      alert('Customer name is required');
+      toast.error('Customer name is required');
       return;
     }
 
@@ -53,36 +56,49 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
         throw new Error(error.error || 'Failed to update customer');
       }
 
-      alert('Customer updated successfully');
-      router.push('/common/customers');
+      toast.success('Customer updated successfully');
+      setTimeout(() => {
+        router.push('/common/customers');
+        router.refresh();
+      }, 500);
     } catch (error: any) {
-      alert('Error updating customer: ' + error.message);
+      toast.error('Error updating customer: ' + error.message);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
+    <div className="min-h-screen bg-background">
+      {/* Toast notifications */}
+      {toast.toasts.map((t) => (
+        <Toast
+          key={t.id}
+          message={t.message}
+          type={t.type}
+          onClose={() => toast.removeToast(t.id)}
+        />
+      ))}
+      
+      <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <Link href="/common/customers" className="text-sm text-blue-600 hover:underline">
+          <Link href="/common/customers" className="text-sm text-primary hover:underline">
             ← Back to Customers
           </Link>
-          <h1 className="text-[17px] font-semibold text-gray-900">Edit Customer - {customer.name}</h1>
+          <h1 className="text-[17px] font-semibold text-foreground">Edit Customer - {customer.name}</h1>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => router.push('/common/customers')}
-            className="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200"
+            className="px-4 py-1.5 text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="px-4 py-1.5 text-sm bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors disabled:opacity-60"
+            className="px-4 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
@@ -94,14 +110,14 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
           <div className="grid gap-6 md:grid-cols-2">
             {/* Customer Name */}
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">
-                Customer Name <span className="text-red-500">*</span>
+              <label className="text-sm font-medium text-foreground mb-1">
+                Customer Name <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                 placeholder="Enter customer name"
                 required
               />
@@ -109,36 +125,36 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
 
             {/* Email */}
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="text-sm font-medium text-foreground mb-1">Email</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                 placeholder="customer@example.com"
               />
             </div>
 
             {/* Phone */}
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label className="text-sm font-medium text-foreground mb-1">Phone</label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                 placeholder="+91 1234567890"
               />
             </div>
 
             {/* GSTIN */}
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">GSTIN</label>
+              <label className="text-sm font-medium text-foreground mb-1">GSTIN</label>
               <input
                 type="text"
                 value={formData.gstin}
                 onChange={(e) => handleChange('gstin', e.target.value.toUpperCase())}
-                className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                 placeholder="22AAAAA0000A1Z5"
                 maxLength={15}
               />
@@ -146,11 +162,11 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
 
             {/* State */}
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">State</label>
+              <label className="text-sm font-medium text-foreground mb-1">State</label>
               <select
                 value={formData.state}
                 onChange={(e) => handleChange('state', e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">Select State</option>
                 <option value="Andhra Pradesh">Andhra Pradesh</option>
@@ -186,12 +202,12 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
 
             {/* Address - Full Width */}
             <div className="flex flex-col md:col-span-2">
-              <label className="text-sm font-medium text-gray-700 mb-1">Address</label>
+              <label className="text-sm font-medium text-foreground mb-1">Address</label>
               <textarea
                 value={formData.address}
                 onChange={(e) => handleChange('address', e.target.value)}
                 rows={3}
-                className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                 placeholder="Enter customer address"
               />
             </div>
@@ -201,14 +217,14 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
             <button
               type="button"
               onClick={() => router.push('/common/customers')}
-              className="px-6 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200"
+              className="px-6 py-2 text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 text-sm bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors disabled:opacity-60"
+              className="px-6 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>

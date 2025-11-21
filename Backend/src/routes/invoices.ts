@@ -6,11 +6,84 @@ import { Decimal } from '@prisma/client/runtime/library';
 
 const router = Router();
 
+// Generate next invoice number for customer/supplier
+router.get('/next-number', async (req, res) => {
+  const { type, customerId, supplierId } = req.query as {
+    type?: 'PURCHASE' | 'SALE';
+    customerId?: string;
+    supplierId?: string;
+  };
+
+  try {
+    const now = new Date();
+    const month = now.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+    const currentMonth = now.getMonth(); // 0-11
+    const currentYear = now.getFullYear();
+    
+    // Financial year runs from April to March
+    // If month is Jan-Mar (0-2), we're in the second half of financial year
+    // If month is Apr-Dec (3-11), we're in the first half of financial year
+    let financialYearStart, financialYearEnd;
+    if (currentMonth >= 3) { // April (3) to December (11)
+      financialYearStart = currentYear;
+      financialYearEnd = currentYear + 1;
+    } else { // January (0) to March (2)
+      financialYearStart = currentYear - 1;
+      financialYearEnd = currentYear;
+    }
+    
+    const year = financialYearStart.toString().slice(-2);
+    const nextYear = financialYearEnd.toString().slice(-2);
+
+    // Calculate month/year range for filtering
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    let sequenceNumber = 1;
+
+    // Get count of ALL invoices of this type in current month/year (resets monthly)
+    if (type === 'SALE') {
+      const invoiceCount = await prisma.invoice.count({
+        where: {
+          type: InvoiceType.SALE,
+          date: {
+            gte: startOfMonth,
+            lte: endOfMonth
+          }
+        }
+      });
+      sequenceNumber = invoiceCount + 1;
+    } else if (type === 'PURCHASE') {
+      const invoiceCount = await prisma.invoice.count({
+        where: {
+          type: InvoiceType.PURCHASE,
+          date: {
+            gte: startOfMonth,
+            lte: endOfMonth
+          }
+        }
+      });
+      sequenceNumber = invoiceCount + 1;
+    }
+
+    // Format: JCB/SequenceNumber/MONTH/YY-YY (e.g., JCB/02/NOV/25-26)
+    const invoiceNumber = `JCB/${sequenceNumber.toString().padStart(2, '0')}/${month}/${year}-${nextYear}`;
+
+    res.json({ invoiceNumber, sequenceNumber, financialYear: `${year}-${nextYear}` });
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Failed to generate invoice number' });
+  }
+});
+
 // Create purchase or sales invoice
 router.post('/', async (req, res) => {
   const body = req.body as InvoiceCreateBody;
 
+  console.log(`[INVOICE CREATE] Type: ${body.type}, Invoice#: ${body.invoiceNumber}, Items: ${body.items?.length || 0}, Discount: ${body.discountPercent}% / ₹${body.discountAmount}`);
+
   if (!body.invoiceNumber || !body.date || !body.type || !body.items?.length) {
+    console.error('[INVOICE CREATE] Validation failed - missing required fields');
     return res.status(400).json({ error: 'invoiceNumber, date, type, items required' });
   }
 
@@ -39,10 +112,8 @@ router.post('/', async (req, res) => {
         });
       }
 
-      const discountPercent = body.discountPercent ?? 0;
-      const discountAmount = subtotal.mul(discountPercent).div(100);
-
-      const taxableValue = subtotal.sub(discountAmount);
+      // Calculate tax on full subtotal (before discount)
+      const taxableValue = subtotal;
 
       const cgstPercent = body.cgstPercent ?? 0;
       const sgstPercent = body.sgstPercent ?? 0;
@@ -50,16 +121,29 @@ router.post('/', async (req, res) => {
       const cgstAmount = taxableValue.mul(cgstPercent).div(100);
       const sgstAmount = taxableValue.mul(sgstPercent).div(100);
 
-      const gross = taxableValue.add(cgstAmount).add(sgstAmount);
+      // Calculate gross before discount
+      const grossBeforeDiscount = taxableValue.add(cgstAmount).add(sgstAmount);
+
+      // Handle both percentage and fixed amount discount on grand total
+      const discountPercent = body.discountPercent ?? 0;
+      let discountAmount = new Decimal(0);
+      
+      if (body.discountAmount !== undefined && body.discountAmount !== null && body.discountAmount > 0) {
+        // Fixed amount discount provided
+        discountAmount = new Decimal(body.discountAmount);
+      } else if (discountPercent > 0) {
+        // Percentage discount on grand total (after tax)
+        discountAmount = grossBeforeDiscount.mul(discountPercent).div(100);
+      }
+
+      const gross = grossBeforeDiscount.sub(discountAmount);
 
       // round to nearest rupee like invoice
       const roundedTotal = gross.toDecimalPlaces(0);
       const roundOff = roundedTotal.sub(gross);
 
-      // Parse the date and set time to current time
-      const invoiceDate = new Date(body.date);
-      const now = new Date();
-      invoiceDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+      // Use current system date and time for invoice creation
+      const invoiceDate = new Date();
 
       const invoice = await tx.invoice.create({
         data: {
@@ -112,9 +196,10 @@ router.post('/', async (req, res) => {
       return invoice;
     });
 
+    console.log(`[INVOICE CREATE] ✓ Success - Created invoice ID: ${result.id}, Type: ${result.type}`);
     res.status(201).json(result);
   } catch (e: any) {
-    console.error(e);
+    console.error('[INVOICE CREATE] ✗ Error:', e.message || e);
     res.status(500).json({ error: e.message || 'Failed to create invoice' });
   }
 });
@@ -129,6 +214,8 @@ router.get('/', async (req, res) => {
     customerId?: string;
     limit?: string;
   };
+
+  console.log(`[INVOICE LIST] Fetching invoices - Type: ${type || 'ALL'}, Limit: ${limit}`);
 
   try {
     const where: any = {};
@@ -166,13 +253,17 @@ router.get('/', async (req, res) => {
           }
         }
       },
-      orderBy: { date: 'desc' },
+      orderBy: [
+        { date: 'desc' },
+        { createdAt: 'desc' }
+      ],
       take: Number(limit)
     });
 
+    console.log(`[INVOICE LIST] ✓ Found ${invoices.length} invoices (Type: ${type || 'ALL'})`);
     res.json(invoices);
   } catch (e) {
-    console.error(e);
+    console.error('[INVOICE LIST] ✗ Error:', e);
     res.status(500).json({ error: 'Failed to load invoices' });
   }
 });
@@ -276,19 +367,34 @@ router.put('/:id', async (req, res) => {
         });
       }
 
-      const discountPercent = body.discountPercent ?? 0;
-      const discountAmount = subtotal.mul(discountPercent).div(100);
-      const taxableValue = subtotal.sub(discountAmount);
+      // Calculate tax on full subtotal (before discount)
+      const taxableValue = subtotal;
       const cgstPercent = body.cgstPercent ?? 0;
       const sgstPercent = body.sgstPercent ?? 0;
       const cgstAmount = taxableValue.mul(cgstPercent).div(100);
       const sgstAmount = taxableValue.mul(sgstPercent).div(100);
-      const gross = taxableValue.add(cgstAmount).add(sgstAmount);
+      
+      // Calculate gross before discount
+      const grossBeforeDiscount = taxableValue.add(cgstAmount).add(sgstAmount);
+
+      // Handle both percentage and fixed amount discount on grand total
+      const discountPercent = body.discountPercent ?? 0;
+      let discountAmount = new Decimal(0);
+      
+      if (body.discountAmount !== undefined && body.discountAmount !== null && body.discountAmount > 0) {
+        // Fixed amount discount provided
+        discountAmount = new Decimal(body.discountAmount);
+      } else if (discountPercent > 0) {
+        // Percentage discount on grand total (after tax)
+        discountAmount = grossBeforeDiscount.mul(discountPercent).div(100);
+      }
+
+      const gross = grossBeforeDiscount.sub(discountAmount);
       const roundedTotal = gross.toDecimalPlaces(0);
       const roundOff = roundedTotal.sub(gross);
 
-      // Parse the date and set time to current time if status changes
-      const invoiceDate = new Date(body.date);
+      // Use system time for status changes
+      const invoiceDate = new Date();
       if (body.status && body.status !== InvoiceStatus.DRAFT) {
         const now = new Date();
         invoiceDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());

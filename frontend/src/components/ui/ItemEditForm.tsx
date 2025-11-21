@@ -128,10 +128,14 @@ export default function ItemEditForm({ item }: { item: any }) {
               <input
                 type="text"
                 value={formData.partNumber}
-                onChange={(e) => handleChange('partNumber', e.target.value)}
+                onChange={(e) => handleChange('partNumber', e.target.value.toUpperCase())}
                 className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., 550/42835C, 336/E8026"
+                pattern="[0-9]+/[A-Z0-9]+"
+                title="Format: Number/Alphanumeric (e.g., 550/42835C)"
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">Format: Number/Alphanumeric (e.g., 550/42835C, 336/E8026)</p>
             </div>
 
             {/* Item Name */}

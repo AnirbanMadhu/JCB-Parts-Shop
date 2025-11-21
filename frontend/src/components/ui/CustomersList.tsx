@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Customer } from "@/lib/api";
 import BackButton from "./BackButton";
 import ToastContainer from "./ToastContainer";
+import ConfirmDialog from "./ConfirmDialog";
 import { Filter, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -21,6 +22,11 @@ export default function CustomersList({ customers }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    customerId: string;
+    customerName: string;
+  }>({ isOpen: false, customerId: '', customerName: '' });
 
   // Keyboard shortcut: Ctrl+F to focus search
   useEffect(() => {
@@ -51,14 +57,16 @@ export default function CustomersList({ customers }: Props) {
 
   const hasRows = filteredCustomers && filteredCustomers.length > 0;
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
-      return;
-    }
+  const handleDeleteClick = (id: string, name: string) => {
+    setConfirmDialog({ isOpen: true, customerId: id, customerName: name });
+  };
 
-    setDeletingId(id);
+  const handleDeleteConfirm = async () => {
+    const { customerId, customerName } = confirmDialog;
+    setDeletingId(customerId);
+    
     try {
-      const res = await fetch(`${API_BASE_URL}/api/customers/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/customers/${customerId}`, {
         method: 'DELETE',
       });
 
@@ -67,7 +75,7 @@ export default function CustomersList({ customers }: Props) {
         throw new Error(errorData.error || 'Failed to delete customer');
       }
 
-      success(`Customer "${name}" deleted successfully`);
+      success(`Customer "${customerName}" deleted successfully`);
       router.refresh();
     } catch (err: any) {
       error(err.message || 'Error deleting customer');
@@ -79,6 +87,16 @@ export default function CustomersList({ customers }: Props) {
   return (
     <div className="min-h-screen bg-background">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, customerId: '', customerName: '' })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Customer"
+        message={`Are you sure you want to delete "${confirmDialog.customerName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
       {/* Header */}
       <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
@@ -168,7 +186,7 @@ export default function CustomersList({ customers }: Props) {
                       <Pencil className="w-4 h-4" />
                     </Link>
                     <button
-                      onClick={() => handleDelete(customer.id, customer.name)}
+                      onClick={() => handleDeleteClick(customer.id, customer.name)}
                       disabled={deletingId === customer.id}
                       className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-all hover:scale-110 disabled:opacity-50"
                       title="Delete"

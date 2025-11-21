@@ -25,16 +25,6 @@ router.post(
 
       const { email, password, name } = req.body;
 
-      // Check if any users exist
-      const userCount = await prisma.user.count();
-      
-      // Only allow registration if no users exist (first user becomes admin)
-      if (userCount > 0) {
-        return res.status(403).json({ 
-          error: 'Registration is closed. Please contact an administrator for an invitation.' 
-        });
-      }
-
       // Check if email already exists
       const existingUser = await prisma.user.findUnique({
         where: { email },
@@ -47,15 +37,15 @@ router.post(
       // Hash password
       const hashedPassword = await hashPassword(password);
 
-      // Create first user as admin
+      // Create user - Anyone who registers through this endpoint becomes an ADMIN
       const user = await prisma.user.create({
         data: {
           email,
           password: hashedPassword,
           name,
-          role: 'ADMIN', // First user is always admin
+          role: 'ADMIN', // All users who register through /register become ADMIN
           isActive: true,
-          mustChangePassword: false, // Admin created their own password
+          mustChangePassword: false, // Self-registered users created their own password
           lastPasswordChange: new Date(),
         },
         select: {

@@ -244,15 +244,15 @@ export default function InvoicePrint({
 
   const ItemsTableHeader = () => (
     <thead>
-      <tr className="border-b-2 border-black bg-white">
-        <th className="border-r border-black p-1 text-left text-[9px] font-bold w-10 text-black">Sl<br/>No</th>
-        <th className="border-r border-black p-1 text-left text-[9px] font-bold text-black">Product Code</th>
-        <th className="border-r border-black p-1 text-left text-[9px] font-bold text-black">Description of Goods</th>
-        <th className="border-r border-black p-1 text-left text-[9px] font-bold text-black">HSN/SAC</th>
-        <th className="border-r border-black p-1 text-center text-[9px] font-bold text-black">Quantity</th>
-        <th className="border-r border-black p-1 text-center text-[9px] font-bold text-black">Rate</th>
-        <th className="border-r border-black p-1 text-center text-[9px] font-bold text-black">per</th>
-        <th className="p-1 text-right text-[9px] font-bold text-black">Amount</th>
+      <tr className="border-b border-black bg-white">
+        <th className="border-r border-black p-1 text-center text-[10px] font-semibold w-12 text-black align-middle">Sl<br/>No</th>
+        <th className="border-r border-black p-1 text-center text-[10px] font-semibold w-24 text-black align-middle">Product Code</th>
+        <th className="border-r border-black p-1 text-center text-[10px] font-semibold text-black align-middle">Description of Goods</th>
+        <th className="border-r border-black p-1 text-center text-[10px] font-semibold w-20 text-black align-middle">HSN/SAC</th>
+        <th className="border-r border-black p-1 text-center text-[10px] font-semibold w-16 text-black align-middle">Quantity</th>
+        <th className="border-r border-black p-1 text-center text-[10px] font-semibold w-20 text-black align-middle">Rate</th>
+        <th className="border-r border-black p-1 text-center text-[10px] font-semibold w-12 text-black align-middle">per</th>
+        <th className="p-1 text-center text-[10px] font-semibold w-24 text-black align-middle">Amount</th>
       </tr>
     </thead>
   );
@@ -314,30 +314,17 @@ export default function InvoicePrint({
                   <tbody>
                     {pageItems.map((item, index) => (
                       <tr key={item.id} className="border-b border-black bg-white">
-                        <td className="border-r border-black p-1 text-black">{startIndex + index + 1}</td>
-                        <td className="border-r border-black p-1 text-black">{item.part?.partNumber || ''}</td>
-                        <td className="border-r border-black p-1 text-black">{item.part?.itemName || ''}</td>
-                        <td className="border-r border-black p-1 text-center text-black">{item.hsnCode || item.part?.hsnCode || ''}</td>
-                        <td className="border-r border-black p-1 text-center text-black">{item.quantity}</td>
-                        <td className="border-r border-black p-1 text-right text-black">₹ {formatAmount(item.rate)}</td>
-                        <td className="border-r border-black p-1 text-center text-black">{item.unit || item.part?.unit || ''}</td>
-                        <td className="p-1 text-right text-black">{formatAmount(item.amount)}</td>
+                        <td className="border-r border-black p-1.5 text-center text-[10px] text-black align-top">{startIndex + index + 1}</td>
+                        <td className="border-r border-black p-1.5 text-[10px] text-black align-top">{item.part?.partNumber || ''}</td>
+                        <td className="border-r border-black p-1.5 text-[10px] text-black align-top">{item.part?.itemName || ''}</td>
+                        <td className="border-r border-black p-1.5 text-center text-[10px] text-black align-top">{(item.hsnCode || item.part?.hsnCode || '').replace(/(\d{4})(\d{2})(\d{2})/, '$1 $2 $3')}</td>
+                        <td className="border-r border-black p-1.5 text-center text-[10px] text-black align-top">{item.quantity}</td>
+                        <td className="border-r border-black p-1.5 text-right text-[10px] text-black align-top">₹<span className="ml-2">{formatAmount(item.rate)}</span></td>
+                        <td className="border-r border-black p-1.5 text-center text-[10px] text-black align-top">{item.unit || item.part?.unit || ''}</td>
+                        <td className="p-1.5 text-right text-[10px] text-black align-top">{formatAmount(item.amount)}</td>
                       </tr>
                     ))}
                     
-                    {/* Add empty rows on last page if needed for spacing */}
-                    {isLastPage && pageItems.length < 3 && Array.from({ length: 3 - pageItems.length }).map((_, i) => (
-                      <tr key={`empty-${i}`} className="border-b border-black">
-                        <td className="border-r border-black p-1 h-6">&nbsp;</td>
-                        <td className="border-r border-black p-1">&nbsp;</td>
-                        <td className="border-r border-black p-1">&nbsp;</td>
-                        <td className="border-r border-black p-1">&nbsp;</td>
-                        <td className="border-r border-black p-1">&nbsp;</td>
-                        <td className="border-r border-black p-1">&nbsp;</td>
-                        <td className="border-r border-black p-1">&nbsp;</td>
-                        <td className="p-1">&nbsp;</td>
-                      </tr>
-                    ))}
                   </tbody>
                 </table>
               </div>
@@ -345,81 +332,87 @@ export default function InvoicePrint({
               {/* Show totals only on last page */}
               {isLastPage && (
                 <>
-                  {/* Totals Section */}
-                  <div className="grid grid-cols-2 border-t-2 border-black">
-                    <div className="border-r-2 border-black"></div>
-                    <div>
-                      <div className="grid grid-cols-2 border-b border-black">
-                        <div className="border-r border-black p-1 text-[9px] font-semibold text-right text-black">Total Amount</div>
-                        <div className="p-1 text-[9px] text-right text-black">{formatAmount(invoice.subtotal)}</div>
-                      </div>
-                      {Number(invoice.discountPercent || 0) > 0 && (
-                        <div className="grid grid-cols-2 border-b border-black">
-                          <div className="border-r border-black p-1 text-[9px] font-semibold text-right text-black">
-                            Discount @{invoice.discountPercent}%
-                          </div>
-                          <div className="p-1 text-[9px] text-right text-black">{formatAmount(invoice.discountAmount)}</div>
+                  {/* Totals Section - Full Width with Right Column for Amounts */}
+                  <div className="border-t border-black">
+                    <div className="flex">
+                      {/* Left Empty Space */}
+                      <div className="flex-1 border-r border-black"></div>
+                      
+                      {/* Right Column with Totals */}
+                      <div className="w-80">
+                        <div className="flex border-b border-black">
+                          <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">Subtotal</div>
+                          <div className="w-28 p-1.5 text-[10px] text-right text-black">{formatAmount(invoice.subtotal)}</div>
                         </div>
-                      )}
-                      <div className="grid grid-cols-2 border-b border-black">
-                        <div className="border-r border-black p-1 text-[9px] font-semibold text-right text-black">Taxable Value</div>
-                        <div className="p-1 text-[9px] text-right text-black">{formatAmount(invoice.taxableValue)}</div>
-                      </div>
-                      {Number(invoice.cgstPercent || 0) > 0 && (
-                        <div className="grid grid-cols-2 border-b border-black">
-                          <div className="border-r border-black p-1 text-[9px] font-semibold text-right text-black">
-                            CGST @{invoice.cgstPercent}%
+                        {Number(invoice.cgstPercent || 0) > 0 && (
+                          <div className="flex border-b border-black">
+                            <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
+                              CGST @{invoice.cgstPercent}%
+                            </div>
+                            <div className="w-28 p-1.5 text-[10px] text-right text-black">{formatAmount(invoice.cgstAmount)}</div>
                           </div>
-                          <div className="p-1 text-[9px] text-right text-black">{formatAmount(invoice.cgstAmount)}</div>
-                        </div>
-                      )}
-                      {Number(invoice.sgstPercent || 0) > 0 && (
-                        <div className="grid grid-cols-2 border-b border-black">
-                          <div className="border-r border-black p-1 text-[9px] font-semibold text-right text-black">
-                            SGST @{invoice.sgstPercent}%
+                        )}
+                        {Number(invoice.sgstPercent || 0) > 0 && (
+                          <div className="flex border-b border-black">
+                            <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
+                              SGST @{invoice.sgstPercent}%
+                            </div>
+                            <div className="w-28 p-1.5 text-[10px] text-right text-black">{formatAmount(invoice.sgstAmount)}</div>
                           </div>
-                          <div className="p-1 text-[9px] text-right text-black">{formatAmount(invoice.sgstAmount)}</div>
+                        )}
+                        {(Number(invoice.discountPercent || 0) > 0 || Number(invoice.discountAmount || 0) > 0) && (
+                          <div className="flex border-b border-black">
+                            <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
+                              Discount{invoice.discountPercent > 0 ? ` @${invoice.discountPercent}%` : ''}
+                            </div>
+                            <div className="w-28 p-1.5 text-[10px] text-right text-black">-{formatAmount(invoice.discountAmount)}</div>
+                          </div>
+                        )}
+                        <div className="flex border-b border-black">
+                          <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">Round off</div>
+                          <div className="w-28 p-1.5 text-[10px] text-right text-black">{formatAmount(invoice.roundOff)}</div>
                         </div>
-                      )}
-                      <div className="grid grid-cols-2 border-b border-black">
-                        <div className="border-r border-black p-1 text-[9px] font-semibold text-right text-black">Round off</div>
-                        <div className="p-1 text-[9px] text-right text-black">{formatAmount(invoice.roundOff)}</div>
-                      </div>
-                      <div className="grid grid-cols-2 border-b-2 border-black">
-                        <div className="border-r border-black p-1 text-[9px] font-bold text-right text-black">Total</div>
-                        <div className="p-1 text-[9px] font-bold text-right text-black">₹ {formatAmount(invoice.total)}</div>
+                        <div className="flex border-b border-black">
+                          <div className="flex-1 p-1.5 text-[10px] font-bold text-right text-black">Grand Total</div>
+                          <div className="w-28 p-1.5 text-[11px] font-bold text-right text-black">₹<span className="ml-2">{formatAmount(invoice.total)}</span></div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Amount in Words */}
-                  <div className="border-b-2 border-black p-2">
-                    <div className="text-[9px] font-bold text-black">Total Amount (In words)</div>
-                    <div className="text-[9px] text-black">INR {totalInWords} only.</div>
+                  <div className="border-b border-black border-t border-black p-2.5">
+                    <div className="text-[10px] font-bold text-black mb-1">Total Amount (In words)</div>
+                    <div className="text-[10px] text-black">INR {totalInWords} only.</div>
+                    <div className="text-[8px] text-right text-black mt-1">E. & O.E</div>
                   </div>
 
                   {/* Footer with Declaration and Signature */}
-                  <div className="grid grid-cols-2 min-h-[100px]">
+                  <div className="grid grid-cols-2 min-h-[120px]">
                     {/* Declaration */}
-                    <div className="border-r-2 border-black p-2">
-                      <div className="text-[9px] font-bold mb-1 text-black">Declaration</div>
-                      <div className="text-[9px] text-black">
+                    <div className="border-r border-black p-3">
+                      <div className="text-[10px] font-bold mb-2 text-black">Declaration</div>
+                      <div className="text-[9px] text-black leading-relaxed">
                         We declare that this invoice shows the actual price of the goods
                         described and that all particulars are true and correct.
                       </div>
                     </div>
 
                     {/* Signature */}
-                    <div className="p-2 relative">
-                      <div className="text-[9px] text-right text-black">
-                        <div className="font-bold mb-1">for {companyName}</div>
-                        <div className="mt-16 pt-2">Authorised Signatory</div>
+                    <div className="p-3 relative">
+                      <div className="text-[10px] text-right text-black h-full flex flex-col justify-between">
+                        <div>
+                          <div className="font-bold mb-1">for {companyName}</div>
+                        </div>
+                        <div className="mt-auto">
+                          <div className="mb-1">Authorised Signatory</div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Computer Generated Invoice Note */}
-                  <div className="text-center text-[9px] py-1 border-t-2 border-black text-black">
+                  <div className="text-center text-[9px] py-1.5 border-t border-black text-black">
                     This is a Computer Generated Invoice
                   </div>
                 </>

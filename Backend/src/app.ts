@@ -14,8 +14,37 @@ import usersRouter from './routes/users';
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
+}));
 app.use(json());
+
+// Custom JSON response handler for Prisma Decimal types
+app.use((_req, res, next) => {
+  const originalJson = res.json.bind(res);
+  res.json = function(body: any) {
+    const stringified = JSON.stringify(body, (_key, value) => {
+      // Convert Prisma Decimal to number
+      if (value && typeof value === 'object' && value.constructor && value.constructor.name === 'Decimal') {
+        return parseFloat(value.toString());
+      }
+      // Convert Date to ISO string
+      if (value instanceof Date) {
+        return value.toISOString();
+      }
+      return value;
+    });
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    return originalJson.call(this, JSON.parse(stringified));
+  };
+  next();
+});
 
 // Request logging middleware
 app.use((req, _res, next) => {

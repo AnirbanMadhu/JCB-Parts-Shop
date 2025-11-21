@@ -54,15 +54,15 @@ export default function PurchaseInvoiceDetailPage({ params }: Props) {
 
   if (loading || !isLoaded) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+      <div className="min-h-screen bg-background p-6">
         <div className="text-center py-12">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="inline-block"
           >
-            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-slate-600 font-medium">Loading invoice details...</p>
+            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-muted-foreground font-medium">Loading invoice details...</p>
           </motion.div>
         </div>
       </div>
@@ -74,58 +74,62 @@ export default function PurchaseInvoiceDetailPage({ params }: Props) {
   }
   
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden flex flex-col">
-      <div className="flex-1 overflow-y-auto p-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-4 flex justify-between items-center"
+          className="mb-6 flex justify-between items-start"
         >
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-1">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               Purchase Invoice Details
             </h1>
-            <div className="flex items-center gap-2">
-              <p className="text-base text-slate-600 font-medium">Invoice #{invoice.invoiceNumber}</p>
-              <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold shadow-sm ${
-                  invoice.status === 'PAID' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' :
-                  invoice.status === 'SUBMITTED' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' :
-                  invoice.status === 'DRAFT' ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white' :
-                  'bg-gradient-to-r from-gray-500 to-slate-500 text-white'
-                }`}>
-                  {invoice.status}
-                </span>
-              </div>
+            <div className="flex items-center gap-3">
+              <p className="text-lg text-muted-foreground font-medium">Invoice #{invoice.invoiceNumber}</p>
+              <span className={`inline-flex px-3 py-1 rounded-md text-xs font-semibold ${
+                invoice.status === 'PAID' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                invoice.status === 'SUBMITTED' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                invoice.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
+              }`}>
+                {invoice.status}
+              </span>
             </div>
+          </div>
         </motion.div>
 
+        {/* Main Content Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl shadow-lg p-4 mb-3"
+          className="bg-card border border-border rounded-lg shadow-sm overflow-hidden"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+          {/* Invoice & Supplier Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100"
+              className="border border-border rounded-lg p-4 bg-muted/20"
             >
-              <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></span>
+              <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
                 Invoice Information
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div>
-                  <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wide">Invoice Number</span>
-                  <p className="text-sm font-bold text-slate-800 mt-0.5">{invoice.invoiceNumber}</p>
+                  <span className="text-xs font-medium text-muted-foreground">Invoice Number</span>
+                  <p className="text-sm font-semibold text-foreground mt-1">{invoice.invoiceNumber}</p>
                 </div>
                 <div>
-                  <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wide">Date</span>
-                  <p className="text-xs text-slate-700 mt-0.5">{new Date(invoice.date).toLocaleDateString('en-IN', {
+                  <span className="text-xs font-medium text-muted-foreground">Date</span>
+                  <p className="text-sm text-foreground mt-1">{new Date(invoice.date).toLocaleDateString('en-IN', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric'
@@ -133,14 +137,14 @@ export default function PurchaseInvoiceDetailPage({ params }: Props) {
                 </div>
                 {invoice.buyerOrderNo && (
                   <div>
-                    <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wide">Buyer Order No</span>
-                    <p className="text-xs text-slate-700 mt-0.5">{invoice.buyerOrderNo}</p>
+                    <span className="text-xs font-medium text-muted-foreground">Buyer Order No</span>
+                    <p className="text-sm text-foreground mt-1">{invoice.buyerOrderNo}</p>
                   </div>
                 )}
                 {invoice.dispatchDocNo && (
                   <div>
-                    <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wide">Dispatch Doc No</span>
-                    <p className="text-xs text-slate-700 mt-0.5">{invoice.dispatchDocNo}</p>
+                    <span className="text-xs font-medium text-muted-foreground">Dispatch Doc No</span>
+                    <p className="text-sm text-foreground mt-1">{invoice.dispatchDocNo}</p>
                   </div>
                 )}
               </div>
@@ -150,33 +154,35 @@ export default function PurchaseInvoiceDetailPage({ params }: Props) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-100"
+              className="border border-border rounded-lg p-4 bg-muted/20"
             >
-              <h3 className="text-sm font-bold text-purple-900 mb-2 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-purple-600 rounded-full animate-pulse"></span>
+              <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
                 Supplier Information
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div>
-                  <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Supplier</span>
-                  <p className="text-base font-bold text-slate-800 mt-1">{invoice.supplier?.name || 'N/A'}</p>
+                  <span className="text-xs font-medium text-muted-foreground">Supplier</span>
+                  <p className="text-sm font-semibold text-foreground mt-1">{invoice.supplier?.name || 'N/A'}</p>
                 </div>
                 {invoice.supplier?.email && (
                   <div>
-                    <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Email</span>
-                    <p className="text-base text-slate-700 mt-1">{invoice.supplier.email}</p>
+                    <span className="text-xs font-medium text-muted-foreground">Email</span>
+                    <p className="text-sm text-foreground mt-1">{invoice.supplier.email}</p>
                   </div>
                 )}
                 {invoice.supplier?.phone && (
                   <div>
-                    <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Phone</span>
-                    <p className="text-base text-slate-700 mt-1">{invoice.supplier.phone}</p>
+                    <span className="text-xs font-medium text-muted-foreground">Phone</span>
+                    <p className="text-sm text-foreground mt-1">{invoice.supplier.phone}</p>
                   </div>
                 )}
                 {invoice.supplier?.gstin && (
                   <div>
-                    <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">GSTIN</span>
-                    <p className="text-base text-slate-700 mt-1">{invoice.supplier.gstin}</p>
+                    <span className="text-xs font-medium text-muted-foreground">GSTIN</span>
+                    <p className="text-sm text-foreground mt-1">{invoice.supplier.gstin}</p>
                   </div>
                 )}
               </div>
@@ -188,43 +194,45 @@ export default function PurchaseInvoiceDetailPage({ params }: Props) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="border-t border-slate-200 pt-3 mb-3"
+            className="p-6 border-t border-border"
           >
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1 mb-2">
-              <span className="w-1.5 h-1.5 bg-green-600 rounded-full animate-pulse"></span>
+            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+              <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
               Payment Information
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border border-border rounded-lg p-4 bg-muted/20">
+              <div className="space-y-3">
                 <div>
-                  <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wide">Payment Status</span>
-                  <p className="text-xs mt-1">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm ${
-                      invoice.paymentStatus === 'PAID' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' :
-                      invoice.paymentStatus === 'PARTIAL' ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white' :
-                      invoice.paymentStatus === 'ON_CREDIT' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' :
-                      'bg-gradient-to-r from-red-500 to-rose-500 text-white'
+                  <span className="text-xs font-medium text-muted-foreground">Payment Status</span>
+                  <p className="mt-1">
+                    <span className={`inline-flex px-2.5 py-1 rounded-md text-xs font-semibold ${
+                      invoice.paymentStatus === 'PAID' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                      invoice.paymentStatus === 'PARTIAL' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                      invoice.paymentStatus === 'ON_CREDIT' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                      'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                     }`}>
                       {invoice.paymentStatus === 'ON_CREDIT' ? 'On Credit' : invoice.paymentStatus}
                     </span>
                   </p>
                 </div>
                 <div>
-                  <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wide">Paid Amount</span>
-                  <p className="text-sm font-bold text-green-700 mt-0.5">₹{Number(invoice.paidAmount || 0).toFixed(2)}</p>
+                  <span className="text-xs font-medium text-muted-foreground">Paid Amount</span>
+                  <p className="text-lg font-bold text-green-600 dark:text-green-400 mt-1">₹{Number(invoice.paidAmount || 0).toFixed(2)}</p>
                 </div>
                 {invoice.dueAmount !== null && invoice.dueAmount !== undefined && (
                   <div>
-                    <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wide">Due Amount</span>
-                    <p className="text-sm font-bold text-red-600 mt-0.5">₹{Number(invoice.dueAmount).toFixed(2)}</p>
+                    <span className="text-xs font-medium text-muted-foreground">Due Amount</span>
+                    <p className="text-lg font-bold text-red-600 dark:text-red-400 mt-1">₹{Number(invoice.dueAmount).toFixed(2)}</p>
                   </div>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {invoice.paymentDate && (
                   <div>
-                    <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wide">Payment Date</span>
-                    <p className="text-xs text-slate-700 mt-0.5">{new Date(invoice.paymentDate).toLocaleDateString('en-IN', {
+                    <span className="text-xs font-medium text-muted-foreground">Payment Date</span>
+                    <p className="text-sm text-foreground mt-1">{new Date(invoice.paymentDate).toLocaleDateString('en-IN', {
                       day: '2-digit',
                       month: 'short',
                       year: 'numeric'
@@ -233,14 +241,14 @@ export default function PurchaseInvoiceDetailPage({ params }: Props) {
                 )}
                 {invoice.paymentMethod && (
                   <div>
-                    <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wide">Payment Method</span>
-                    <p className="text-xs text-slate-700 mt-0.5 font-medium">{invoice.paymentMethod}</p>
+                    <span className="text-xs font-medium text-muted-foreground">Payment Method</span>
+                    <p className="text-sm text-foreground mt-1 font-medium">{invoice.paymentMethod}</p>
                   </div>
                 )}
                 {invoice.paymentNote && (
                   <div>
-                    <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wide">Payment Note</span>
-                    <p className="text-xs text-slate-700 mt-0.5 italic">{invoice.paymentNote}</p>
+                    <span className="text-xs font-medium text-muted-foreground">Payment Note</span>
+                    <p className="text-sm text-foreground mt-1 italic">{invoice.paymentNote}</p>
                   </div>
                 )}
               </div>
@@ -253,24 +261,26 @@ export default function PurchaseInvoiceDetailPage({ params }: Props) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
-              className="border-t border-slate-200 pt-3 mb-3"
+              className="p-6 border-b border-border"
             >
-              <h3 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-orange-600 rounded-full animate-pulse"></span>
+              <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
                 Delivery Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg p-3 border border-orange-100">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
                   {invoice.deliveryNote && (
                     <div>
-                      <span className="text-[10px] font-semibold text-orange-600 uppercase tracking-wide">Delivery Note</span>
-                      <p className="text-xs text-slate-700 mt-0.5">{invoice.deliveryNote}</p>
+                      <span className="text-xs font-medium text-muted-foreground">Delivery Note</span>
+                      <p className="text-sm text-foreground mt-1">{invoice.deliveryNote}</p>
                     </div>
                   )}
                   {invoice.deliveryNoteDate && (
                     <div>
-                      <span className="text-[10px] font-semibold text-orange-600 uppercase tracking-wide">Delivery Note Date</span>
-                      <p className="text-xs text-slate-700 mt-0.5">{new Date(invoice.deliveryNoteDate).toLocaleDateString('en-IN', {
+                      <span className="text-xs font-medium text-muted-foreground">Delivery Note Date</span>
+                      <p className="text-sm text-foreground mt-1">{new Date(invoice.deliveryNoteDate).toLocaleDateString('en-IN', {
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric'
@@ -278,17 +288,17 @@ export default function PurchaseInvoiceDetailPage({ params }: Props) {
                     </div>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {invoice.dispatchedThrough && (
                     <div>
-                      <span className="text-[10px] font-semibold text-orange-600 uppercase tracking-wide">Dispatched Through</span>
-                      <p className="text-xs text-slate-700 mt-0.5">{invoice.dispatchedThrough}</p>
+                      <span className="text-xs font-medium text-muted-foreground">Dispatched Through</span>
+                      <p className="text-sm text-foreground mt-1">{invoice.dispatchedThrough}</p>
                     </div>
                   )}
                   {invoice.termsOfDelivery && (
                     <div>
-                      <span className="text-[10px] font-semibold text-orange-600 uppercase tracking-wide">Terms of Delivery</span>
-                      <p className="text-xs text-slate-700 mt-0.5">{invoice.termsOfDelivery}</p>
+                      <span className="text-xs font-medium text-muted-foreground">Terms of Delivery</span>
+                      <p className="text-sm text-foreground mt-1">{invoice.termsOfDelivery}</p>
                     </div>
                   )}
                 </div>
@@ -301,59 +311,64 @@ export default function PurchaseInvoiceDetailPage({ params }: Props) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
-              className="border-t border-slate-200 pt-3 mb-3"
+              className="p-6 border-b border-border"
             >
-              <h3 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-cyan-600 rounded-full animate-pulse"></span>
+              <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
                 Notes
               </h3>
-              <div className="bg-gradient-to-br from-cyan-50 to-sky-50 rounded-lg p-3 border border-cyan-100">
-                <p className="text-xs text-slate-700 leading-relaxed italic">{invoice.note}</p>
+              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+                <p className="text-sm text-muted-foreground leading-relaxed italic">{invoice.note}</p>
               </div>
             </motion.div>
           )}
 
+          {/* Items Table */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.7 }}
-            className="border-t border-slate-200 pt-3 mb-3"
+            className="p-6"
           >
-            <h3 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-pulse"></span>
+            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+              <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
               Items
             </h3>
-            <div className="overflow-auto rounded-lg border border-slate-200 shadow-lg max-h-[200px]">
-              <table className="w-full text-xs">
-                <thead className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white sticky top-0 z-10">
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <table className="w-full text-sm">
+                <thead className="bg-muted border-b border-border">
                   <tr>
-                    <th className="px-2 py-1.5 text-left font-bold text-[10px]">#</th>
-                    <th className="px-2 py-1.5 text-left font-bold text-[10px]">Part Number</th>
-                    <th className="px-2 py-1.5 text-left font-bold text-[10px]">Item Name</th>
-                    <th className="px-2 py-1.5 text-left font-bold text-[10px]">HSN</th>
-                    <th className="px-2 py-1.5 text-right font-bold text-[10px]">Qty</th>
-                    <th className="px-2 py-1.5 text-left font-bold text-[10px]">Unit</th>
-                    <th className="px-2 py-1.5 text-right font-bold text-[10px]">Rate</th>
-                    <th className="px-2 py-1.5 text-right font-bold text-[10px]">Amount</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">#</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">Part Number</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">Item Name</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">HSN</th>
+                    <th className="px-4 py-3 text-right font-semibold text-foreground">Qty</th>
+                    <th className="px-4 py-3 text-left font-semibold text-foreground">Unit</th>
+                    <th className="px-4 py-3 text-right font-semibold text-foreground">Rate</th>
+                    <th className="px-4 py-3 text-right font-semibold text-foreground">Amount</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white">
+                <tbody className="bg-card">
                   {invoice.items?.map((item: any, i: number) => (
                     <motion.tr
                       key={item.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: 0.8 + (i * 0.05) }}
-                      className="border-b border-slate-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200"
+                      className="border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors"
                     >
-                      <td className="px-2 py-1.5 font-semibold text-slate-600">{i + 1}</td>
-                      <td className="px-2 py-1.5 font-medium text-slate-800">{item.part?.partNumber}</td>
-                      <td className="px-2 py-1.5 text-slate-700">{item.part?.itemName}</td>
-                      <td className="px-2 py-1.5 text-slate-600">{item.hsnCode}</td>
-                      <td className="px-2 py-1.5 text-right font-semibold text-blue-600">{item.quantity}</td>
-                      <td className="px-2 py-1.5 text-slate-600">{item.unit}</td>
-                      <td className="px-2 py-1.5 text-right text-slate-700">₹{Number(item.rate).toFixed(2)}</td>
-                      <td className="px-2 py-1.5 text-right font-bold text-indigo-700">₹{Number(item.amount).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
+                      <td className="px-4 py-3 font-medium text-foreground">{item.part?.partNumber}</td>
+                      <td className="px-4 py-3 text-foreground">{item.part?.itemName}</td>
+                      <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{item.hsnCode}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-foreground">{item.quantity}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{item.unit}</td>
+                      <td className="px-4 py-3 text-right text-foreground">₹{Number(item.rate).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-foreground">₹{Number(item.amount).toFixed(2)}</td>
                     </motion.tr>
                   ))}
                 </tbody>
@@ -361,79 +376,86 @@ export default function PurchaseInvoiceDetailPage({ params }: Props) {
             </div>
           </motion.div>
 
+          {/* Totals */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.9 }}
-            className="border-t border-slate-200 mt-3 pt-3"
+            className="p-6 bg-muted/30"
           >
             <div className="flex justify-end">
-              <div className="w-full md:w-80 space-y-1.5 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-3 border border-slate-200 shadow-lg">
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-600 font-medium">Subtotal:</span>
-                  <span className="font-bold text-slate-800">₹{Number(invoice.subtotal).toFixed(2)}</span>
+              <div className="w-full md:w-96 space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span className="font-semibold text-foreground">₹{Number(invoice.subtotal).toFixed(2)}</span>
                 </div>
                 {invoice.discountPercent > 0 && (
-                  <div className="flex justify-between text-base">
-                    <span className="text-slate-600 font-medium">Discount ({invoice.discountPercent}%):</span>
-                    <span className="font-bold text-red-600">- ₹{Number(invoice.discountAmount).toFixed(2)}</span>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Discount ({invoice.discountPercent}%):</span>
+                    <span className="font-semibold text-red-600 dark:text-red-400">- ₹{Number(invoice.discountAmount).toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-base">
-                  <span className="text-slate-600 font-medium">Taxable Value:</span>
-                  <span className="font-bold text-slate-800">₹{Number(invoice.taxableValue).toFixed(2)}</span>
+                <div className="flex justify-between text-sm pb-2 border-b border-border">
+                  <span className="text-muted-foreground">Taxable Value:</span>
+                  <span className="font-semibold text-foreground">₹{Number(invoice.taxableValue).toFixed(2)}</span>
                 </div>
                 {invoice.cgstPercent > 0 && (
-                  <div className="flex justify-between text-base">
-                    <span className="text-slate-600 font-medium">CGST ({invoice.cgstPercent}%):</span>
-                    <span className="font-bold text-blue-600">₹{Number(invoice.cgstAmount).toFixed(2)}</span>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">CGST ({invoice.cgstPercent}%):</span>
+                    <span className="font-semibold text-foreground">₹{Number(invoice.cgstAmount).toFixed(2)}</span>
                   </div>
                 )}
                 {invoice.sgstPercent > 0 && (
-                  <div className="flex justify-between text-base">
-                    <span className="text-slate-600 font-medium">SGST ({invoice.sgstPercent}%):</span>
-                    <span className="font-bold text-blue-600">₹{Number(invoice.sgstAmount).toFixed(2)}</span>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">SGST ({invoice.sgstPercent}%):</span>
+                    <span className="font-semibold text-foreground">₹{Number(invoice.sgstAmount).toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-base">
-                  <span className="text-slate-600 font-medium">Round Off:</span>
-                  <span className="font-bold text-slate-800">₹{Number(invoice.roundOff).toFixed(2)}</span>
+                <div className="flex justify-between text-sm pb-3 border-b border-border">
+                  <span className="text-muted-foreground">Round Off:</span>
+                  <span className="font-semibold text-foreground">₹{Number(invoice.roundOff).toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-2xl font-bold border-t-2 border-slate-300 pt-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  <span>Total:</span>
-                  <span>₹{Number(invoice.total).toFixed(2)}</span>
+                <div className="flex justify-between text-lg font-bold pt-2">
+                  <span className="text-foreground">Total:</span>
+                  <span className="text-primary">₹{Number(invoice.total).toFixed(2)}</span>
                 </div>
               </div>
             </div>
           </motion.div>
         </motion.div>
 
+        {/* Action Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 1 }}
-          className="flex gap-2 mt-3"
+          className="flex gap-3 mt-6"
         >
           <motion.a
-            whileHover={{ scale: 1.05, x: -5 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             href="/purchases/invoices"
-            className="px-4 py-2 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 rounded-lg hover:from-slate-200 hover:to-slate-300 font-semibold shadow-lg transition-all duration-200 border border-slate-300 text-sm"
+            className="px-6 py-2.5 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 font-medium shadow-sm hover:shadow transition-all duration-200 flex items-center gap-2"
           >
-            ← Back to Invoices
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Invoices
           </motion.a>
           {isLoaded && (settings.purchases.allowEditSubmitted || invoice.status === 'DRAFT') && (
             <motion.a
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               href={`/purchases/invoices/${invoice.id}/edit`}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-semibold shadow-lg shadow-blue-500/30 transition-all duration-200 text-sm"
+              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-medium shadow-sm hover:shadow transition-all duration-200 flex items-center gap-2"
             >
-              Edit Invoice ✏️
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit Invoice
             </motion.a>
           )}
         </motion.div>
-      </div>
       </div>
     </div>
   );

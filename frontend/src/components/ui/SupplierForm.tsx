@@ -3,12 +3,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/hooks/useToast";
 import BackButton from "./BackButton";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
 export default function SupplierForm() {
   const router = useRouter();
+  const toast = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -33,20 +36,32 @@ export default function SupplierForm() {
         throw new Error(error.error || 'Failed to create supplier');
       }
 
-      alert('Supplier created successfully');
-      router.push('/common');
-      router.refresh();
+      toast.success('Supplier created successfully');
+      setTimeout(() => {
+        router.push('/common');
+        router.refresh();
+      }, 500);
     } catch (error: any) {
-      alert('Error creating supplier: ' + error.message);
+      toast.error('Error creating supplier: ' + error.message);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
+    <div className="min-h-screen bg-background">
+      {/* Toast notifications */}
+      {toast.toasts.map((t) => (
+        <Toast
+          key={t.id}
+          message={t.message}
+          type={t.type}
+          onClose={() => toast.removeToast(t.id)}
+        />
+      ))}
+      
+      <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <BackButton />
-          <h1 className="text-[17px] font-semibold text-gray-900">Add New Supplier</h1>
+          <h1 className="text-[17px] font-semibold text-foreground">Add New Supplier</h1>
         </div>
       </header>
 
@@ -55,8 +70,8 @@ export default function SupplierForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Supplier Name */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Supplier Name <span className="text-red-500">*</span>
+              <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">
+                Supplier Name <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -64,14 +79,14 @@ export default function SupplierForm() {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                 placeholder="Enter supplier name"
               />
             </div>
 
             {/* Contact Person */}
             <div>
-              <label htmlFor="contactPerson" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="contactPerson" className="block text-sm font-medium text-foreground mb-1.5">
                 Contact Person
               </label>
               <input
@@ -79,14 +94,14 @@ export default function SupplierForm() {
                 id="contactPerson"
                 value={formData.contactPerson}
                 onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                 placeholder="Enter contact person name"
               />
             </div>
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
                 Email
               </label>
               <input
@@ -94,15 +109,15 @@ export default function SupplierForm() {
                 id="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                 placeholder="supplier@example.com"
               />
             </div>
 
             {/* Phone */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Phone <span className="text-red-500">*</span>
+              <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-1.5">
+                Phone <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 type="tel"
@@ -110,14 +125,14 @@ export default function SupplierForm() {
                 required
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                 placeholder="Enter phone number"
               />
             </div>
 
             {/* GSTIN */}
             <div>
-              <label htmlFor="gstin" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="gstin" className="block text-sm font-medium text-foreground mb-1.5">
                 GSTIN
               </label>
               <input
@@ -125,7 +140,7 @@ export default function SupplierForm() {
                 id="gstin"
                 value={formData.gstin}
                 onChange={(e) => setFormData({ ...formData, gstin: e.target.value.toUpperCase() })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                 placeholder="22AAAAA0000A1Z5"
                 maxLength={15}
               />
@@ -134,7 +149,7 @@ export default function SupplierForm() {
 
           {/* Address */}
           <div>
-            <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label htmlFor="address" className="block text-sm font-medium text-foreground mb-1.5">
               Address
             </label>
             <textarea
@@ -142,7 +157,7 @@ export default function SupplierForm() {
               rows={3}
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
               placeholder="Enter complete address"
             />
           </div>
@@ -151,14 +166,14 @@ export default function SupplierForm() {
           <div className="flex items-center gap-3 pt-4">
             <button
               type="submit"
-              className="px-6 py-2 bg-[#2c3e50] text-white text-sm font-medium rounded-md hover:bg-[#1a252f] transition-colors"
+              className="px-6 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-colors"
             >
               Create Supplier
             </button>
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors"
+              className="px-6 py-2 bg-muted text-muted-foreground text-sm font-medium rounded-md hover:bg-muted/80 transition-colors"
             >
               Cancel
             </button>

@@ -27,6 +27,7 @@ export interface InvoiceCreateBody {
   customerId?: number | null;
   items: InvoiceItemBody[];
   discountPercent?: number;
+  discountAmount?: number;
   cgstPercent?: number;
   sgstPercent?: number;
   deliveryNote?: string;

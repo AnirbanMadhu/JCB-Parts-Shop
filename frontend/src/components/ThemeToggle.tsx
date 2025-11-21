@@ -27,7 +27,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="h-9 w-9 hover:bg-accent transition-colors"
+      className="h-9 w-9 hover:bg-accent transition-colors cursor-pointer"
       title={actualTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
     >
       {actualTheme === 'light' ? (

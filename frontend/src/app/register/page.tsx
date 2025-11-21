@@ -22,10 +22,6 @@ export default function RegisterPage() {
       .then(res => res.json())
       .then(data => {
         setSystemStatus(data);
-        if (data.initialized) {
-          // System already has an admin, redirect to login
-          router.push('/login');
-        }
       })
       .catch(err => console.error('Failed to check system status:', err));
 
@@ -60,7 +56,7 @@ export default function RegisterPage() {
     }
   };
 
-  if (!systemStatus || systemStatus.initialized) {
+  if (!systemStatus) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4 animate-pulse">
@@ -87,14 +83,16 @@ export default function RegisterPage() {
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full">
               <Shield className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Admin Setup</span>
+              <span className="text-sm font-medium text-primary">{systemStatus.initialized ? 'User Registration' : 'Admin Setup'}</span>
             </div>
             <h1 className="text-4xl font-bold text-foreground leading-tight">
               Welcome to<br />
               <span className="text-primary">JCB Parts Shop</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              Set up your administrator account to begin managing your parts inventory, suppliers, and customers.
+              {systemStatus.initialized 
+                ? 'Create your account to access the parts inventory management system.'
+                : 'Set up your administrator account to begin managing your parts inventory, suppliers, and customers.'}
             </p>
           </div>
 
@@ -136,10 +134,10 @@ export default function RegisterPage() {
               <Shield className="w-8 h-8 text-primary" />
             </div>
             <h2 className="text-2xl font-bold text-foreground">
-              Create Admin Account
+              {systemStatus.initialized ? 'Create Account' : 'Create Admin Account'}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Set up your administrator credentials
+              {systemStatus.initialized ? 'Register for a new account' : 'Set up your administrator credentials'}
             </p>
           </div>
           <form className="space-y-5" onSubmit={handleSubmit}>
@@ -247,7 +245,7 @@ export default function RegisterPage() {
               ) : (
                 <>
                   <Shield className="w-5 h-5" />
-                  Create Admin Account
+                  {systemStatus.initialized ? 'Create Account' : 'Create Admin Account'}
                 </>
               )}
             </button>

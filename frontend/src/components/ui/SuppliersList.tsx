@@ -4,6 +4,7 @@
 import Link from "next/link";
 import BackButton from "./BackButton";
 import ToastContainer from "./ToastContainer";
+import ConfirmDialog from "./ConfirmDialog";
 import { Search, Plus, Edit, Trash2 } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -30,6 +31,11 @@ export default function SuppliersList({ suppliers }: Props) {
   const { toasts, removeToast, success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    supplierId: number;
+    supplierName: string;
+  }>({ isOpen: false, supplierId: 0, supplierName: '' });
 
   // Keyboard shortcut: Ctrl+F to focus search
   useEffect(() => {
@@ -44,16 +50,17 @@ export default function SuppliersList({ suppliers }: Props) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleDelete = async (e: React.MouseEvent, id: number, name: string) => {
+  const handleDeleteClick = (e: React.MouseEvent, id: number, name: string) => {
     e.preventDefault();
     e.stopPropagation();
+    setConfirmDialog({ isOpen: true, supplierId: id, supplierName: name });
+  };
 
-    if (!confirm(`Are you sure you want to delete supplier "${name}"? This action cannot be undone.`)) {
-      return;
-    }
+  const handleDeleteConfirm = async () => {
+    const { supplierId, supplierName } = confirmDialog;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/suppliers/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/suppliers/${supplierId}`, {
         method: 'DELETE',
       });
 
@@ -62,7 +69,7 @@ export default function SuppliersList({ suppliers }: Props) {
         throw new Error(errorData.error || 'Failed to delete supplier');
       }
 
-      success(`Supplier "${name}" deleted successfully`);
+      success(`Supplier "${supplierName}" deleted successfully`);
       router.refresh();
     } catch (err: any) {
       error(err.message || 'Error deleting supplier');
@@ -88,6 +95,16 @@ export default function SuppliersList({ suppliers }: Props) {
   return (
     <div className="min-h-screen bg-background">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, supplierId: 0, supplierName: '' })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Supplier"
+        message={`Are you sure you want to delete supplier "${confirmDialog.supplierName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
       <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <BackButton />
@@ -183,7 +200,7 @@ export default function SuppliersList({ suppliers }: Props) {
                         <Edit className="w-4 h-4" />
                       </Link>
                       <button
-                        onClick={(e) => handleDelete(e, supplier.id, supplier.name)}
+                        onClick={(e) => handleDeleteClick(e, supplier.id, supplier.name)}
                         className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-all hover:scale-110"
                         title="Delete supplier"
                       >

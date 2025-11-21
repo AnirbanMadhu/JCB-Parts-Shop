@@ -52,16 +52,59 @@ async function fetchProductByCode(code: string) {
 export default function SalesInvoiceForm() {
   const router = useRouter();
 
-  const [number, setNumber] = useState<string>(() => {
-    const ts = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    return `SINV-${ts}-${Math.floor(Math.random() * 900 + 100)}`;
-  });
+  const [number, setNumber] = useState<string>("");
   const [date, setDate] = useState<string>(() =>
     new Date().toISOString().slice(0, 10)
   );
 
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerQuery, setCustomerQuery] = useState("");
+  
+  // Discount on grand total
+  const [discountType, setDiscountType] = useState<"percentage" | "amount">("percentage");
+  const [discountValue, setDiscountValue] = useState<number>(0);
+
+  // Fetch unique invoice number when customer changes
+  useEffect(() => {
+    const fetchInvoiceNumber = async () => {
+      if (customer?.id) {
+        try {
+          const res = await fetch(
+            `${API_BASE_URL}/api/invoices/next-number?type=SALE&customerId=${customer.id}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            setNumber(data.invoiceNumber);
+          }
+        } catch (error) {
+          console.error('Failed to fetch invoice number:', error);
+          // Fallback to basic format
+          const now = new Date();
+          const month = now.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+          const currentMonth = now.getMonth();
+          const currentYear = now.getFullYear();
+          const financialYearStart = currentMonth >= 3 ? currentYear : currentYear - 1;
+          const financialYearEnd = currentMonth >= 3 ? currentYear + 1 : currentYear;
+          const year = financialYearStart.toString().slice(-2);
+          const nextYear = financialYearEnd.toString().slice(-2);
+          setNumber(`JCB/01/${month}/${year}-${nextYear}`);
+        }
+      } else {
+        // Generate default invoice number if no customer selected
+        const now = new Date();
+        const month = now.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const financialYearStart = currentMonth >= 3 ? currentYear : currentYear - 1;
+        const financialYearEnd = currentMonth >= 3 ? currentYear + 1 : currentYear;
+        const year = financialYearStart.toString().slice(-2);
+        const nextYear = financialYearEnd.toString().slice(-2);
+        setNumber(`JCB/01/${month}/${year}-${nextYear}`);
+      }
+    };
+
+    fetchInvoiceNumber();
+  }, [customer]);
 
   const [lines, setLines] = useState<Line[]>([]);
   const [notes, setNotes] = useState("");
@@ -82,8 +125,22 @@ export default function SalesInvoiceForm() {
       (s, l) => s + (l.qty * (l.price - l.discount) * l.taxRate) / 100,
       0
     );
-    return { sub, tax, grand: sub + tax };
-  }, [lines]);
+    const subtotalWithTax = sub + tax;
+    
+    // Apply discount on grand total
+    let discountAmount = 0;
+    if (discountValue > 0) {
+      if (discountType === "percentage") {
+        discountAmount = (subtotalWithTax * discountValue) / 100;
+      } else {
+        discountAmount = discountValue;
+      }
+    }
+    
+    const grand = subtotalWithTax - discountAmount;
+    
+    return { sub, tax, discount: discountAmount, grand };
+  }, [lines, discountType, discountValue]);
 
   const handleScan = async (code: string) => {
     const exists = lines.findIndex((l) => l.code === code);
@@ -168,7 +225,8 @@ export default function SalesInvoiceForm() {
           rate: l.price - l.discount,
           unit: l.uom
         })),
-        discountPercent: 0,
+        discountPercent: discountType === "percentage" ? discountValue : 0,
+        discountAmount: discountType === "amount" ? discountValue : 0,
         cgstPercent,
         sgstPercent
       };
@@ -184,11 +242,18 @@ export default function SalesInvoiceForm() {
         throw new Error(error.error || "Failed to save invoice");
       }
 
+      const invoice = await res.json();
+
       if (submit) {
-        router.push("/sales/invoices");
+        success("Invoice created successfully!");
       } else {
-        success("Invoice saved successfully!");
+        success("Invoice saved as draft!");
       }
+      
+      // Navigate after a brief delay to show the success message
+      setTimeout(() => {
+        router.push("/sales/invoices");
+      }, 800);
     } catch (error: any) {
       toastError("Error saving invoice: " + error.message);
     } finally {
@@ -255,7 +320,7 @@ export default function SalesInvoiceForm() {
   }, [customerQuery, allCustomers]);
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-background p-6">
       {/* Toast notifications */}
       {toast.toasts.map((t) => (
         <Toast
@@ -268,29 +333,29 @@ export default function SalesInvoiceForm() {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link href="/sales/invoices" className="text-sm underline dark:text-blue-400">
+          <Link href="/sales/invoices" className="text-sm underline text-primary hover:text-primary/80">
             ← Back
           </Link>
-          <h1 className="text-xl font-semibold dark:text-white">New Sales Invoice</h1>
+          <h1 className="text-xl font-semibold text-foreground">New Sales Invoice</h1>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowPreview(true)}
-            className="rounded-md border px-3 py-2 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800 dark:text-white"
+            className="rounded-md border-2 border-gray-300 bg-white text-gray-700 px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer font-medium shadow-sm"
           >
             Preview
           </button>
           <button
             disabled={saving || lines.length === 0 || !customer}
             onClick={() => save(false)}
-            className="rounded-md px-3 py-2 bg-neutral-700 text-white disabled:opacity-60 dark:bg-neutral-600"
+            className="rounded-md border-2 border-blue-500 bg-white text-blue-600 px-4 py-2 hover:bg-blue-50 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition-colors font-medium shadow-sm"
           >
             {saving ? "Saving..." : "Save Draft"}
           </button>
           <button
             disabled={saving || lines.length === 0 || !customer}
             onClick={() => save(true)}
-            className="rounded-md px-3 py-2 bg-black text-white disabled:opacity-60 dark:bg-neutral-800"
+            className="rounded-md border-2 border-blue-600 bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition-colors font-medium shadow-sm"
           >
             {saving ? "Submitting..." : "Submit"}
           </button>
@@ -300,27 +365,27 @@ export default function SalesInvoiceForm() {
       {/* Meta */}
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         <div className="flex flex-col">
-          <label className="text-xs text-neutral-500 dark:text-neutral-400">Invoice Number</label>
+          <label className="text-sm font-medium text-foreground mb-1">Invoice Number</label>
           <input
             value={number}
             onChange={(e) => setNumber(e.target.value)}
-            className="rounded-lg border px-3 py-2 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
+            className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div className="flex flex-col">
-          <label className="text-xs text-neutral-500 dark:text-neutral-400">Date</label>
+          <label className="text-sm font-medium text-foreground mb-1">Date</label>
           <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="rounded-lg border px-3 py-2 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:[color-scheme:dark]"
+            type="text"
+            value={new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+            disabled
+            className="rounded-lg border border-border bg-muted text-muted-foreground px-3 py-2 cursor-not-allowed"
           />
         </div>
         <div className="flex flex-col">
-          <label className="text-xs text-neutral-500 dark:text-neutral-400">Customer</label>
+          <label className="text-sm font-medium text-foreground mb-1">Customer</label>
           {customer ? (
             <div className="flex items-center gap-2">
-              <div className="rounded-lg border px-3 py-2 grow bg-neutral-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white">
+              <div className="rounded-lg border border-border bg-muted text-foreground px-3 py-2 grow">
                 {customer.name}
               </div>
               <button
@@ -328,7 +393,7 @@ export default function SalesInvoiceForm() {
                   setCustomer(null);
                   setCustomerQuery("");
                 }}
-                className="rounded-md border px-2 py-2 dark:border-neutral-700 dark:hover:bg-neutral-800 dark:text-white"
+                className="rounded-md border border-border bg-background text-foreground px-2 py-2 hover:bg-muted transition-colors"
               >
                 Change
               </button>
@@ -339,22 +404,22 @@ export default function SalesInvoiceForm() {
                 value={customerQuery}
                 onChange={(e) => setCustomerQuery(e.target.value)}
                 placeholder="Search by customer name or ID (e.g., CUST-001)"
-                className="w-full rounded-lg border px-3 py-2 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:placeholder-neutral-500"
+                className="w-full rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
               />
               {filteredCustomers.length > 0 && (
-                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border bg-white shadow dark:bg-neutral-800 dark:border-neutral-700">
+                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-border bg-card shadow-lg">
                   {filteredCustomers.map((c) => (
                     <button
                       key={c.id}
                       type="button"
-                      className="block w-full text-left px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-700 dark:text-white"
+                      className="block w-full text-left px-3 py-2 hover:bg-muted text-foreground transition-colors"
                       onClick={() => {
                         setCustomer(c);
                         setCustomerQuery("");
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        {c.indexId && <span className="font-mono text-xs text-blue-600 dark:text-blue-400">{c.indexId}</span>}
+                        {c.indexId && <span className="font-mono text-xs text-primary">{c.indexId}</span>}
                         <span>{c.name}</span>
                       </div>
                     </button>
@@ -367,55 +432,75 @@ export default function SalesInvoiceForm() {
       </div>
 
       {/* Scanner */}
-      <div className="mt-8 rounded-xl border p-4 dark:border-neutral-700 dark:bg-neutral-900/50">
+      <div className="mt-8 rounded-xl border border-border bg-card p-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-medium dark:text-white">Add Items</h2>
+          <h2 className="font-medium text-foreground">Add Items</h2>
           <BarcodeScanner 
             onScan={handleScan}
             enabled={true}
             showIndicator={true}
           />
         </div>
-        <div className="mt-3 relative">
+        <div className="mt-3 mb-8 relative">
           <div className="flex gap-2">
             <div className="flex-1 relative">
               <input
                 type="text"
                 value={partSearchQuery}
                 onChange={(e) => setPartSearchQuery(e.target.value)}
-                placeholder="Scan barcode or manually type part number/name..."
-                className="w-full rounded-lg border px-3 py-2 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:placeholder-neutral-500"
+                placeholder="Scan barcode or type part number/name to search..."
+                className="w-full rounded-lg border border-border bg-background text-foreground px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
               />
               {isSearching && (
-                <div className="absolute right-3 top-3 text-sm text-neutral-500 dark:text-neutral-400">
+                <div className="absolute right-3 top-3 text-sm text-muted-foreground">
                   Searching...
                 </div>
               )}
               {partSuggestions.length > 0 && (
-                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border bg-white shadow-lg dark:bg-neutral-800 dark:border-neutral-700">
+                <div className="absolute z-50 mt-2 w-full max-h-72 overflow-auto rounded-lg border-2 border-gray-300 bg-white shadow-2xl">
+                  <div className="bg-white px-3 py-2 text-sm font-bold text-gray-900 border-b-2 border-gray-300">
+                    Select a part to add
+                  </div>
                   {partSuggestions.map((part) => (
                     <button
                       key={part.id}
                       type="button"
-                      className="block w-full text-left px-3 py-2 hover:bg-blue-50 border-b last:border-b-0 dark:hover:bg-neutral-700 dark:border-neutral-700"
+                      className="block w-full text-left px-4 py-3 hover:bg-gray-100 border-b last:border-b-0 border-gray-200 transition-colors bg-white"
                       onClick={() => {
                         handleScan(part.partNumber);
                         setPartSearchQuery("");
                         setPartSuggestions([]);
                       }}
                     >
-                      <div className="font-medium text-blue-600 dark:text-blue-400">{part.partNumber}</div>
-                      <div className="text-xs text-neutral-600 dark:text-neutral-300">
-                        {part.itemName} - ₹{part.mrp ?? part.rtl} ({part.unit})
-                        {part.barcode && <span className="ml-2">| Barcode: {part.barcode}</span>}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-blue-600 text-base">{part.partNumber}</div>
+                          <div className="text-sm text-gray-900 mt-0.5 line-clamp-2 font-medium">
+                            {part.itemName}
+                          </div>
+                          {part.barcode && (
+                            <div className="text-xs text-gray-600 mt-1">
+                              Barcode: {part.barcode}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <div className="font-bold text-gray-900">₹{part.mrp ?? part.rtl}</div>
+                          <div className="text-xs text-gray-600">{part.unit}</div>
+                        </div>
                       </div>
                     </button>
                   ))}
                 </div>
               )}
               {!isSearching && partSearchQuery.trim() && partSuggestions.length === 0 && (
-                <div className="absolute z-10 mt-1 w-full rounded-lg border bg-white shadow-lg px-3 py-2 text-sm text-red-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-red-400">
-                  No parts found matching "{partSearchQuery}". Try typing "JCB" to see available parts.
+                <div className="absolute z-50 mt-2 w-full rounded-lg border-2 border-destructive/50 bg-white dark:bg-gray-800 shadow-xl px-4 py-3">
+                  <div className="text-sm text-destructive font-medium">
+                    ✗ No parts found matching "{partSearchQuery}"
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Try searching with part number (e.g., JCB-OF-003) or item name
+                  </div>
                 </div>
               )}
             </div>
@@ -428,16 +513,10 @@ export default function SalesInvoiceForm() {
                   setPartSuggestions([]);
                 }
               }}
-              className="px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
             >
               Add
             </button>
-          </div>
-          <div className="mt-2 text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span><strong>Primary:</strong> Scan barcode with scanner - auto-detects and adds item instantly. <strong>Fallback:</strong> Manually type if barcode not available.</span>
           </div>
         </div>
 
@@ -447,18 +526,18 @@ export default function SalesInvoiceForm() {
         </div>
 
         {/* Items Table */}
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-8 overflow-x-auto">
           <table className="min-w-[960px] w-full text-sm">
-            <thead className="bg-neutral-50 dark:bg-neutral-800">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-3 py-2 text-left dark:text-neutral-200">Code</th>
-                <th className="px-3 py-2 text-left dark:text-neutral-200">Name</th>
-                <th className="px-3 py-2 text-left dark:text-neutral-200">UOM</th>
-                <th className="px-3 py-2 text-right dark:text-neutral-200">Qty</th>
-                <th className="px-3 py-2 text-right dark:text-neutral-200">Price</th>
-                <th className="px-3 py-2 text-right dark:text-neutral-200">Discount</th>
-                <th className="px-3 py-2 text-right dark:text-neutral-200">Tax %</th>
-                <th className="px-3 py-2 text-right dark:text-neutral-200">Line Total</th>
+                <th className="px-3 py-2 text-left text-foreground font-medium">Code</th>
+                <th className="px-3 py-2 text-left text-foreground font-medium">Name</th>
+                <th className="px-3 py-2 text-left text-foreground font-medium">UOM</th>
+                <th className="px-3 py-2 text-right text-foreground font-medium">Qty</th>
+                <th className="px-3 py-2 text-right text-foreground font-medium">Price</th>
+                <th className="px-3 py-2 text-right text-foreground font-medium">Discount</th>
+                <th className="px-3 py-2 text-right text-foreground font-medium">Tax %</th>
+                <th className="px-3 py-2 text-right text-foreground font-medium">Line Total</th>
                 <th className="px-3 py-2"></th>
               </tr>
             </thead>
@@ -470,18 +549,18 @@ export default function SalesInvoiceForm() {
                 return (
                   <tr 
                     key={l.code} 
-                    className={`border-t transition-all duration-500 ${
-                      isHighlighted ? 'bg-green-100 animate-pulse dark:bg-green-900/30' : 'hover:bg-gray-50 dark:hover:bg-neutral-800/50'
-                    } dark:border-neutral-700`}
+                    className={`border-t border-border transition-all duration-500 ${
+                      isHighlighted ? 'bg-green-100 animate-pulse dark:bg-green-900/30' : 'hover:bg-muted/50'
+                    }`}
                   >
-                    <td className="px-3 py-2 dark:text-neutral-200">{l.code}</td>
-                    <td className="px-3 py-2 dark:text-neutral-200">{l.name}</td>
-                    <td className="px-3 py-2 dark:text-neutral-200">{l.uom ?? "-"}</td>
+                    <td className="px-3 py-2 text-foreground">{l.code}</td>
+                    <td className="px-3 py-2 text-foreground">{l.name}</td>
+                    <td className="px-3 py-2 text-foreground">{l.uom ?? "-"}</td>
                     <td className="px-3 py-2 text-right">
                       <input
                         type="number"
                         min={1}
-                        className="w-20 rounded border px-2 py-1 text-right dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
+                        className="w-20 rounded border border-border bg-background text-foreground px-2 py-1 text-right focus:outline-none focus:ring-1 focus:ring-primary"
                         value={l.qty}
                         onChange={(e) =>
                           updateLine(i, { qty: Math.max(1, Number(e.target.value || 1)) })
@@ -491,7 +570,7 @@ export default function SalesInvoiceForm() {
                     <td className="px-3 py-2 text-right">
                       <input
                         type="number"
-                        className="w-24 rounded border px-2 py-1 text-right dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
+                        className="w-24 rounded border border-border bg-background text-foreground px-2 py-1 text-right focus:outline-none focus:ring-1 focus:ring-primary"
                         value={l.price}
                         onChange={(e) => updateLine(i, { price: Number(e.target.value || 0) })}
                       />
@@ -499,7 +578,7 @@ export default function SalesInvoiceForm() {
                     <td className="px-3 py-2 text-right">
                       <input
                         type="number"
-                        className="w-24 rounded border px-2 py-1 text-right dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
+                        className="w-24 rounded border border-border bg-background text-foreground px-2 py-1 text-right focus:outline-none focus:ring-1 focus:ring-primary"
                         value={l.discount}
                         onChange={(e) =>
                           updateLine(i, { discount: Math.max(0, Number(e.target.value || 0)) })
@@ -509,14 +588,14 @@ export default function SalesInvoiceForm() {
                     <td className="px-3 py-2 text-right">
                       <input
                         type="number"
-                        className="w-20 rounded border px-2 py-1 text-right dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
+                        className="w-20 rounded border border-border bg-background text-foreground px-2 py-1 text-right focus:outline-none focus:ring-1 focus:ring-primary"
                         value={l.taxRate}
                         onChange={(e) =>
                           updateLine(i, { taxRate: Math.max(0, Number(e.target.value || 0)) })
                         }
                       />
                     </td>
-                    <td className="px-3 py-2 text-right dark:text-neutral-200">
+                    <td className="px-3 py-2 text-right text-foreground">
                       {lineTotal.toLocaleString(undefined, {
                         style: "currency",
                         currency: "INR",
@@ -526,7 +605,7 @@ export default function SalesInvoiceForm() {
                     <td className="px-3 py-2 text-right">
                       <button
                         onClick={() => removeLine(i)}
-                        className="rounded-md border px-2 py-1 hover:bg-red-50 dark:border-neutral-700 dark:hover:bg-red-900/30 dark:text-white"
+                        className="rounded-md border border-border bg-background text-destructive px-2 py-1 hover:bg-destructive/10 transition-colors"
                       >
                         Remove
                       </button>
@@ -535,8 +614,8 @@ export default function SalesInvoiceForm() {
                 );
               })}
               {lines.length === 0 && (
-                <tr className="border-t dark:border-neutral-700">
-                  <td colSpan={9} className="px-3 py-6 text-center text-neutral-500 dark:text-neutral-400">
+                <tr className="border-t border-border">
+                  <td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">
                     Scan a barcode / enter part number to add items
                   </td>
                 </tr>
@@ -549,17 +628,17 @@ export default function SalesInvoiceForm() {
       {/* Notes & totals */}
       <div className="mt-6 grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2">
-          <label className="text-xs text-neutral-500 dark:text-neutral-400">Notes (optional)</label>
+          <label className="text-sm font-medium text-foreground mb-1 block">Notes (optional)</label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={4}
-            className="mt-1 w-full rounded-lg border px-3 py-2 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:placeholder-neutral-500"
+            className="w-full rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
             placeholder="Any remarks for this sale..."
           />
         </div>
-        <div className="rounded-xl border p-4 h-fit dark:border-neutral-700 dark:bg-neutral-900/50">
-          <div className="flex items-center justify-between py-1 dark:text-neutral-200">
+        <div className="rounded-xl border border-border bg-card p-4 h-fit">
+          <div className="flex items-center justify-between py-1 text-foreground">
             <span>Subtotal</span>
             <span>
               {totals.sub.toLocaleString(undefined, {
@@ -569,7 +648,7 @@ export default function SalesInvoiceForm() {
               })}
             </span>
           </div>
-          <div className="flex items-center justify-between py-1 dark:text-neutral-200">
+          <div className="flex items-center justify-between py-1 text-foreground">
             <span>Tax</span>
             <span>
               {totals.tax.toLocaleString(undefined, {
@@ -579,7 +658,47 @@ export default function SalesInvoiceForm() {
               })}
             </span>
           </div>
-          <div className="mt-2 border-t pt-3 flex items-center justify-between font-semibold dark:border-neutral-700 dark:text-white">
+          
+          {/* Discount on Grand Total */}
+          <div className="mt-2 border-t border-border pt-2 pb-2">
+            <label className="text-sm font-medium text-foreground mb-1 block">
+              Discount
+            </label>
+            <div className="flex gap-2">
+              <select
+                value={discountType}
+                onChange={(e) => setDiscountType(e.target.value as "percentage" | "amount")}
+                className="px-2 py-1 text-sm rounded border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="percentage">%</option>
+                <option value="amount">₹</option>
+              </select>
+              <input
+                type="number"
+                min="0"
+                step={discountType === "percentage" ? "0.01" : "1"}
+                max={discountType === "percentage" ? "100" : undefined}
+                value={discountValue}
+                onChange={(e) => setDiscountValue(Number(e.target.value))}
+                className="flex-1 px-2 py-1 text-sm rounded border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder="0"
+              />
+            </div>
+            {totals.discount > 0 && (
+              <div className="flex items-center justify-between py-1 mt-1 text-sm text-green-600 dark:text-green-400">
+                <span>Discount Applied</span>
+                <span>
+                  -{totals.discount.toLocaleString(undefined, {
+                    style: "currency",
+                    currency: "INR",
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-2 border-t border-border pt-3 flex items-center justify-between font-semibold text-foreground">
             <span>Grand Total</span>
             <span>
               {totals.grand.toLocaleString(undefined, {
@@ -595,34 +714,34 @@ export default function SalesInvoiceForm() {
       {/* Preview modal */}
       {showPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-          <div className="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-neutral-900">
+          <div className="w-full max-w-4xl rounded-2xl bg-card p-6 shadow-2xl">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold dark:text-white">Preview — {number}</h3>
+              <h3 className="text-lg font-semibold text-foreground">Preview — {number}</h3>
               <button
                 onClick={() => setShowPreview(false)}
-                className="rounded-md border px-3 py-1 dark:border-neutral-700 dark:hover:bg-neutral-800 dark:text-white"
+                className="rounded-md border border-border bg-background text-foreground px-3 py-1 hover:bg-muted transition-colors"
               >
                 Close
               </button>
             </div>
-            <div className="mt-4 grid gap-2 text-sm dark:text-neutral-200">
-              <div><span className="text-neutral-500 dark:text-neutral-400">Date:</span> {date}</div>
+            <div className="mt-4 grid gap-2 text-sm text-foreground">
+              <div><span className="text-muted-foreground">Date:</span> {new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</div>
               <div>
-                <span className="text-neutral-500 dark:text-neutral-400">Customer:</span>{" "}
+                <span className="text-muted-foreground">Customer:</span>{" "}
                 {customer ? customer.name : "—"}
               </div>
             </div>
-            <div className="mt-4 overflow-x-auto rounded-lg border dark:border-neutral-700">
+            <div className="mt-4 overflow-x-auto rounded-lg border border-border">
               <table className="min-w-[900px] w-full text-sm">
-                <thead className="bg-neutral-50 dark:bg-neutral-800">
+                <thead className="bg-muted">
                   <tr>
-                    <th className="px-3 py-2 text-left dark:text-neutral-200">Code</th>
-                    <th className="px-3 py-2 text-left dark:text-neutral-200">Name</th>
-                    <th className="px-3 py-2 text-right dark:text-neutral-200">Qty</th>
-                    <th className="px-3 py-2 text-right dark:text-neutral-200">Price</th>
-                    <th className="px-3 py-2 text-right dark:text-neutral-200">Discount</th>
-                    <th className="px-3 py-2 text-right dark:text-neutral-200">Tax %</th>
-                    <th className="px-3 py-2 text-right dark:text-neutral-200">Total</th>
+                    <th className="px-3 py-2 text-left text-foreground font-medium">Code</th>
+                    <th className="px-3 py-2 text-left text-foreground font-medium">Name</th>
+                    <th className="px-3 py-2 text-right text-foreground font-medium">Qty</th>
+                    <th className="px-3 py-2 text-right text-foreground font-medium">Price</th>
+                    <th className="px-3 py-2 text-right text-foreground font-medium">Discount</th>
+                    <th className="px-3 py-2 text-right text-foreground font-medium">Tax %</th>
+                    <th className="px-3 py-2 text-right text-foreground font-medium">Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -630,14 +749,14 @@ export default function SalesInvoiceForm() {
                     const net = l.price - l.discount;
                     const total = l.qty * net + (l.qty * net * l.taxRate) / 100;
                     return (
-                      <tr key={l.code} className="border-t dark:border-neutral-700">
-                        <td className="px-3 py-2 dark:text-neutral-200">{l.code}</td>
-                        <td className="px-3 py-2 dark:text-neutral-200">{l.name}</td>
-                        <td className="px-3 py-2 text-right dark:text-neutral-200">{l.qty}</td>
-                        <td className="px-3 py-2 text-right dark:text-neutral-200">{l.price}</td>
-                        <td className="px-3 py-2 text-right dark:text-neutral-200">{l.discount}</td>
-                        <td className="px-3 py-2 text-right dark:text-neutral-200">{l.taxRate}</td>
-                        <td className="px-3 py-2 text-right dark:text-neutral-200">
+                      <tr key={l.code} className="border-t border-border">
+                        <td className="px-3 py-2 text-foreground">{l.code}</td>
+                        <td className="px-3 py-2 text-foreground">{l.name}</td>
+                        <td className="px-3 py-2 text-right text-foreground">{l.qty}</td>
+                        <td className="px-3 py-2 text-right text-foreground">{l.price}</td>
+                        <td className="px-3 py-2 text-right text-foreground">{l.discount}</td>
+                        <td className="px-3 py-2 text-right text-foreground">{l.taxRate}</td>
+                        <td className="px-3 py-2 text-right text-foreground">
                           {total.toLocaleString(undefined, {
                             style: "currency",
                             currency: "INR",
@@ -651,10 +770,58 @@ export default function SalesInvoiceForm() {
               </table>
             </div>
 
+            {/* Totals in Preview */}
+            <div className="mt-4 flex justify-end">
+              <div className="w-64 rounded-lg border border-border bg-card p-4">
+                <div className="flex items-center justify-between py-1 text-sm text-foreground">
+                  <span>Subtotal</span>
+                  <span>
+                    {totals.sub.toLocaleString(undefined, {
+                      style: "currency",
+                      currency: "INR",
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1 text-sm text-foreground">
+                  <span>Tax</span>
+                  <span>
+                    {totals.tax.toLocaleString(undefined, {
+                      style: "currency",
+                      currency: "INR",
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
+                {totals.discount > 0 && (
+                  <div className="flex items-center justify-between py-1 text-sm text-green-600 dark:text-green-400">
+                    <span>Discount ({discountType === "percentage" ? `${discountValue}%` : "₹"})</span>
+                    <span>
+                      -{totals.discount.toLocaleString(undefined, {
+                        style: "currency",
+                        currency: "INR",
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                )}
+                <div className="mt-2 border-t border-border pt-2 flex items-center justify-between font-semibold text-foreground">
+                  <span>Grand Total</span>
+                  <span>
+                    {totals.grand.toLocaleString(undefined, {
+                      style: "currency",
+                      currency: "INR",
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 onClick={() => setShowPreview(false)}
-                className="rounded-md border px-3 py-2 dark:border-neutral-700 dark:hover:bg-neutral-800 dark:text-white"
+                className="rounded-md border border-border bg-background text-foreground px-3 py-2 hover:bg-muted transition-colors"
               >
                 Edit
               </button>
@@ -663,7 +830,7 @@ export default function SalesInvoiceForm() {
                   setShowPreview(false);
                   void save(true);
                 }}
-                className="rounded-md px-3 py-2 bg-black text-white dark:bg-neutral-700 dark:hover:bg-neutral-600"
+                className="rounded-md px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 Confirm & Submit
               </button>

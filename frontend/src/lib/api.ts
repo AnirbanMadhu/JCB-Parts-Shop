@@ -2,7 +2,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
 export type Invoice = {
-  id: string;
+  id: number;
   invoiceNumber: string;
   status: "DRAFT" | "SUBMITTED" | "PAID" | "CANCELLED";
   date: string;
@@ -23,7 +23,7 @@ export type Invoice = {
 };
 
 export type Customer = {
-  id: string;
+  id: number;
   indexId?: string;
   name: string;
   email: string;
@@ -42,7 +42,7 @@ export type Item = {
 };
 
 export type Payment = {
-  id: string;
+  id: number;
   invoiceNumber: string;
   amount: number;
   date: string;

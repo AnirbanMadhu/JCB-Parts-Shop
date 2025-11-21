@@ -10,10 +10,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [systemStatus, setSystemStatus] = useState<{ initialized: boolean; requiresSetup: boolean } | null>(null);
   const router = useRouter();
   const { login, isAuthenticated } = useAuth();
 
   useEffect(() => {
+    // Check system status
+    fetch('http://localhost:4001/api/auth/status')
+      .then(res => res.json())
+      .then(data => {
+        setSystemStatus(data);
+      })
+      .catch(err => console.error('Failed to check system status:', err));
+
     if (isAuthenticated()) {
       router.push('/dashboard');
     }
@@ -135,7 +144,7 @@ export default function LoginPage() {
               href="/register"
               className="font-medium text-primary hover:text-primary/80 transition-colors"
             >
-              First time? Register as admin
+              {systemStatus && !systemStatus.initialized ? 'First time? Register as admin' : "Don't have an account? Register"}
             </a>
           </div>
         </form>

@@ -96,40 +96,40 @@ export default function PaymentStatusModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Payment Status</h2>
-            <p className="text-sm text-gray-500">Invoice: {invoice.invoiceNumber}</p>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Payment Status</h2>
+            <p className="text-sm text-gray-500 dark:text-slate-400">Invoice: {invoice.invoiceNumber}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-gray-500 dark:text-slate-400" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
           {/* Invoice Amount Summary */}
-          <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 mb-6 border border-blue-200 dark:border-blue-800">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-blue-700">Total Amount:</span>
-              <span className="text-xl font-bold text-blue-900">
+              <span className="text-sm text-blue-700 dark:text-blue-300">Total Amount:</span>
+              <span className="text-xl font-bold text-blue-900 dark:text-blue-100">
                 ₹{invoice.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-green-700">Paid Amount:</span>
-              <span className="text-lg font-semibold text-green-900">
+              <span className="text-sm text-green-700 dark:text-green-300">Paid Amount:</span>
+              <span className="text-lg font-semibold text-green-900 dark:text-green-100">
                 ₹{parseFloat(paidAmount || "0").toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
-            <div className="flex justify-between items-center pt-2 border-t border-blue-300">
-              <span className="text-sm text-orange-700">Due Amount:</span>
-              <span className="text-lg font-semibold text-orange-900">
+            <div className="flex justify-between items-center pt-2 border-t border-blue-300 dark:border-blue-700">
+              <span className="text-sm text-orange-700 dark:text-orange-300">Due Amount:</span>
+              <span className="text-lg font-semibold text-orange-900 dark:text-orange-100">
                 ₹{Math.max(0, dueAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
@@ -137,15 +137,15 @@ export default function PaymentStatusModal({
 
           {/* Payment Status */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
               Payment Status <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { value: "UNPAID", label: "Payment Due", color: "red" },
-                { value: "ON_CREDIT", label: "On Credit", color: "yellow" },
-                { value: "PARTIAL", label: "Partial Payment", color: "orange" },
-                { value: "PAID", label: "Full Payment", color: "green" },
+                { value: "UNPAID", label: "Payment Due", colorLight: "border-red-500 bg-red-50 text-red-700", colorDark: "dark:border-red-500 dark:bg-red-950/30 dark:text-red-300" },
+                { value: "ON_CREDIT", label: "On Credit", colorLight: "border-yellow-500 bg-yellow-50 text-yellow-700", colorDark: "dark:border-yellow-500 dark:bg-yellow-950/30 dark:text-yellow-300" },
+                { value: "PARTIAL", label: "Partial Payment", colorLight: "border-orange-500 bg-orange-50 text-orange-700", colorDark: "dark:border-orange-500 dark:bg-orange-950/30 dark:text-orange-300" },
+                { value: "PAID", label: "Full Payment", colorLight: "border-green-500 bg-green-50 text-green-700", colorDark: "dark:border-green-500 dark:bg-green-950/30 dark:text-green-300" },
               ].map((status) => (
                 <button
                   key={status.value}
@@ -153,8 +153,8 @@ export default function PaymentStatusModal({
                   onClick={() => handlePaymentStatusChange(status.value)}
                   className={`px-4 py-3 rounded-lg border-2 text-sm font-medium transition-all ${
                     paymentStatus === status.value
-                      ? `border-${status.color}-500 bg-${status.color}-50 text-${status.color}-700`
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                      ? `${status.colorLight} ${status.colorDark}`
+                      : "border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:border-gray-300 dark:hover:border-slate-500"
                   }`}
                 >
                   {status.label}
@@ -165,7 +165,7 @@ export default function PaymentStatusModal({
 
           {/* Paid Amount */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
               <DollarSign className="w-4 h-4 inline mr-1" />
               Paid Amount <span className="text-red-500">*</span>
             </label>
@@ -187,7 +187,7 @@ export default function PaymentStatusModal({
                   setPaymentStatus("PARTIAL");
                 }
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="0.00"
               required
             />
@@ -198,7 +198,7 @@ export default function PaymentStatusModal({
                   setPaidAmount("0");
                   setPaymentStatus("UNPAID");
                 }}
-                className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                className="text-xs px-3 py-1 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 rounded hover:bg-gray-200 dark:hover:bg-slate-600"
               >
                 No Payment
               </button>
@@ -209,7 +209,7 @@ export default function PaymentStatusModal({
                   setPaidAmount(half);
                   setPaymentStatus("PARTIAL");
                 }}
-                className="text-xs px-3 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200"
+                className="text-xs px-3 py-1 bg-orange-100 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 rounded hover:bg-orange-200 dark:hover:bg-orange-950/50"
               >
                 Half Payment
               </button>
@@ -220,7 +220,7 @@ export default function PaymentStatusModal({
                     setPaidAmount(invoice.total.toString());
                     setPaymentStatus("PAID");
                   }}
-                  className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                  className="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-950/50"
                 >
                   Pay Due (₹{initialDueAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                 </button>
@@ -231,7 +231,7 @@ export default function PaymentStatusModal({
                   setPaidAmount(invoice.total.toString());
                   setPaymentStatus("PAID");
                 }}
-                className="text-xs px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
+                className="text-xs px-3 py-1 bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-950/50"
               >
                 Full Payment
               </button>
@@ -240,7 +240,7 @@ export default function PaymentStatusModal({
 
           {/* Payment Date */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
               <Calendar className="w-4 h-4 inline mr-1" />
               Payment Date
             </label>
@@ -248,20 +248,20 @@ export default function PaymentStatusModal({
               type="date"
               value={paymentDate}
               onChange={(e) => setPaymentDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* Payment Method */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
               <CreditCard className="w-4 h-4 inline mr-1" />
               Payment Method <span className="text-red-500">*</span>
             </label>
             <select
               value={paymentMethod}
               onChange={(e) => setPaymentMethod(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
               <option value="">Select payment method</option>
@@ -276,45 +276,45 @@ export default function PaymentStatusModal({
 
           {/* Payment Note */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
               Payment Notes
             </label>
             <textarea
               value={paymentNote}
               onChange={(e) => setPaymentNote(e.target.value)}
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Add any notes about this payment..."
             />
           </div>
 
           {/* Invoice Remarks */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
               Invoice Remarks
             </label>
             <textarea
               value={invoiceRemarks}
               onChange={(e) => setInvoiceRemarks(e.target.value)}
               rows={2}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Add or edit invoice remarks..."
             />
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors border border-gray-300"
+              className="px-6 py-2 text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md transition-colors border border-gray-300 dark:border-slate-600"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 text-sm bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors disabled:opacity-60"
+              className="px-6 py-2 text-sm bg-[#2c3e50] dark:bg-blue-600 text-white rounded-md hover:bg-[#1a252f] dark:hover:bg-blue-700 transition-colors disabled:opacity-60"
             >
               {saving ? "Saving..." : "Save Payment"}
             </button>

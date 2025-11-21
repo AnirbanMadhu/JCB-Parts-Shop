@@ -84,7 +84,7 @@ export default function SetupPage() {
                         checked={salesAllowEditSubmitted}
                         onChange={(e) => handleSalesToggle(e.target.checked)}
                       />
-                      <div className="w-11 h-6 bg-input peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary shadow-sm"></div>
+                      <div className="w-11 h-6 bg-red-500 dark:bg-red-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-500/20 dark:peer-focus:ring-emerald-400/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:shadow-md after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 dark:peer-checked:bg-emerald-600 shadow-sm"></div>
                     </label>
                   </div>
                 </div>
@@ -115,7 +115,7 @@ export default function SetupPage() {
                         checked={purchasesAllowEditSubmitted}
                         onChange={(e) => handlePurchasesToggle(e.target.checked)}
                       />
-                      <div className="w-11 h-6 bg-input peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary shadow-sm"></div>
+                      <div className="w-11 h-6 bg-red-500 dark:bg-red-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-500/20 dark:peer-focus:ring-emerald-400/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:shadow-md after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 dark:peer-checked:bg-emerald-600 shadow-sm"></div>
                     </label>
                   </div>
                 </div>

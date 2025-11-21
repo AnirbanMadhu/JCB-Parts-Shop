@@ -12,6 +12,14 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'partNumber, itemName, hsnCode required' });
   }
 
+  // Validate part number format (e.g., 550/42835C, 336/E8026)
+  const partNumberPattern = /^[0-9]+\/[A-Z0-9]+$/;
+  if (!partNumberPattern.test(body.partNumber)) {
+    return res.status(400).json({ 
+      error: 'Invalid part number format. Use format: Number/Alphanumeric (e.g., 550/42835C, 336/E8026)' 
+    });
+  }
+
   // Set defaults for required fields if not provided
   const gstPercent = body.gstPercent ?? 18;
   const unit = body.unit ?? 'PCS';
@@ -130,6 +138,14 @@ router.put('/:id', async (req, res) => {
 
   if (!body.partNumber || !body.itemName || !body.hsnCode) {
     return res.status(400).json({ error: 'partNumber, itemName, hsnCode required' });
+  }
+
+  // Validate part number format (e.g., 550/42835C, 336/E8026)
+  const partNumberPattern = /^[0-9]+\/[A-Z0-9]+$/;
+  if (!partNumberPattern.test(body.partNumber)) {
+    return res.status(400).json({ 
+      error: 'Invalid part number format. Use format: Number/Alphanumeric (e.g., 550/42835C, 336/E8026)' 
+    });
   }
 
   const gstPercent = body.gstPercent ?? 18;

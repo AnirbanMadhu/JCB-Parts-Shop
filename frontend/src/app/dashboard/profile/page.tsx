@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { User, Lock, Mail, Shield, Calendar, ArrowLeft, Eye, EyeOff } from "lucide-react";
@@ -9,6 +9,11 @@ export default function ProfilePage() {
   const { user, token } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"info" | "password">("info");
+  
+  // Debug: Log user data
+  useEffect(() => {
+    console.log('Profile Page - User Data:', user);
+  }, [user]);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   
@@ -141,7 +146,7 @@ export default function ProfilePage() {
           <div className="flex border-b border-border">
             <button
               onClick={() => setActiveTab("info")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors cursor-pointer ${
                 activeTab === "info"
                   ? "text-primary border-b-2 border-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -154,7 +159,7 @@ export default function ProfilePage() {
             </button>
             <button
               onClick={() => setActiveTab("password")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-colors cursor-pointer ${
                 activeTab === "password"
                   ? "text-primary border-b-2 border-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -176,8 +181,8 @@ export default function ProfilePage() {
                     <User className="w-8 h-8 text-primary" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-semibold text-foreground">{user?.name}</h2>
-                    <p className="text-muted-foreground">{user?.email}</p>
+                    <h2 className="text-2xl font-semibold text-foreground">{user?.name || 'User'}</h2>
+                    <p className="text-muted-foreground">{user?.email || 'No email available'}</p>
                   </div>
                 </div>
 
@@ -188,7 +193,7 @@ export default function ProfilePage() {
                       Full Name
                     </label>
                     <div className="p-3 bg-muted rounded-lg border border-border">
-                      <p className="text-foreground">{user?.name}</p>
+                      <p className="text-foreground font-medium">{user?.name || 'N/A'}</p>
                     </div>
                   </div>
 
@@ -198,7 +203,7 @@ export default function ProfilePage() {
                       Email Address
                     </label>
                     <div className="p-3 bg-muted rounded-lg border border-border">
-                      <p className="text-foreground">{user?.email}</p>
+                      <p className="text-foreground font-medium">{user?.email || 'N/A'}</p>
                     </div>
                   </div>
 
@@ -208,15 +213,20 @@ export default function ProfilePage() {
                       Role
                     </label>
                     <div className="p-3 bg-muted rounded-lg border border-border">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          user?.role === "ADMIN"
-                            ? "bg-purple-500/10 text-purple-600 dark:text-purple-400"
-                            : "bg-primary/10 text-primary"
-                        }`}
-                      >
-                        {user?.role}
-                      </span>
+                      {user?.role ? (
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
+                            user.role === "ADMIN"
+                              ? "bg-purple-500 text-white"
+                              : "bg-blue-500 text-white"
+                          }`}
+                        >
+                          <Shield className="w-4 h-4" />
+                          {user.role}
+                        </span>
+                      ) : (
+                        <p className="text-foreground font-medium">N/A</p>
+                      )}
                     </div>
                   </div>
 

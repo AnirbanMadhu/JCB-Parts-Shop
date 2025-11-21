@@ -5,7 +5,7 @@ import Link from "next/link";
 import BackButton from "@/components/ui/BackButton";
 import PaymentStatusModal from "@/app/sales/_components/PaymentStatusModal";
 import ToastContainer from "@/components/ui/ToastContainer";
-import { Search, Calendar, Pencil } from "lucide-react";
+import { Search, Calendar, Edit } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
@@ -134,7 +134,6 @@ export default function PurchasePaymentsList({ payments }: Props) {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
       {/* Header - Fixed */}
       <header className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
@@ -151,33 +150,31 @@ export default function PurchasePaymentsList({ payments }: Props) {
         </div>
       </header>
 
-      {/* Content - Scrollable */}
-      <div className="flex-1 overflow-auto">
       {/* Summary Cards */}
-      <div className="px-6 pt-6">
+      <div className="px-6 pt-6 animate-fade-in">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-            <p className="text-xs text-purple-600 font-medium mb-1">Total Purchases</p>
-            <p className="text-2xl font-bold text-purple-900">
+          <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-500/30 hover:border-purple-500/50 transition-all hover:shadow-lg animate-slide-up">
+            <p className="text-xs text-purple-600 dark:text-purple-400 font-medium mb-1">Total Purchases</p>
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <p className="text-xs text-purple-600 mt-1">{filteredPayments.length} transaction(s)</p>
+            <p className="text-xs text-purple-600/80 dark:text-purple-400/80 mt-1">{filteredPayments.length} transaction(s)</p>
           </div>
-          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <p className="text-xs text-green-600 font-medium mb-1">Paid Amount</p>
-            <p className="text-2xl font-bold text-green-900">
+          <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/30 hover:border-green-500/50 transition-all hover:shadow-lg animate-slide-up" style={{animationDelay: '0.1s'}}>
+            <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-1">Paid Amount</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
               ₹{paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <p className="text-xs text-green-600 mt-1">
+            <p className="text-xs text-green-600/80 dark:text-green-400/80 mt-1">
               {filteredPayments.filter(p => p.paidAmount && p.paidAmount > 0).length} payment(s)
             </p>
           </div>
-          <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-            <p className="text-xs text-orange-600 font-medium mb-1">Pending Amount</p>
-            <p className="text-2xl font-bold text-orange-900">
+          <div className="bg-orange-500/10 rounded-lg p-4 border border-orange-500/30 hover:border-orange-500/50 transition-all hover:shadow-lg animate-slide-up" style={{animationDelay: '0.2s'}}>
+            <p className="text-xs text-orange-600 dark:text-orange-400 font-medium mb-1">Pending Amount</p>
+            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               ₹{pendingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <p className="text-xs text-orange-600 mt-1">
+            <p className="text-xs text-orange-600/80 dark:text-orange-400/80 mt-1">
               {filteredPayments.filter(p => {
                 const due = p.dueAmount !== undefined && p.dueAmount !== null 
                   ? Number(p.dueAmount) 
@@ -192,19 +189,19 @@ export default function PurchasePaymentsList({ payments }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Search */}
           <div className="relative md:col-span-2">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               ref={searchInputRef}
               type="text"
               placeholder="Search by invoice number, supplier, or remarks..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-input bg-background text-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 ✕
               </button>
@@ -213,17 +210,17 @@ export default function PurchasePaymentsList({ payments }: Props) {
 
           {/* Date Filter */}
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-input bg-background text-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all"
             />
             {dateFilter && (
               <button
                 onClick={() => setDateFilter("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 ✕
               </button>
@@ -237,10 +234,10 @@ export default function PurchasePaymentsList({ payments }: Props) {
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-4 py-1.5 text-sm rounded-md transition-colors ${
+              className={`px-4 py-1.5 text-sm rounded-md transition-all ${
                 statusFilter === status
-                  ? 'bg-[#2c3e50] text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground'
               }`}
             >
               {status}
@@ -251,40 +248,40 @@ export default function PurchasePaymentsList({ payments }: Props) {
 
       {/* Table Container */}
       <div className="px-6 py-6">
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
           {!hasRows ? (
             /* Empty State */
             <div className="flex flex-col items-center justify-center py-32">
               <div className="mb-4">
-                <svg className="w-20 h-20 text-gray-300" viewBox="0 0 80 80" fill="none">
-                  <rect x="22" y="14" width="40" height="48" rx="2" fill="white" stroke="currentColor" strokeWidth="1.5" />
-                  <rect x="18" y="18" width="40" height="48" rx="2" fill="white" stroke="currentColor" strokeWidth="1.5" />
+                <svg className="w-20 h-20 text-muted" viewBox="0 0 80 80" fill="none">
+                  <rect x="22" y="14" width="40" height="48" rx="2" fill="hsl(var(--card))" stroke="currentColor" strokeWidth="1.5" />
+                  <rect x="18" y="18" width="40" height="48" rx="2" fill="hsl(var(--card))" stroke="currentColor" strokeWidth="1.5" />
                 </svg>
               </div>
-              <p className="text-sm text-gray-400 mb-5">No purchase transactions found</p>
-              <Link href="/purchases/invoices/new" className="px-5 py-2 bg-[#2c3e50] text-white text-sm font-medium rounded-md hover:bg-[#1a252f] transition-colors">
+              <p className="text-sm text-muted-foreground mb-5">No purchase transactions found</p>
+              <Link href="/purchases/invoices/new" className="px-5 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
                 Create First Purchase
               </Link>
             </div>
           ) : (
             <>
               {/* Table Header */}
-              <div className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200">
-                <div className="text-xs font-medium text-gray-500">#</div>
-                <div className="text-xs font-medium text-gray-500">Invoice No</div>
-                <div className="text-xs font-medium text-gray-500">Supplier</div>
-                <div className="text-xs font-medium text-gray-500">Date & Time</div>
-                <div className="text-xs font-medium text-gray-500">Status</div>
-                <div className="text-xs font-medium text-gray-500">Payment</div>
-                <div className="text-xs font-medium text-gray-500">Remarks</div>
-                <div className="text-xs font-medium text-gray-500 text-right">Amount</div>
-                <div className="text-xs font-medium text-gray-500 text-center">Actions</div>
+              <div className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
+                <div className="text-xs font-medium text-muted-foreground">#</div>
+                <div className="text-xs font-medium text-muted-foreground">Invoice No</div>
+                <div className="text-xs font-medium text-muted-foreground">Supplier</div>
+                <div className="text-xs font-medium text-muted-foreground">Date & Time</div>
+                <div className="text-xs font-medium text-muted-foreground">Status</div>
+                <div className="text-xs font-medium text-muted-foreground">Payment</div>
+                <div className="text-xs font-medium text-muted-foreground">Remarks</div>
+                <div className="text-xs font-medium text-muted-foreground text-right">Amount</div>
+                <div className="text-xs font-medium text-muted-foreground text-center">Actions</div>
               </div>
               {/* Table Body */}
               <div className="max-h-[600px] overflow-y-auto">
                 {filteredPayments.map((payment, i) => (
-                  <div key={payment.id} className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
-                    <div className="text-sm text-gray-900">{i + 1}</div>
+                  <div key={payment.id} className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 border-b border-border hover:bg-muted/50">
+                    <div className="text-sm text-foreground">{i + 1}</div>
                     <div className="text-sm">
                       <Link href={`/purchases/invoices/${payment.id}`} className="text-blue-600 hover:underline font-medium">
                         {payment.invoiceNumber}
@@ -292,20 +289,20 @@ export default function PurchasePaymentsList({ payments }: Props) {
                     </div>
                     <div className="text-sm">
                       {payment.supplier ? (
-                        <div className="text-gray-900">
+                        <div className="text-foreground">
                           <div className="font-medium">{payment.supplier.name}</div>
                         </div>
                       ) : (
-                        <span className="text-gray-400">-</span>
+                        <span className="text-muted-foreground">-</span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-foreground">
                       <div>{new Date(payment.date).toLocaleDateString('en-IN', { 
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric'
                       })}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         {new Date(payment.createdAt || payment.date).toLocaleTimeString('en-IN', {
                           hour: '2-digit',
                           minute: '2-digit'
@@ -341,15 +338,15 @@ export default function PurchasePaymentsList({ payments }: Props) {
                           : 'Due'}
                       </span>
                       {payment.paidAmount !== undefined && payment.paidAmount > 0 && (
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-muted-foreground mt-1">
                           ₹{Number(payment.paidAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       )}
                     </div>
-                    <div className="text-sm text-gray-600 truncate" title={payment.note || ''}>
+                    <div className="text-sm text-muted-foreground truncate" title={payment.note || ''}>
                       {payment.note || '-'}
                     </div>
-                    <div className="text-sm text-gray-900 text-right">
+                    <div className="text-sm text-foreground text-right">
                       <div className="font-semibold">
                         ₹{Number(payment.total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
@@ -365,7 +362,7 @@ export default function PurchasePaymentsList({ payments }: Props) {
                         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                         title="Edit Payment Status"
                       >
-                        <Pencil className="w-4 h-4" />
+                        <Edit className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -374,7 +371,6 @@ export default function PurchasePaymentsList({ payments }: Props) {
             </>
           )}
         </div>
-      </div>
       </div>
 
       {/* Payment Status Modal */}
@@ -389,6 +385,7 @@ export default function PurchasePaymentsList({ payments }: Props) {
           onSave={handleSavePayment}
         />
       )}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

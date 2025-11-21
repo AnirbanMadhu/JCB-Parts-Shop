@@ -282,8 +282,8 @@ export default function SalesPaymentsList({ payments }: Props) {
               {/* Table Body */}
               <div className="max-h-[600px] overflow-y-auto">
                 {filteredPayments.map((payment, i) => (
-                  <div key={payment.id} className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
-                    <div className="text-sm text-gray-900">{i + 1}</div>
+                  <div key={payment.id} className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 border-b border-border hover:bg-muted/50">
+                    <div className="text-sm text-foreground">{i + 1}</div>
                     <div className="text-sm">
                       <Link href={`/sales/invoices/${payment.id}`} className="text-blue-600 hover:underline font-medium">
                         {payment.invoiceNumber}
@@ -291,23 +291,23 @@ export default function SalesPaymentsList({ payments }: Props) {
                     </div>
                     <div className="text-sm">
                       {payment.customer ? (
-                        <Link href={`/common/customers/${payment.customer.id}`} className="text-gray-900 hover:text-blue-600">
+                        <Link href={`/common/customers/${payment.customer.id}`} className="text-foreground hover:text-primary">
                           <div className="font-medium">{payment.customer.name}</div>
                           {payment.customer.indexId && (
-                            <div className="text-xs text-gray-500 font-mono">{payment.customer.indexId}</div>
+                            <div className="text-xs text-muted-foreground font-mono">{payment.customer.indexId}</div>
                           )}
                         </Link>
                       ) : (
-                        <span className="text-gray-400">-</span>
+                        <span className="text-muted-foreground">-</span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-foreground">
                       <div>{new Date(payment.date).toLocaleDateString('en-IN', { 
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric'
                       })}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         {new Date(payment.createdAt || payment.date).toLocaleTimeString('en-IN', {
                           hour: '2-digit',
                           minute: '2-digit'
@@ -343,15 +343,15 @@ export default function SalesPaymentsList({ payments }: Props) {
                           : 'Due'}
                       </span>
                       {payment.paidAmount !== undefined && payment.paidAmount > 0 && (
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-muted-foreground mt-1">
                           ₹{Number(payment.paidAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       )}
                     </div>
-                    <div className="text-sm text-gray-600 truncate" title={payment.note || ''}>
+                    <div className="text-sm text-muted-foreground truncate" title={payment.note || ''}>
                       {payment.note || '-'}
                     </div>
-                    <div className="text-sm text-gray-900 text-right">
+                    <div className="text-sm text-foreground text-right">
                       <div className="font-semibold">
                         ₹{Number(payment.total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
