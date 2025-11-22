@@ -1,8 +1,6 @@
-import { API_BASE_URL } from '@/lib/constants';
-
-// components/Common/SupplierEditForm.tsx
 "use client";
 
+import { API_BASE_URL } from '@/lib/constants';
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BackButton from "./BackButton";
@@ -91,7 +89,7 @@ export default function SupplierEditForm({ supplier }: Props) {
         </div>
         <button
           onClick={() => setShowDeleteDialog(true)}
-          className="px-4 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors border border-red-200"
+          className="px-4 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors border border-red-200 cursor-pointer"
         >
           Delete Supplier
         </button>
@@ -205,7 +203,7 @@ export default function SupplierEditForm({ supplier }: Props) {
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors"
+              className="px-6 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
             >
               Cancel
             </button>

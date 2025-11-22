@@ -134,7 +134,7 @@ export default function ProfilePage() {
         <div className="mb-8">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Back</span>
@@ -346,7 +346,7 @@ export default function ProfilePage() {
                         <button
                           type="button"
                           onClick={() => setShowNewPassword(!showNewPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                         >
                           {showNewPassword ? (
                             <EyeOff className="w-5 h-5" />
@@ -376,7 +376,7 @@ export default function ProfilePage() {
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                         >
                           {showConfirmPassword ? (
                             <EyeOff className="w-5 h-5" />
@@ -391,7 +391,7 @@ export default function ProfilePage() {
                       <button
                         type="submit"
                         disabled={isLoading}
-                        className="flex-1 bg-primary text-primary-foreground py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                        className="flex-1 bg-primary text-primary-foreground py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium cursor-pointer"
                       >
                         {isLoading ? "Changing Password..." : "Change Password"}
                       </button>
@@ -404,7 +404,7 @@ export default function ProfilePage() {
                           setConfirmPassword("");
                           setMessage(null);
                         }}
-                        className="flex-1 bg-secondary text-secondary-foreground py-2 px-4 rounded-lg hover:bg-secondary/80 transition-colors font-medium"
+                        className="flex-1 bg-secondary text-secondary-foreground py-2 px-4 rounded-lg hover:bg-secondary/80 transition-colors font-medium cursor-pointer"
                       >
                         Back
                       </button>
@@ -415,7 +415,7 @@ export default function ProfilePage() {
                         type="button"
                         onClick={handleRequestOTP}
                         disabled={isLoading}
-                        className="text-sm text-blue-600 hover:text-blue-500 disabled:opacity-50"
+                        className="text-sm text-blue-600 hover:text-blue-500 disabled:opacity-50 cursor-pointer"
                       >
                         Didn&apos;t receive the code? Resend OTP
                       </button>

@@ -41,7 +41,7 @@ export default function Toast({ message, type, onClose, duration = 3000 }: Toast
       <p className="flex-1 text-sm font-medium">{message}</p>
       <button
         onClick={onClose}
-        className="flex-shrink-0 hover:opacity-70 transition-opacity"
+        className="flex-shrink-0 hover:opacity-70 transition-opacity cursor-pointer"
         aria-label="Close"
       >
         <X className="w-4 h-4" />

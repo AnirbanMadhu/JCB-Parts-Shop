@@ -179,6 +179,25 @@ body {
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Make all buttons and clickable elements show pointer cursor */
+  button,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  a {
+    cursor: pointer;
+  }
+
+  /* Disabled buttons should show not-allowed cursor */
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  [type="button"]:disabled,
+  [type="submit"]:disabled,
+  [type="reset"]:disabled {
+    cursor: not-allowed;
+  }
+
   /* Smooth transitions for theme changes */
   * {
     transition-property: background-color, border-color, color, fill, stroke;

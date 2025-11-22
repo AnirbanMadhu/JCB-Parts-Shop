@@ -54,10 +54,15 @@ export type Item = {
   id: number;
   partNumber: string;
   itemName: string;
-  mrp: number;
-  rtl: number;
-  stock: number;
+  description?: string;
+  hsnCode: string;
+  gstPercent: number;
   unit: string;
+  mrp?: number;
+  rtl?: number;
+  barcode?: string;
+  qrCode?: string;
+  stock: number;
 };
 
 export type Payment = {
@@ -118,10 +123,11 @@ export async function fetchCustomers(): Promise<Customer[]> {
   }
 }
 
-export async function fetchItems(): Promise<Item[]> {
+export async function fetchItems(onlyPurchased: boolean = false): Promise<Item[]> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${API_BASE_URL}/api/stock`, {
+    const url = `${API_BASE_URL}/api/stock${onlyPurchased ? '?onlyPurchased=true' : ''}`;
+    const res = await fetch(url, {
       headers,
       cache: 'no-store',
       next: { revalidate: 0 }

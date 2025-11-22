@@ -52,7 +52,7 @@ export default function DashboardHeader() {
   return (
     <header className="sticky top-0 z-10 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 hover:bg-accent rounded-md transition-colors">
+        <button onClick={() => router.back()} className="p-2 hover:bg-accent rounded-md transition-colors cursor-pointer">
           <ChevronLeft className="w-4 h-4 text-muted-foreground" />
         </button>
         <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>

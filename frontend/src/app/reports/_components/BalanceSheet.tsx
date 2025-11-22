@@ -11,13 +11,13 @@ export default function BalanceSheetPage() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-md">
+          <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-md cursor-pointer">
             <ChevronLeft className="w-4 h-4 text-gray-500" />
           </button>
           <h1 className="text-[17px] font-semibold text-gray-900">Balance Sheet</h1>
         </div>
         <div className="flex items-center gap-2">
-          <button className="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200">
+          <button className="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200 cursor-pointer">
             Export
           </button>
         </div>

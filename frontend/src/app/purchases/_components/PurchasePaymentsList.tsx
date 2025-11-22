@@ -44,7 +44,7 @@ export default function PurchasePaymentsList({ payments }: Props) {
   const router = useRouter();
   const { toasts, removeToast, success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0]);
+  const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedInvoice, setSelectedInvoice] = useState<PurchaseInvoice | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -269,7 +269,7 @@ export default function PurchasePaymentsList({ payments }: Props) {
           ) : (
             <>
               {/* Table Header */}
-              <div className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
+              <div className="grid grid-cols-[50px_minmax(100px,130px)_minmax(150px,200px)_minmax(120px,150px)_minmax(100px,120px)_minmax(100px,130px)_minmax(100px,1fr)_minmax(120px,150px)_80px] gap-3 px-4 py-3 bg-muted/30 border-b border-border">
                 <div className="text-xs font-medium text-muted-foreground">#</div>
                 <div className="text-xs font-medium text-muted-foreground">Invoice No</div>
                 <div className="text-xs font-medium text-muted-foreground">Supplier</div>
@@ -283,17 +283,17 @@ export default function PurchasePaymentsList({ payments }: Props) {
               {/* Table Body - Flex grow to fill available space */}
               <div className="flex-1 overflow-y-auto">
                 {filteredPayments.map((payment, i) => (
-                  <div key={payment.id} className="grid grid-cols-[60px_120px_200px_150px_120px_120px_1fr_150px_100px] gap-4 px-4 py-3 border-b border-border hover:bg-muted/50">
+                  <div key={payment.id} className="grid grid-cols-[50px_minmax(100px,130px)_minmax(150px,200px)_minmax(120px,150px)_minmax(100px,120px)_minmax(100px,130px)_minmax(100px,1fr)_minmax(120px,150px)_80px] gap-3 px-4 py-3 border-b border-border hover:bg-muted/50">
                     <div className="text-sm text-foreground">{i + 1}</div>
                     <div className="text-sm">
                       <Link href={`/purchases/invoices/${payment.id}`} className="text-blue-600 hover:underline font-medium">
                         {payment.invoiceNumber}
                       </Link>
                     </div>
-                    <div className="text-sm">
+                    <div className="text-sm overflow-hidden">
                       {payment.supplier ? (
                         <div className="text-foreground">
-                          <div className="font-medium">{payment.supplier.name}</div>
+                          <div className="font-medium truncate">{payment.supplier.name}</div>
                         </div>
                       ) : (
                         <span className="text-muted-foreground">-</span>

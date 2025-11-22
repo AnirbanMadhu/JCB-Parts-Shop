@@ -50,15 +50,18 @@ export default async function ItemDetailPage({ params }: Props) {
   const stock = stockData.stock || 0;
 
   return (
-    <div className="h-full overflow-auto bg-white">
-      <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <BackButton />
-          <h1 className="text-[17px] font-semibold text-gray-900">Item Details</h1>
+          <div className="flex items-center gap-2">
+            <span className="w-1 h-6 bg-primary rounded-full" />
+            <h1 className="text-[17px] font-semibold text-foreground">Item Details</h1>
+          </div>
         </div>
         <Link 
           href={`/common/items/${item.id}/edit`}
-          className="px-4 py-1.5 text-sm bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors"
+          className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors shadow-sm"
         >
           Edit Item
         </Link>
@@ -66,67 +69,67 @@ export default async function ItemDetailPage({ params }: Props) {
 
       <div className="px-6 py-6">
         {/* Item Info Card */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-          <div className="flex items-start justify-between mb-6">
+        <div className="bg-card border border-border rounded-lg p-6 mb-6 shadow-sm">
+          <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
             <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">{item.itemName}</h2>
-              <p className="text-sm text-gray-500">Part Number: <span className="font-mono font-medium text-gray-900">{item.partNumber}</span></p>
+              <h2 className="text-2xl font-semibold text-foreground mb-2">{item.itemName}</h2>
+              <p className="text-sm text-muted-foreground">Part Number: <span className="font-mono font-medium text-foreground">{item.partNumber}</span></p>
             </div>
-            <div className={`px-4 py-2 rounded-lg text-center ${
-              stock > 10 ? 'bg-green-50 border border-green-200' : 
-              stock > 0 ? 'bg-yellow-50 border border-yellow-200' : 
-              'bg-red-50 border border-red-200'
+            <div className={`px-4 py-3 rounded-lg text-center min-w-[120px] ${
+              stock > 10 ? 'bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800' : 
+              stock > 0 ? 'bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800' : 
+              'bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800'
             }`}>
-              <p className="text-xs text-gray-600 mb-1">Current Stock</p>
+              <p className="text-xs text-muted-foreground mb-1">Current Stock</p>
               <p className={`text-3xl font-bold ${
-                stock > 10 ? 'text-green-600' : 
-                stock > 0 ? 'text-yellow-600' : 
-                'text-red-600'
+                stock > 10 ? 'text-green-600 dark:text-green-500' : 
+                stock > 0 ? 'text-yellow-600 dark:text-yellow-500' : 
+                'text-red-600 dark:text-red-500'
               }`}>
                 {stock}
               </p>
-              <p className="text-xs text-gray-500 mt-1">{item.unit}</p>
+              <p className="text-xs text-muted-foreground mt-1">{item.unit}</p>
             </div>
           </div>
 
           {item.description && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-500 mb-1">Description</p>
-              <p className="text-sm text-gray-900">{item.description}</p>
+            <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border">
+              <p className="text-xs text-muted-foreground mb-2 font-medium">Description</p>
+              <p className="text-sm text-foreground leading-relaxed">{item.description}</p>
             </div>
           )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="flex items-start gap-3">
-              <Hash className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+              <Hash className="w-5 h-5 text-muted-foreground mt-0.5" />
               <div>
-                <p className="text-xs text-gray-500">HSN Code</p>
-                <p className="text-sm text-gray-900 font-mono">{item.hsnCode}</p>
+                <p className="text-xs text-muted-foreground mb-1">HSN Code</p>
+                <p className="text-sm text-foreground font-mono font-medium">{item.hsnCode}</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <Package className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+              <Package className="w-5 h-5 text-muted-foreground mt-0.5" />
               <div>
-                <p className="text-xs text-gray-500">Unit</p>
-                <p className="text-sm text-gray-900">{item.unit}</p>
+                <p className="text-xs text-muted-foreground mb-1">Unit</p>
+                <p className="text-sm text-foreground font-medium">{item.unit}</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <Tag className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+              <Tag className="w-5 h-5 text-muted-foreground mt-0.5" />
               <div>
-                <p className="text-xs text-gray-500">GST Rate</p>
-                <p className="text-sm text-gray-900">{item.gstPercent}%</p>
+                <p className="text-xs text-muted-foreground mb-1">GST Rate</p>
+                <p className="text-sm text-foreground font-medium">{item.gstPercent}%</p>
               </div>
             </div>
 
             {item.mrp && (
-              <div className="flex items-start gap-3">
-                <IndianRupee className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+                <IndianRupee className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-xs text-gray-500">MRP</p>
-                  <p className="text-sm text-gray-900 font-semibold">
+                  <p className="text-xs text-muted-foreground mb-1">MRP</p>
+                  <p className="text-sm text-foreground font-semibold">
                     ₹{Number(item.mrp).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
@@ -134,11 +137,11 @@ export default async function ItemDetailPage({ params }: Props) {
             )}
 
             {item.rtl && (
-              <div className="flex items-start gap-3">
-                <IndianRupee className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+                <IndianRupee className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-xs text-gray-500">Retail Price</p>
-                  <p className="text-sm text-gray-900 font-semibold">
+                  <p className="text-xs text-muted-foreground mb-1">Retail Price</p>
+                  <p className="text-sm text-foreground font-semibold">
                     ₹{Number(item.rtl).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
@@ -146,21 +149,21 @@ export default async function ItemDetailPage({ params }: Props) {
             )}
 
             {item.barcode && (
-              <div className="flex items-start gap-3">
-                <Layers className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+                <Layers className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-xs text-gray-500">Barcode</p>
-                  <p className="text-sm text-gray-900 font-mono">{item.barcode}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Barcode</p>
+                  <p className="text-sm text-foreground font-mono font-medium">{item.barcode}</p>
                 </div>
               </div>
             )}
 
             {item.qrCode && (
-              <div className="flex items-start gap-3">
-                <Layers className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+                <Layers className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-xs text-gray-500">QR Code</p>
-                  <p className="text-sm text-gray-900 font-mono">{item.qrCode}</p>
+                  <p className="text-xs text-muted-foreground mb-1">QR Code</p>
+                  <p className="text-sm text-foreground font-mono font-medium">{item.qrCode}</p>
                 </div>
               </div>
             )}
@@ -168,31 +171,45 @@ export default async function ItemDetailPage({ params }: Props) {
         </div>
 
         {/* Timestamps */}
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-xs text-gray-500">Created At</p>
-              <p className="text-gray-900">
-                {new Date(item.createdAt).toLocaleString('en-IN', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </p>
+        <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-muted/50">
+                <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Created At</p>
+                <p className="text-foreground font-medium">
+                  {new Date(item.createdAt).toLocaleString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-gray-500">Last Updated</p>
-              <p className="text-gray-900">
-                {new Date(item.updatedAt).toLocaleString('en-IN', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </p>
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-muted/50">
+                <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Last Updated</p>
+                <p className="text-foreground font-medium">
+                  {new Date(item.updatedAt).toLocaleString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
             </div>
           </div>
         </div>

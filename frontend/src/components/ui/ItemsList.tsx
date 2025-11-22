@@ -13,15 +13,18 @@ import { useToast } from "@/hooks/useToast";
 
 type Props = {
   items: Item[];
+  initialOnlyPurchased?: boolean;
 };
 
 
 
-export default function ItemsList({ items }: Props) {
+export default function ItemsList(props: Props) {
+  const { items } = props;
   const router = useRouter();
   const { toasts, removeToast, success, error } = useToast();
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showOnlyPurchased, setShowOnlyPurchased] = useState(props.initialOnlyPurchased ?? false);
   const [editingStockId, setEditingStockId] = useState<number | null>(null);
   const [stockValues, setStockValues] = useState<{ [key: number]: number }>({});
   const [updatingStockId, setUpdatingStockId] = useState<number | null>(null);
@@ -45,14 +48,26 @@ export default function ItemsList({ items }: Props) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const filteredItems = useMemo(() => {
-    if (!searchTerm.trim()) return items;
+  // Handle filter toggle - navigate to update URL params
+  const handlePurchasedFilterChange = (checked: boolean) => {
+    setShowOnlyPurchased(checked);
+    const url = checked ? '/common/items?onlyPurchased=true' : '/common/items';
+    router.push(url);
+  };
 
-    const term = searchTerm.toLowerCase().trim();
-    return items.filter(item => 
-      item.partNumber.toLowerCase().includes(term) ||
-      item.itemName.toLowerCase().includes(term)
-    );
+  const filteredItems = useMemo(() => {
+    let filtered = items;
+
+    // Filter by search term (client-side for better UX)
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter(item => 
+        item.partNumber.toLowerCase().includes(term) ||
+        item.itemName.toLowerCase().includes(term)
+      );
+    }
+
+    return filtered;
   }, [items, searchTerm]);
 
   const hasRows = filteredItems && filteredItems.length > 0;
@@ -115,7 +130,7 @@ export default function ItemsList({ items }: Props) {
 
   const startEditingStock = (itemId: number, currentStock: number) => {
     setEditingStockId(itemId);
-    setStockValues({ ...stockValues, [itemId]: currentStock });
+    setStockValues({ ...stockValues, [itemId]: currentStock ?? 0 });
   };
 
   const cancelEditingStock = () => {
@@ -135,9 +150,9 @@ export default function ItemsList({ items }: Props) {
         </div>
       </header>
 
-      {/* Search Bar */}
-      <div className="px-6 pt-6">
-        <div className="relative max-w-md">
+      {/* Search Bar and Filters */}
+      <div className="px-6 pt-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="relative max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             ref={searchInputRef}
@@ -150,16 +165,28 @@ export default function ItemsList({ items }: Props) {
           {searchTerm && (
             <button
               onClick={() => setSearchTerm("")}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               ✕
             </button>
           )}
         </div>
+        
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showOnlyPurchased}
+              onChange={(e) => handlePurchasedFilterChange(e.target.checked)}
+              className="w-4 h-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+            />
+            <span className="text-sm text-foreground whitespace-nowrap">Show only purchased items</span>
+          </label>
+        </div>
       </div>
 
       <div className="px-6 py-6">
-        <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm animate-fade-in">
+        <div className="bg-card border border-border rounded-lg overflow-x-auto shadow-sm animate-fade-in">
           {!hasRows ? (
             <div className="flex flex-col items-center justify-center py-32">
               <div className="mb-4">
@@ -173,95 +200,120 @@ export default function ItemsList({ items }: Props) {
               </p>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-[60px_repeat(5,1fr)_120px] gap-4 px-4 py-3 border-b border-border bg-muted/30">
-                <div className="text-xs font-medium text-muted-foreground">#</div>
-                <div className="text-xs font-medium text-muted-foreground">Part Number</div>
-                <div className="text-xs font-medium text-muted-foreground">Item Name</div>
-                <div className="text-xs font-medium text-muted-foreground">Unit</div>
-                <div className="text-xs font-medium text-muted-foreground text-right">MRP</div>
-                <div className="text-xs font-medium text-muted-foreground text-right">Stock</div>
-                <div className="text-xs font-medium text-muted-foreground text-center">Actions</div>
-              </div>
-              {filteredItems.map((item, i) => (
-                <div key={item.id} className="grid grid-cols-[60px_repeat(5,1fr)_120px] gap-4 px-4 py-3 border-b border-border hover:bg-muted/20 transition-colors">
-                  <div className="text-sm text-foreground">{i + 1}</div>
-                  <div className="text-sm text-foreground">{item.partNumber}</div>
-                  <div className="text-sm">
-                    <Link href={`/common/items/${item.id}`} className="text-primary hover:underline transition-colors">
-                      {item.itemName}
-                    </Link>
-                  </div>
-                  <div className="text-sm text-foreground">{item.unit}</div>
-                  <div className="text-sm text-foreground text-right">
-                    {item.mrp.toLocaleString(undefined, {
-                      style: "currency",
-                      currency: "INR",
-                      maximumFractionDigits: 2,
-                    })}
-                  </div>
-                  <div className="text-right">
-                    {editingStockId === item.id ? (
-                      <div className="flex items-center justify-end gap-1">
-                        <input
-                          type="number"
-                          min="0"
-                          value={stockValues[item.id] ?? item.stock}
-                          onChange={(e) => setStockValues({ ...stockValues, [item.id]: parseInt(e.target.value) || 0 })}
-                          className="w-16 px-2 py-1 text-sm border border-primary rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-right transition-all"
-                          disabled={updatingStockId === item.id}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleStockUpdate(item.id, item.itemName);
-                            if (e.key === 'Escape') cancelEditingStock();
-                          }}
-                          autoFocus
-                        />
+            <table className="w-full min-w-max">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">#</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground whitespace-nowrap">Part Number</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground whitespace-nowrap">Item Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Description</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">HSN</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">GST %</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Unit</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">RTL</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">MRP</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground whitespace-nowrap">Stock Qty</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.map((item, i) => (
+                  <tr key={item.id} className="border-b border-border hover:bg-muted/20 transition-colors">
+                    <td className="px-4 py-3 text-sm text-foreground">{i + 1}</td>
+                    <td className="px-4 py-3 text-sm text-foreground font-mono whitespace-nowrap">{item.partNumber}</td>
+                    <td className="px-4 py-3 text-sm whitespace-nowrap">
+                      <Link href={`/common/items/${item.id}`} className="text-primary hover:underline transition-colors font-medium">
+                        {item.itemName}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground max-w-xs truncate" title={item.description || 'N/A'}>
+                      {item.description || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">{item.hsnCode}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{item.gstPercent}%</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{item.unit}</td>
+                    <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
+                      {item.rtl ? Number(item.rtl).toLocaleString(undefined, {
+                        style: "currency",
+                        currency: "INR",
+                        maximumFractionDigits: 2,
+                      }) : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground text-right whitespace-nowrap">
+                      {Number(item.mrp ?? 0).toLocaleString(undefined, {
+                        style: "currency",
+                        currency: "INR",
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {editingStockId === item.id ? (
+                        <div className="flex items-center justify-end gap-1 whitespace-nowrap">
+                          <input
+                            type="number"
+                            min="0"
+                            value={stockValues[item.id] ?? item.stock ?? 0}
+                            onChange={(e) => setStockValues({ ...stockValues, [item.id]: parseInt(e.target.value) || 0 })}
+                            className="w-16 px-2 py-1 text-sm border border-primary rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-right transition-all"
+                            disabled={updatingStockId === item.id}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleStockUpdate(item.id, item.itemName);
+                              if (e.key === 'Escape') cancelEditingStock();
+                            }}
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleStockUpdate(item.id, item.itemName)}
+                            disabled={updatingStockId === item.id}
+                            className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 cursor-pointer"
+                            title="Save"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={cancelEditingStock}
+                            disabled={updatingStockId === item.id}
+                            className="text-xs px-2 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 disabled:opacity-50 cursor-pointer"
+                            title="Cancel"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
                         <button
-                          onClick={() => handleStockUpdate(item.id, item.itemName)}
-                          disabled={updatingStockId === item.id}
-                          className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                          onClick={() => startEditingStock(item.id, item.stock ?? 0)}
+                          className={`text-sm font-semibold hover:underline whitespace-nowrap cursor-pointer ${
+                            (item.stock ?? 0) > 10 ? 'text-green-600' : (item.stock ?? 0) > 0 ? 'text-yellow-600' : 'text-red-600'
+                          }`}
+                          title="Click to edit stock"
                         >
-                          ✓
+                          {item.stock ?? 0}
                         </button>
-                        <button
-                          onClick={cancelEditingStock}
-                          disabled={updatingStockId === item.id}
-                          className="text-xs px-2 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 disabled:opacity-50"
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                        <Link
+                          href={`/common/items/${item.id}/edit`}
+                          className="p-1.5 text-primary hover:bg-primary/10 rounded transition-all hover:scale-110"
+                          title="Edit item"
                         >
-                          ✕
+                          <Pencil className="w-4 h-4" />
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(item.id, item.itemName)}
+                          disabled={deletingId === item.id}
+                          className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-all hover:scale-110 disabled:opacity-50 cursor-pointer"
+                          title="Delete item"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-                    ) : (
-                      <button
-                        onClick={() => startEditingStock(item.id, item.stock)}
-                        className={`text-sm font-semibold hover:underline ${
-                          item.stock > 10 ? 'text-green-600' : item.stock > 0 ? 'text-yellow-600' : 'text-red-600'
-                        }`}
-                      >
-                        {item.stock}
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <Link
-                      href={`/common/items/${item.id}/edit`}
-                      className="p-1.5 text-primary hover:bg-primary/10 rounded transition-all hover:scale-110"
-                      title="Edit"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(item.id, item.itemName)}
-                      disabled={deletingId === item.id}
-                      className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-all hover:scale-110 disabled:opacity-50"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </div>

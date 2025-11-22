@@ -129,7 +129,7 @@ export default function CustomersList({ customers }: Props) {
           {searchTerm && (
             <button
               onClick={() => setSearchTerm("")}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               ✕
             </button>
@@ -190,7 +190,7 @@ export default function CustomersList({ customers }: Props) {
                     <button
                       onClick={() => handleDeleteClick(customer.id, customer.name)}
                       disabled={deletingId === customer.id}
-                      className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-all hover:scale-110 disabled:opacity-50"
+                      className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-all hover:scale-110 disabled:opacity-50 cursor-pointer"
                       title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />

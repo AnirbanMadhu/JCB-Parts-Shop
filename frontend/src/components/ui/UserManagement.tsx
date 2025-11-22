@@ -152,7 +152,7 @@ export default function UserManagement() {
         </h2>
         <button
           onClick={() => setShowInviteForm(!showInviteForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow-md"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
         >
           <UserPlus size={18} />
           Invite User
@@ -316,7 +316,7 @@ export default function UserManagement() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
                     onClick={() => handleToggleActive(user.id, user.isActive ?? true)}
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
                       user.isActive
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
@@ -331,7 +331,7 @@ export default function UserManagement() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button
                     onClick={() => handleDeleteUser(user.id, user.name)}
-                    className="text-red-600 hover:text-red-900 ml-4"
+                    className="text-red-600 hover:text-red-900 ml-4 cursor-pointer"
                     title="Delete user"
                   >
                     <Trash2 size={18} />

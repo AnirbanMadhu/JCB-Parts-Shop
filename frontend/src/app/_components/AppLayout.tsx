@@ -6,6 +6,7 @@ import AppSidebar from "@/app/dashboard/_components/Sidebar";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import RouteGuard from "@/components/RouteGuard";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -47,5 +48,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return <LayoutContent>{children}</LayoutContent>;
+  return (
+    <RouteGuard>
+      <LayoutContent>{children}</LayoutContent>
+    </RouteGuard>
+  );
 }

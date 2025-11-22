@@ -64,6 +64,23 @@ router.get('/search', async (req, res) => {
   const { q, barcode, qrCode } = req.query as { q?: string; barcode?: string; qrCode?: string };
 
   try {
+    // Helper function to add stock info to a part
+    const addStockInfo = async (part: any) => {
+      const [incoming, outgoing] = await Promise.all([
+        prisma.inventoryTransaction.aggregate({
+          where: { partId: part.id, direction: 'IN' },
+          _sum: { quantity: true }
+        }),
+        prisma.inventoryTransaction.aggregate({
+          where: { partId: part.id, direction: 'OUT' },
+          _sum: { quantity: true }
+        })
+      ]);
+      const inQty = incoming._sum.quantity ?? 0;
+      const outQty = outgoing._sum.quantity ?? 0;
+      return { ...part, stock: inQty - outQty };
+    };
+
     // Search by barcode
     if (barcode) {
       const part = await prisma.part.findUnique({ 
@@ -72,7 +89,8 @@ router.get('/search', async (req, res) => {
       if (!part || part.isDeleted) {
         return res.status(404).json({ error: 'Part not found' });
       }
-      return res.json(part);
+      const partWithStock = await addStockInfo(part);
+      return res.json(partWithStock);
     }
 
     // Search by QR code
@@ -83,7 +101,8 @@ router.get('/search', async (req, res) => {
       if (!part || part.isDeleted) {
         return res.status(404).json({ error: 'Part not found' });
       }
-      return res.json(part);
+      const partWithStock = await addStockInfo(part);
+      return res.json(partWithStock);
     }
 
     // General search by part number or item name

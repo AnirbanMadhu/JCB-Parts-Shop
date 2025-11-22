@@ -1,7 +1,8 @@
+"use client";
+
 import { API_BASE_URL } from '@/lib/constants';
 
 // components/Purchases/PurchaseInvoiceForm.tsx
-"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import ScannerInput from "./ScannerInput";
@@ -27,13 +28,25 @@ type Supplier = { id: number; name: string };
 
 
 async function fetchProductByCode(code: string) {
+  // Extract code from URL if it's a URL (e.g., https://lamilink.in/q?q=CODE)
+  let searchCode = code;
+  try {
+    const urlObj = new URL(code);
+    const qParam = urlObj.searchParams.get('q');
+    if (qParam) {
+      searchCode = qParam;
+    }
+  } catch {
+    // Not a URL, use the code as-is
+  }
+
   // Search by barcode first, then by part number
   try {
-    console.log("Searching for part:", code);
+    console.log("Searching for part:", searchCode);
     console.log("API URL:", API_BASE_URL);
     
     // Try barcode search
-    let url = `${API_BASE_URL}/api/parts/search?barcode=${encodeURIComponent(code)}`;
+    let url = `${API_BASE_URL}/api/parts/search?barcode=${encodeURIComponent(searchCode)}`;
     console.log("Trying barcode search:", url);
     let res = await fetch(url, { cache: "no-store" });
     
@@ -44,7 +57,7 @@ async function fetchProductByCode(code: string) {
     }
     
     // Try part number search
-    url = `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(code)}`;
+    url = `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(searchCode)}`;
     console.log("Trying part number search:", url);
     res = await fetch(url, { cache: "no-store" });
     
@@ -168,7 +181,7 @@ export default function PurchaseInvoiceForm() {
           partId: p.id,
           name: p.itemName,
           uom: p.unit,
-          price: Number(p.rtl ?? p.mrp ?? 0),
+          price: Number(p.rtl ?? p.mrp ?? 0), // Default to RTL, but can be edited to actual purchase price
           qty: 1, // default quantity
           taxRate: Number(p.gstPercent ?? 0),
           discount: 0,
@@ -405,12 +418,12 @@ export default function PurchaseInvoiceForm() {
                 className="w-full rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
               />
               {filteredSuppliers.length > 0 && (
-                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-border bg-card shadow-lg">
+                <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 shadow-2xl">
                   {filteredSuppliers.map((s) => (
                     <button
                       key={s.id}
                       type="button"
-                      className="block w-full text-left px-3 py-2 hover:bg-muted text-foreground transition-colors"
+                      className="block w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white transition-colors cursor-pointer border-b border-gray-200 dark:border-gray-700 last:border-b-0"
                       onClick={() => {
                         setSupplier(s);
                         setSupplierQuery("");
@@ -452,15 +465,15 @@ export default function PurchaseInvoiceForm() {
                 </div>
               )}
               {partSuggestions.length > 0 && (
-                <div className="absolute z-50 mt-2 w-full max-h-72 overflow-auto rounded-lg border-2 border-gray-300 bg-white shadow-2xl">
-                  <div className="bg-white px-3 py-2 text-sm font-bold text-gray-900 border-b-2 border-gray-300">
+                <div className="absolute z-50 mt-2 w-full max-h-72 overflow-auto rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 shadow-2xl">
+                  <div className="bg-gray-200 dark:bg-gray-800 px-4 py-2 text-sm font-bold text-gray-900 dark:text-white border-b-2 border-gray-300 dark:border-gray-600 sticky top-0">
                     Select a part to add
                   </div>
                   {partSuggestions.map((part) => (
                     <button
                       key={part.id}
                       type="button"
-                      className="block w-full text-left px-4 py-3 hover:bg-gray-100 border-b last:border-b-0 border-gray-200 transition-colors bg-white cursor-pointer"
+                      className="block w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 border-b last:border-b-0 border-gray-200 dark:border-gray-700 transition-colors bg-white dark:bg-gray-900 cursor-pointer"
                       onClick={() => {
                         handleScan(part.partNumber);
                         setPartSearchQuery("");

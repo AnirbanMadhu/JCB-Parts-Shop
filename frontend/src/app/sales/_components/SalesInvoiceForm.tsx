@@ -1,7 +1,8 @@
+"use client";
+
 import { API_BASE_URL } from '@/lib/constants';
 
 // components/Sales/SalesInvoiceForm.tsx
-"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import ScannerInput from "@/app/purchases/_components/ScannerInput";
@@ -27,16 +28,28 @@ type Customer = { id: number; name: string; indexId?: string };
 
 
 async function fetchProductByCode(code: string) {
+  // Extract code from URL if it's a URL (e.g., https://lamilink.in/q?q=CODE)
+  let searchCode = code;
+  try {
+    const url = new URL(code);
+    const qParam = url.searchParams.get('q');
+    if (qParam) {
+      searchCode = qParam;
+    }
+  } catch {
+    // Not a URL, use the code as-is
+  }
+
   // Search by barcode first, then by part number
   try {
     // Try barcode search
-    let res = await fetch(`${API_BASE_URL}/api/parts/search?barcode=${encodeURIComponent(code)}`, { cache: "no-store" });
+    let res = await fetch(`${API_BASE_URL}/api/parts/search?barcode=${encodeURIComponent(searchCode)}`, { cache: "no-store" });
     if (res.ok) {
       return await res.json();
     }
     
     // Try part number search
-    res = await fetch(`${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(code)}`, { cache: "no-store" });
+    res = await fetch(`${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(searchCode)}`, { cache: "no-store" });
     if (res.ok) {
       const parts = await res.json();
       if (parts.length > 0) {
@@ -204,7 +217,7 @@ export default function SalesInvoiceForm() {
           partId: p.id,
           name: p.itemName,
           uom: p.unit,
-          price: Number(p.mrp ?? p.rtl ?? 0), // Use MRP for sales
+          price: Number(p.rtl ?? p.mrp ?? 0), // Use RTL (retail selling price) for sales
           qty: 1,
           taxRate: Number(p.gstPercent ?? 0),
           discount: 0,
@@ -465,12 +478,12 @@ export default function SalesInvoiceForm() {
                 className="w-full rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
               />
               {filteredCustomers.length > 0 && (
-                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-border bg-card shadow-lg">
+                <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 shadow-2xl">
                   {filteredCustomers.map((c) => (
                     <button
                       key={c.id}
                       type="button"
-                      className="block w-full text-left px-3 py-2 hover:bg-muted text-foreground transition-colors"
+                      className="block w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 last:border-b-0 transition-colors cursor-pointer"
                       onClick={() => {
                         setCustomer(c);
                         setCustomerQuery("");
@@ -792,115 +805,119 @@ export default function SalesInvoiceForm() {
 
       {/* Preview modal */}
       {showPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-          <div className="w-full max-w-4xl rounded-2xl bg-card p-6 shadow-2xl">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-4xl rounded-2xl bg-card border border-border shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
               <h3 className="text-lg font-semibold text-foreground">Preview — {number}</h3>
               <button
                 onClick={() => setShowPreview(false)}
-                className="rounded-md border border-border bg-background text-foreground px-3 py-1 hover:bg-muted transition-colors"
+                className="rounded-md border border-border bg-background text-foreground px-3 py-1.5 hover:bg-muted transition-colors text-sm font-medium cursor-pointer"
               >
                 Close
               </button>
             </div>
-            <div className="mt-4 grid gap-2 text-sm text-foreground">
-              <div><span className="text-muted-foreground">Date:</span> {new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</div>
-              <div>
-                <span className="text-muted-foreground">Customer:</span>{" "}
-                {customer ? customer.name : "—"}
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {/* Invoice Details */}
+              <div className="grid gap-3 text-sm mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground font-medium">Date:</span>
+                  <span className="text-foreground font-semibold">
+                    {new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground font-medium">Customer:</span>
+                  <span className="text-foreground font-semibold">{customer ? customer.name : "—"}</span>
+                </div>
               </div>
-            </div>
-            <div className="mt-4 overflow-x-auto rounded-lg border border-border">
-              <table className="min-w-[900px] w-full text-sm">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="px-3 py-2 text-left text-foreground font-medium">Code</th>
-                    <th className="px-3 py-2 text-left text-foreground font-medium">Name</th>
-                    <th className="px-3 py-2 text-right text-foreground font-medium">Qty</th>
-                    <th className="px-3 py-2 text-right text-foreground font-medium">Price</th>
-                    <th className="px-3 py-2 text-right text-foreground font-medium">Discount</th>
-                    <th className="px-3 py-2 text-right text-foreground font-medium">Tax %</th>
-                    <th className="px-3 py-2 text-right text-foreground font-medium">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lines.map((l) => {
-                    const net = l.price - l.discount;
-                    const total = l.qty * net + (l.qty * net * l.taxRate) / 100;
-                    return (
-                      <tr key={l.code} className="border-t border-border">
-                        <td className="px-3 py-2 text-foreground">{l.code}</td>
-                        <td className="px-3 py-2 text-foreground">{l.name}</td>
-                        <td className="px-3 py-2 text-right text-foreground">{l.qty}</td>
-                        <td className="px-3 py-2 text-right text-foreground">{l.price}</td>
-                        <td className="px-3 py-2 text-right text-foreground">{l.discount}</td>
-                        <td className="px-3 py-2 text-right text-foreground">{l.taxRate}</td>
-                        <td className="px-3 py-2 text-right text-foreground">
-                          {total.toLocaleString(undefined, {
+
+              {/* Items Table */}
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="min-w-[900px] w-full text-sm">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-3 py-2.5 text-left text-foreground font-semibold">Code</th>
+                      <th className="px-3 py-2.5 text-left text-foreground font-semibold">Name</th>
+                      <th className="px-3 py-2.5 text-right text-foreground font-semibold">Qty</th>
+                      <th className="px-3 py-2.5 text-right text-foreground font-semibold">Price</th>
+                      <th className="px-3 py-2.5 text-right text-foreground font-semibold">Discount</th>
+                      <th className="px-3 py-2.5 text-right text-foreground font-semibold">Tax %</th>
+                      <th className="px-3 py-2.5 text-right text-foreground font-semibold">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-card">
+                    {lines.map((l, i) => {
+                      const net = l.price - l.discount;
+                      const total = l.qty * net + (l.qty * net * l.taxRate) / 100;
+                      return (
+                        <tr key={i} className="border-t border-border hover:bg-muted/50 transition-colors">
+                          <td className="px-3 py-2.5 text-foreground font-mono">{l.code}</td>
+                          <td className="px-3 py-2.5 text-foreground">{l.name}</td>
+                          <td className="px-3 py-2.5 text-right text-foreground font-semibold">{l.qty}</td>
+                          <td className="px-3 py-2.5 text-right text-foreground">₹{l.price.toFixed(2)}</td>
+                          <td className="px-3 py-2.5 text-right text-foreground">{l.discount > 0 ? `₹${l.discount.toFixed(2)}` : '—'}</td>
+                          <td className="px-3 py-2.5 text-right text-foreground">{l.taxRate}%</td>
+                          <td className="px-3 py-2.5 text-right text-foreground font-semibold">
+                            {total.toLocaleString(undefined, {
+                              style: "currency",
+                              currency: "INR",
+                              maximumFractionDigits: 2,
+                            })}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Totals Summary */}
+              <div className="mt-6 flex justify-end">
+                <div className="min-w-80 rounded-lg border border-border bg-card p-4 shadow-sm">
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground font-medium">Subtotal</span>
+                      <span className="text-foreground font-semibold">
+                        {totals.sub.toLocaleString(undefined, { style: "currency", currency: "INR" })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground font-medium">Tax</span>
+                      <span className="text-foreground font-semibold">
+                        {totals.tax.toLocaleString(undefined, { style: "currency", currency: "INR" })}
+                      </span>
+                    </div>
+                    {totals.discount > 0 && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-green-600 dark:text-green-400 font-medium">Discount ({discountType === "percentage" ? `${discountValue}%` : "₹"})</span>
+                        <span className="text-green-600 dark:text-green-400 font-semibold">
+                          -{totals.discount.toLocaleString(undefined, {
                             style: "currency",
                             currency: "INR",
                             maximumFractionDigits: 2,
                           })}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Totals in Preview */}
-            <div className="mt-4 flex justify-end">
-              <div className="w-64 rounded-lg border border-border bg-card p-4">
-                <div className="flex items-center justify-between py-1 text-sm text-foreground">
-                  <span>Subtotal</span>
-                  <span>
-                    {totals.sub.toLocaleString(undefined, {
-                      style: "currency",
-                      currency: "INR",
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-1 text-sm text-foreground">
-                  <span>Tax</span>
-                  <span>
-                    {totals.tax.toLocaleString(undefined, {
-                      style: "currency",
-                      currency: "INR",
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-                {totals.discount > 0 && (
-                  <div className="flex items-center justify-between py-1 text-sm text-green-600 dark:text-green-400">
-                    <span>Discount ({discountType === "percentage" ? `${discountValue}%` : "₹"})</span>
-                    <span>
-                      -{totals.discount.toLocaleString(undefined, {
-                        style: "currency",
-                        currency: "INR",
-                        maximumFractionDigits: 2,
-                      })}
-                    </span>
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center pt-2 border-t border-border">
+                      <span className="text-foreground font-bold">Grand Total</span>
+                      <span className="text-foreground font-bold text-lg">
+                        {totals.grand.toLocaleString(undefined, { style: "currency", currency: "INR" })}
+                      </span>
+                    </div>
                   </div>
-                )}
-                <div className="mt-2 border-t border-border pt-2 flex items-center justify-between font-semibold text-foreground">
-                  <span>Grand Total</span>
-                  <span>
-                    {totals.grand.toLocaleString(undefined, {
-                      style: "currency",
-                      currency: "INR",
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 flex items-center justify-end gap-2">
+            {/* Footer Actions */}
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-muted/30">
               <button
                 onClick={() => setShowPreview(false)}
-                className="rounded-md border border-border bg-background text-foreground px-3 py-2 hover:bg-muted transition-colors"
+                className="rounded-md border border-border bg-background text-foreground px-4 py-2 hover:bg-muted transition-colors text-sm font-medium cursor-pointer"
               >
                 Edit
               </button>
@@ -909,7 +926,7 @@ export default function SalesInvoiceForm() {
                   setShowPreview(false);
                   void save(true);
                 }}
-                className="rounded-md px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="rounded-md px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium shadow-sm cursor-pointer"
               >
                 Confirm & Submit
               </button>

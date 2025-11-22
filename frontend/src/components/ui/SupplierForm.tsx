@@ -175,7 +175,7 @@ export default function SupplierForm() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-2 bg-muted text-muted-foreground text-sm font-medium rounded-md hover:bg-muted/80 transition-colors"
+              className="px-6 py-2 bg-muted text-muted-foreground text-sm font-medium rounded-md hover:bg-muted/80 transition-colors cursor-pointer"
             >
               Cancel
             </button>

@@ -181,7 +181,7 @@ export function DataTable<T extends Record<string, any>>({
           {exportable && (
             <button
               onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium cursor-pointer"
             >
               <Download className="w-4 h-4" />
               Export CSV
@@ -260,14 +260,14 @@ export function DataTable<T extends Record<string, any>>({
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               <ChevronsLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -286,7 +286,7 @@ export function DataTable<T extends Record<string, any>>({
                     )}
                     <button
                       onClick={() => setCurrentPage(page)}
-                      className={`min-w-[36px] px-3 py-1 rounded-lg transition-colors ${
+                      className={`min-w-[36px] px-3 py-1 rounded-lg transition-colors cursor-pointer ${
                         currentPage === page
                           ? 'bg-blue-600 text-white'
                           : 'hover:bg-gray-100 text-gray-700'
@@ -300,14 +300,14 @@ export function DataTable<T extends Record<string, any>>({
             <button
               onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               <ChevronsRight className="w-4 h-4" />
             </button>

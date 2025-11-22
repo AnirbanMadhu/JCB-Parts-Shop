@@ -28,10 +28,10 @@ export default async function EditItemPage({
 
   if (!item) {
     return (
-      <div className="p-6">
+      <div className="min-h-screen bg-background p-6">
         <div className="text-center py-12">
-          <h1 className="text-xl font-semibold text-red-600">Item not found</h1>
-          <p className="mt-2 text-gray-600">The item you're looking for doesn't exist.</p>
+          <h1 className="text-xl font-semibold text-destructive">Item not found</h1>
+          <p className="mt-2 text-muted-foreground">The item you're looking for doesn't exist.</p>
         </div>
       </div>
     );

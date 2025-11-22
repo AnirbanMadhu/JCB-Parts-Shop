@@ -204,7 +204,7 @@ export default function SuppliersList({ suppliers }: Props) {
                       </Link>
                       <button
                         onClick={(e) => handleDeleteClick(e, supplier.id, supplier.name)}
-                        className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-all hover:scale-110"
+                        className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-all hover:scale-110 cursor-pointer"
                         title="Delete supplier"
                       >
                         <Trash2 className="w-4 h-4" />

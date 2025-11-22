@@ -93,14 +93,14 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
           <button
             type="button"
             onClick={() => router.push('/common/customers')}
-            className="px-4 py-1.5 text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border"
+            className="px-4 py-1.5 text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="px-4 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60"
+            className="px-4 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60 cursor-pointer"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
@@ -219,14 +219,14 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
             <button
               type="button"
               onClick={() => router.push('/common/customers')}
-              className="px-6 py-2 text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border"
+              className="px-6 py-2 text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60"
+              className="px-6 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60 cursor-pointer"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>

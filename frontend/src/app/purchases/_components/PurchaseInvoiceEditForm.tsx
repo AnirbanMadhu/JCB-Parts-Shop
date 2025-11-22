@@ -7,6 +7,7 @@ import ScannerInput from "./ScannerInput";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 
 type Line = {
   code: string;
@@ -24,15 +25,27 @@ type Supplier = { id: number; name: string };
 
 
 async function fetchProductByCode(code: string) {
+  // Extract code from URL if it's a URL (e.g., https://lamilink.in/q?q=CODE)
+  let searchCode = code;
   try {
-    let url = `${API_BASE_URL}/api/parts/search?barcode=${encodeURIComponent(code)}`;
+    const urlObj = new URL(code);
+    const qParam = urlObj.searchParams.get('q');
+    if (qParam) {
+      searchCode = qParam;
+    }
+  } catch {
+    // Not a URL, use the code as-is
+  }
+
+  try {
+    let url = `${API_BASE_URL}/api/parts/search?barcode=${encodeURIComponent(searchCode)}`;
     let res = await fetch(url, { cache: "no-store" });
     
     if (res.ok) {
       return await res.json();
     }
     
-    url = `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(code)}`;
+    url = `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(searchCode)}`;
     res = await fetch(url, { cache: "no-store" });
     
     if (res.ok) {
@@ -42,7 +55,7 @@ async function fetchProductByCode(code: string) {
       }
     }
     
-    throw new Error(`No part found with code: ${code}`);
+    throw new Error(`No part found with code: ${searchCode}`);
   } catch (error) {
     console.error("Error fetching part:", error);
     throw error;
@@ -99,6 +112,7 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
       setLines((prev) =>
         prev.map((l, i) => (i === exists ? { ...l, qty: l.qty + 1 } : l))
       );
+      success(`Added 1 more "${lines[exists].name}" (Total: ${lines[exists].qty + 1})`);
       return;
     }
 
@@ -117,10 +131,20 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
           discount: 0,
         },
       ]);
+      success(`Added "${p.itemName}" to invoice`);
     } catch (error: any) {
       toastError(error.message || "Part not found. Please check the code and try again.");
     }
   };
+
+  // Enable barcode scanner
+  useBarcodeScanner({
+    onScan: handleScan,
+    enabled: !saving && !showPreview,
+    minLength: 3,
+    enableSound: true,
+    enableVisualFeedback: true,
+  });
 
   const updateLine = (idx: number, patch: Partial<Line>) => {
     setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
@@ -281,7 +305,7 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
             className="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white px-3 py-2 [color-scheme:light] dark:[color-scheme:dark]"
           />
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col relative">
           <label className="text-xs text-neutral-500">Supplier</label>
           {supplier ? (
             <div className="flex items-center gap-2">
@@ -304,15 +328,15 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
                 value={supplierQuery}
                 onChange={(e) => setSupplierQuery(e.target.value)}
                 placeholder="Search supplier"
-                className="w-full rounded-lg border px-3 py-2"
+                className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
               {filteredSuppliers.length > 0 && (
-                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border bg-white shadow">
+                <div className="absolute right-0 z-50 mt-2 w-80 max-h-72 overflow-auto rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-2xl">
                   {filteredSuppliers.map((s) => (
                     <button
                       key={s.id}
                       type="button"
-                      className="block w-full text-left px-3 py-2 hover:bg-neutral-50"
+                      className="block w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors duration-150 border-b border-gray-100 dark:border-slate-700 last:border-b-0 font-medium text-gray-900 dark:text-white"
                       onClick={() => {
                         setSupplier(s);
                         setSupplierQuery("");
@@ -331,6 +355,15 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
       <div className="mt-8 rounded-xl border p-4">
         <div className="flex items-center justify-between">
           <h2 className="font-medium">Items</h2>
+          {!saving && !showPreview && (
+            <div className="flex items-center gap-2 text-xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span className="text-green-600 dark:text-green-400 font-medium">Scanner ready - scan barcode</span>
+            </div>
+          )}
         </div>
         <div className="mt-3 relative">
           <div className="flex gap-2">
@@ -339,25 +372,28 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
                 type="text"
                 value={partSearchQuery}
                 onChange={(e) => setPartSearchQuery(e.target.value)}
-                placeholder="Type part number, barcode, or name..."
-                className="w-full rounded-lg border px-3 py-2"
+                placeholder="Scan barcode or type part number/name to search..."
+                className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
               {partSuggestions.length > 0 && (
-                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border bg-white shadow-lg">
+                <div className="absolute left-0 right-0 z-50 mt-2 max-h-72 overflow-auto rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-2xl">
                   {partSuggestions.map((part) => (
                     <button
                       key={part.id}
                       type="button"
-                      className="block w-full text-left px-3 py-2 hover:bg-blue-50 border-b last:border-b-0"
+                      className="block w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors duration-150 border-b border-gray-100 dark:border-slate-700 last:border-b-0"
                       onClick={() => {
                         handleScan(part.partNumber);
                         setPartSearchQuery("");
                         setPartSuggestions([]);
                       }}
                     >
-                      <div className="font-medium text-blue-600">{part.partNumber}</div>
-                      <div className="text-xs text-neutral-600">
-                        {part.itemName} - ₹{part.rtl ?? part.mrp} ({part.unit})
+                      <div className="font-semibold text-blue-600 dark:text-blue-400 mb-1">{part.partNumber}</div>
+                      <div className="text-sm text-gray-700 dark:text-gray-300">
+                        {part.itemName}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        ₹{part.rtl ?? part.mrp} • {part.unit}
                       </div>
                     </button>
                   ))}
@@ -513,50 +549,53 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
 
       {/* Preview modal */}
       {showPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-          <div className="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Preview — {number}</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-4xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-slate-700">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Preview — {number}</h3>
               <button
                 onClick={() => setShowPreview(false)}
-                className="rounded-md border px-3 py-1 hover:bg-gray-100"
+                className="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors font-medium"
               >
                 Close
               </button>
             </div>
-            <div className="mt-4 grid gap-2 text-sm">
-              <div><span className="text-neutral-500">Date:</span> {date}</div>
-              <div>
-                <span className="text-neutral-500">Supplier:</span>{" "}
-                {supplier ? supplier.name : "—"}
+            <div className="grid gap-3 text-sm bg-gray-50 dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-700">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600 dark:text-gray-400 font-medium min-w-24">Date:</span>
+                <span className="text-gray-900 dark:text-white font-semibold">{new Date(date).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600 dark:text-gray-400 font-medium min-w-24">Supplier:</span>
+                <span className="text-gray-900 dark:text-white font-semibold">{supplier ? supplier.name : "—"}</span>
               </div>
             </div>
-            <div className="mt-4 overflow-x-auto rounded-lg border">
+            <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
               <table className="min-w-[900px] w-full text-sm">
-                <thead className="bg-neutral-50">
+                <thead className="bg-gray-100 dark:bg-slate-900">
                   <tr>
-                    <th className="px-3 py-2 text-left">Code</th>
-                    <th className="px-3 py-2 text-left">Name</th>
-                    <th className="px-3 py-2 text-right">Qty</th>
-                    <th className="px-3 py-2 text-right">Price</th>
-                    <th className="px-3 py-2 text-right">Discount</th>
-                    <th className="px-3 py-2 text-right">Tax %</th>
-                    <th className="px-3 py-2 text-right">Total</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Code</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Name</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Qty</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Price</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Discount</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Tax %</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Total</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white dark:bg-slate-800">
                   {lines.map((l, i) => {
                     const net = l.price - l.discount;
                     const total = l.qty * net + (l.qty * net * l.taxRate) / 100;
                     return (
-                      <tr key={i} className="border-t">
-                        <td className="px-3 py-2">{l.code}</td>
-                        <td className="px-3 py-2">{l.name}</td>
-                        <td className="px-3 py-2 text-right">{l.qty}</td>
-                        <td className="px-3 py-2 text-right">₹{l.price.toFixed(2)}</td>
-                        <td className="px-3 py-2 text-right">₹{l.discount.toFixed(2)}</td>
-                        <td className="px-3 py-2 text-right">{l.taxRate}%</td>
-                        <td className="px-3 py-2 text-right">
+                      <tr key={i} className="border-t border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                        <td className="px-4 py-3 text-gray-900 dark:text-gray-200">{l.code}</td>
+                        <td className="px-4 py-3 text-gray-900 dark:text-gray-200">{l.name}</td>
+                        <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-200 font-medium">{l.qty}</td>
+                        <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-200">₹{l.price.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-200">₹{l.discount.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-200">{l.taxRate}%</td>
+                        <td className="px-4 py-3 text-right text-gray-900 dark:text-white font-semibold">
                           {total.toLocaleString(undefined, {
                             style: "currency",
                             currency: "INR",
@@ -570,18 +609,31 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
               </table>
             </div>
 
-            <div className="mt-4 flex justify-end gap-4">
-              <div className="text-right">
-                <div className="text-sm text-neutral-500">Subtotal: {totals.sub.toLocaleString(undefined, { style: "currency", currency: "INR" })}</div>
-                <div className="text-sm text-neutral-500">Tax: {totals.tax.toLocaleString(undefined, { style: "currency", currency: "INR" })}</div>
-                <div className="text-lg font-semibold mt-1">Grand Total: {totals.grand.toLocaleString(undefined, { style: "currency", currency: "INR" })}</div>
+            <div className="mt-6 flex justify-end">
+              <div className="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 min-w-80">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                    <span className="text-gray-900 dark:text-white font-semibold">{totals.sub.toLocaleString(undefined, { style: "currency", currency: "INR" })}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">Tax:</span>
+                    <span className="text-gray-900 dark:text-white font-semibold">{totals.tax.toLocaleString(undefined, { style: "currency", currency: "INR" })}</span>
+                  </div>
+                  <div className="border-t border-gray-300 dark:border-slate-600 pt-2 mt-2">
+                    <div className="flex justify-between">
+                      <span className="text-base font-bold text-gray-900 dark:text-white">Grand Total:</span>
+                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{totals.grand.toLocaleString(undefined, { style: "currency", currency: "INR" })}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-2">
+            <div className="mt-6 flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
               <button
                 onClick={() => setShowPreview(false)}
-                className="rounded-md border px-4 py-2 hover:bg-gray-50"
+                className="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-5 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors font-medium"
               >
                 Edit
               </button>
@@ -591,7 +643,7 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
                   setShowPreview(false);
                   void save(false);
                 }}
-                className="rounded-md px-4 py-2 bg-neutral-700 text-white hover:bg-neutral-800 disabled:opacity-60"
+                className="rounded-lg px-5 py-2.5 bg-gray-700 dark:bg-slate-600 text-white hover:bg-gray-800 dark:hover:bg-slate-500 disabled:opacity-60 transition-colors font-medium"
               >
                 Save Draft
               </button>
@@ -601,9 +653,9 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
                   setShowPreview(false);
                   void save(true);
                 }}
-                className="rounded-md px-4 py-2 bg-black text-white hover:bg-neutral-900 disabled:opacity-60"
+                className="rounded-lg px-5 py-2.5 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-60 transition-colors font-medium shadow-lg"
               >
-                Submit
+                Confirm & Submit
               </button>
             </div>
           </div>

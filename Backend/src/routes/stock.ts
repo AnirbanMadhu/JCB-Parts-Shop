@@ -85,10 +85,30 @@ router.post('/:partId/adjust', async (req, res) => {
 });
 
 // Optional: list stock for all parts (for report like your Excel)
-router.get('/', async (_req, res) => {
+router.get('/', async (req, res) => {
   try {
+    const { onlyPurchased } = req.query;
+    
+    // If onlyPurchased filter is enabled, find parts with incoming transactions
+    let partFilter: any = { isDeleted: false };
+    
+    if (onlyPurchased === 'true') {
+      // Get all part IDs that have incoming inventory transactions
+      const partsWithPurchases = await prisma.inventoryTransaction.findMany({
+        where: { direction: 'IN' },
+        select: { partId: true },
+        distinct: ['partId']
+      });
+      
+      const partIds = partsWithPurchases.map(t => t.partId);
+      partFilter = { 
+        isDeleted: false,
+        id: { in: partIds }
+      };
+    }
+    
     const parts = await prisma.part.findMany({ 
-      where: { isDeleted: false },
+      where: partFilter,
       orderBy: { partNumber: 'asc' } 
     });
 
