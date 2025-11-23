@@ -549,91 +549,107 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
 
       {/* Preview modal */}
       {showPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-4xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-slate-700">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Preview — {number}</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-4xl rounded-2xl bg-card border border-border shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
+              <h3 className="text-lg font-semibold text-foreground">Preview — {number}</h3>
               <button
                 onClick={() => setShowPreview(false)}
-                className="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors font-medium"
+                className="rounded-md border border-border bg-background text-foreground px-3 py-1.5 hover:bg-muted transition-colors text-sm font-medium cursor-pointer"
               >
                 Close
               </button>
             </div>
-            <div className="grid gap-3 text-sm bg-gray-50 dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-700">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-600 dark:text-gray-400 font-medium min-w-24">Date:</span>
-                <span className="text-gray-900 dark:text-white font-semibold">{new Date(date).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-600 dark:text-gray-400 font-medium min-w-24">Supplier:</span>
-                <span className="text-gray-900 dark:text-white font-semibold">{supplier ? supplier.name : "—"}</span>
-              </div>
-            </div>
-            <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
-              <table className="min-w-[900px] w-full text-sm">
-                <thead className="bg-gray-100 dark:bg-slate-900">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Code</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Name</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Qty</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Price</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Discount</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Tax %</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-300">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-slate-800">
-                  {lines.map((l, i) => {
-                    const net = l.price - l.discount;
-                    const total = l.qty * net + (l.qty * net * l.taxRate) / 100;
-                    return (
-                      <tr key={i} className="border-t border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50">
-                        <td className="px-4 py-3 text-gray-900 dark:text-gray-200">{l.code}</td>
-                        <td className="px-4 py-3 text-gray-900 dark:text-gray-200">{l.name}</td>
-                        <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-200 font-medium">{l.qty}</td>
-                        <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-200">₹{l.price.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-200">₹{l.discount.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-200">{l.taxRate}%</td>
-                        <td className="px-4 py-3 text-right text-gray-900 dark:text-white font-semibold">
-                          {total.toLocaleString(undefined, {
-                            style: "currency",
-                            currency: "INR",
-                            maximumFractionDigits: 2,
-                          })}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
 
-            <div className="mt-6 flex justify-end">
-              <div className="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-700 min-w-80">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
-                    <span className="text-gray-900 dark:text-white font-semibold">{totals.sub.toLocaleString(undefined, { style: "currency", currency: "INR" })}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Tax:</span>
-                    <span className="text-gray-900 dark:text-white font-semibold">{totals.tax.toLocaleString(undefined, { style: "currency", currency: "INR" })}</span>
-                  </div>
-                  <div className="border-t border-gray-300 dark:border-slate-600 pt-2 mt-2">
-                    <div className="flex justify-between">
-                      <span className="text-base font-bold text-gray-900 dark:text-white">Grand Total:</span>
-                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{totals.grand.toLocaleString(undefined, { style: "currency", currency: "INR" })}</span>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {/* Invoice Details */}
+              <div className="grid gap-3 text-sm mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground font-medium">Date:</span>
+                  <span className="text-foreground font-semibold">
+                    {new Date(date).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground font-medium">Supplier:</span>
+                  <span className="text-foreground font-semibold">{supplier ? supplier.name : "—"}</span>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="min-w-[900px] w-full text-sm">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-3 py-2.5 text-left text-foreground font-semibold">Code</th>
+                      <th className="px-3 py-2.5 text-left text-foreground font-semibold">Name</th>
+                      <th className="px-3 py-2.5 text-right text-foreground font-semibold">Qty</th>
+                      <th className="px-3 py-2.5 text-right text-foreground font-semibold">Price</th>
+                      <th className="px-3 py-2.5 text-right text-foreground font-semibold">Discount</th>
+                      <th className="px-3 py-2.5 text-right text-foreground font-semibold">Tax %</th>
+                      <th className="px-3 py-2.5 text-right text-foreground font-semibold">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-card">
+                    {lines.map((l, i) => {
+                      const net = l.price - l.discount;
+                      const total = l.qty * net + (l.qty * net * l.taxRate) / 100;
+                      return (
+                        <tr key={i} className="border-t border-border hover:bg-muted/50 transition-colors">
+                          <td className="px-3 py-2.5 text-foreground font-mono">{l.code}</td>
+                          <td className="px-3 py-2.5 text-foreground">{l.name}</td>
+                          <td className="px-3 py-2.5 text-right text-foreground font-semibold">{l.qty}</td>
+                          <td className="px-3 py-2.5 text-right text-foreground">₹{l.price.toFixed(2)}</td>
+                          <td className="px-3 py-2.5 text-right text-foreground">{l.discount > 0 ? `₹${l.discount.toFixed(2)}` : '—'}</td>
+                          <td className="px-3 py-2.5 text-right text-foreground">{l.taxRate}%</td>
+                          <td className="px-3 py-2.5 text-right text-foreground font-semibold">
+                            {total.toLocaleString(undefined, {
+                              style: "currency",
+                              currency: "INR",
+                              maximumFractionDigits: 2,
+                            })}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Totals Summary */}
+              <div className="mt-6 flex justify-end">
+                <div className="min-w-80 rounded-lg border border-border bg-card p-4 shadow-sm">
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground font-medium">Subtotal</span>
+                      <span className="text-foreground font-semibold">
+                        {totals.sub.toLocaleString(undefined, { style: "currency", currency: "INR" })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground font-medium">Tax</span>
+                      <span className="text-foreground font-semibold">
+                        {totals.tax.toLocaleString(undefined, { style: "currency", currency: "INR" })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2 border-t border-border">
+                      <span className="text-foreground font-bold">Grand Total</span>
+                      <span className="text-foreground font-bold text-lg">
+                        {totals.grand.toLocaleString(undefined, { style: "currency", currency: "INR" })}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
+            {/* Footer Actions */}
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-muted/30">
               <button
                 onClick={() => setShowPreview(false)}
-                className="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-5 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors font-medium"
+                className="rounded-md border border-border bg-background text-foreground px-4 py-2 hover:bg-muted transition-colors text-sm font-medium cursor-pointer"
               >
                 Edit
               </button>
@@ -643,7 +659,7 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
                   setShowPreview(false);
                   void save(false);
                 }}
-                className="rounded-lg px-5 py-2.5 bg-gray-700 dark:bg-slate-600 text-white hover:bg-gray-800 dark:hover:bg-slate-500 disabled:opacity-60 transition-colors font-medium"
+                className="rounded-md px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50 transition-colors text-sm font-medium cursor-pointer"
               >
                 Save Draft
               </button>
@@ -653,7 +669,7 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
                   setShowPreview(false);
                   void save(true);
                 }}
-                className="rounded-lg px-5 py-2.5 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-60 transition-colors font-medium shadow-lg"
+                className="rounded-md px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors text-sm font-medium shadow-sm cursor-pointer"
               >
                 Confirm & Submit
               </button>
