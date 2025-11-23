@@ -122,7 +122,7 @@ router.post(
         name: user.name,
       });
 
-      res.json({
+      const responseData = {
         message: 'Login successful',
         user: {
           id: user.id,
@@ -133,7 +133,13 @@ router.post(
           createdAt: user.createdAt,
         },
         token,
-      });
+      };
+
+      console.log(`[LOGIN] User ${user.email} logged in`);
+      console.log(`[LOGIN] mustChangePassword: ${user.mustChangePassword}`);
+      console.log(`[LOGIN] Response data:`, JSON.stringify(responseData.user, null, 2));
+
+      res.json(responseData);
     } catch (error) {
       console.error('Login error:', error);
       res.status(500).json({ error: 'Failed to login' });

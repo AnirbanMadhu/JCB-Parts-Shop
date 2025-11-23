@@ -8,7 +8,7 @@ import { API_BASE_URL } from '@/lib/constants';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, updateUser } = useAuth();
   
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -17,6 +17,9 @@ export default function ChangePasswordPage() {
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isMandatory, setIsMandatory] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -25,16 +28,21 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    // Check if password change is mandatory
+    // Check if password change is mandatory from both context and localStorage
     const userData = localStorage.getItem('auth_user');
     if (userData) {
       const parsedUser = JSON.parse(userData);
       const mustChange = parsedUser.mustChangePassword === true;
-      console.log('Change password page - User data:', parsedUser);
-      console.log('Must change password:', mustChange);
+      console.log('[ChangePassword] User data:', parsedUser);
+      console.log('[ChangePassword] Must change password:', mustChange);
+      setIsMandatory(mustChange);
+    } else if (user) {
+      // Fallback to context if localStorage is not available
+      const mustChange = user.mustChangePassword === true;
+      console.log('[ChangePassword] Using context user, mustChange:', mustChange);
       setIsMandatory(mustChange);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,23 +105,20 @@ export default function ChangePasswordPage() {
         throw new Error(data.error || 'Failed to change password');
       }
 
-      console.log('Password changed successfully!');
+      console.log('[ChangePassword] Password changed successfully!');
       
       // Update user data to remove mustChangePassword flag
-      const userData = localStorage.getItem('auth_user');
-      if (userData) {
-        const parsedUser = JSON.parse(userData);
-        parsedUser.mustChangePassword = false;
-        localStorage.setItem('auth_user', JSON.stringify(parsedUser));
-        console.log('Updated user data in localStorage:', parsedUser);
-      }
+      // This immediately updates both localStorage and context
+      updateUser({ mustChangePassword: false });
+      console.log('[ChangePassword] Updated mustChangePassword to false');
 
       setIsSuccess(true);
 
-      // Immediate redirect after successful password change
-      console.log('Redirecting to dashboard...');
+      // Redirect to dashboard after showing success message
+      console.log('[ChangePassword] Redirecting to dashboard in 1.5 seconds...');
       setTimeout(() => {
-        router.replace('/dashboard');
+        // Use router.push for client-side navigation (faster, no page reload)
+        router.push('/dashboard');
       }, 1500);
     } catch (err: any) {
       setError(err.message || 'Failed to change password. Please try again.');
@@ -165,8 +170,9 @@ export default function ChangePasswordPage() {
                   Your password has been changed successfully!
                 </h3>
                 <div className="mt-2 text-sm text-green-500/80">
-                  <p>You can now use your new password to login.</p>
-                  <p className="mt-2">Redirecting to dashboard...</p>
+                  <p>Your account is now secured with your new password.</p>
+                  <p className="mt-2 font-medium">✓ You can now access the application</p>
+                  <p className="mt-1 text-xs">Redirecting to dashboard...</p>
                 </div>
               </div>
             </div>
@@ -251,17 +257,35 @@ export default function ChangePasswordPage() {
                 <label htmlFor="current-password" className="block text-sm font-medium text-foreground mb-1">
                   Current Password
                 </label>
-                <input
-                  id="current-password"
-                  name="current-password"
-                  type="password"
-                  autoComplete="current-password"
-                  required={!isMandatory}
-                  className="appearance-none relative block w-full px-3 py-2 border border-input bg-background placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors sm:text-sm shadow-sm"
-                  placeholder="Enter current password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <input
+                    id="current-password"
+                    name="current-password"
+                    type={showCurrentPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    required={!isMandatory}
+                    className="appearance-none relative block w-full px-3 py-2 pr-10 border border-input bg-background placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors sm:text-sm shadow-sm"
+                    placeholder="Enter current password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showCurrentPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
 
@@ -269,34 +293,70 @@ export default function ChangePasswordPage() {
               <label htmlFor="new-password" className="block text-sm font-medium text-foreground mb-1">
                 New Password
               </label>
-              <input
-                id="new-password"
-                name="new-password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="appearance-none relative block w-full px-3 py-2 border border-input bg-background placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors sm:text-sm shadow-sm"
-                placeholder="Enter new password (min. 6 characters)"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
+              <div className="relative">
+                <input
+                  id="new-password"
+                  name="new-password"
+                  type={showNewPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  required
+                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-input bg-background placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors sm:text-sm shadow-sm"
+                  placeholder="Enter new password (min. 6 characters)"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showNewPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             <div>
               <label htmlFor="confirm-password" className="block text-sm font-medium text-foreground mb-1">
                 Confirm New Password
               </label>
-              <input
-                id="confirm-password"
-                name="confirm-password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="appearance-none relative block w-full px-3 py-2 border border-input bg-background placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors sm:text-sm shadow-sm"
-                placeholder="Confirm new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
+              <div className="relative">
+                <input
+                  id="confirm-password"
+                  name="confirm-password"
+                  type={showConfirmPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  required
+                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-input bg-background placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors sm:text-sm shadow-sm"
+                  placeholder="Confirm new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showConfirmPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 

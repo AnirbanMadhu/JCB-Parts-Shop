@@ -72,6 +72,8 @@ router.post(
       // Hash password
       const hashedPassword = await hashPassword(password);
 
+      console.log(`[USER INVITE] Creating user ${email} with mustChangePassword: true`);
+
       // Create user with mustChangePassword flag
       const user = await prisma.user.create({
         data: {
