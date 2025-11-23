@@ -29,9 +29,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-full overflow-hidden">
         <AppSidebar />
         <SidebarInset className="flex flex-col flex-1 min-w-0">
-          <header className="sticky top-0 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4 z-20">
-            <SidebarTrigger className="-ml-1" />
-            <div className="h-4 w-px bg-border" />
+          <header className="sticky top-0 flex h-12 sm:h-14 shrink-0 items-center gap-2 border-b bg-background px-2 sm:px-4 z-20">
+            <SidebarTrigger className="-ml-1 touch-manipulation" />
+            <div className="h-4 w-px bg-border hidden sm:block" />
             <div className="flex flex-1 items-center gap-2">
               {/* You can add breadcrumb or page title here */}
             </div>

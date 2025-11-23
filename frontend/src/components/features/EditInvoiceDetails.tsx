@@ -382,10 +382,9 @@ export default function EditInvoiceDetails() {
             </div>
 
             {/* Info Note */}
-            <div className="w-full bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <p className="text-sm text-blue-900 dark:text-blue-300">
-                <strong>Note:</strong> You can edit empty fields or update existing invoice details. 
-                Leave fields blank to clear existing values.
+            <div className="w-full bg-blue-100 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-4">
+              <p className="text-sm text-blue-900 dark:text-blue-200 font-medium">
+                <strong className="font-bold">Note:</strong> Settings are saved automatically and will be applied immediately. When editing is enabled for submitted invoices, users will be able to modify and update invoices after they have been submitted (status is not DRAFT).
               </p>
             </div>
           </div>

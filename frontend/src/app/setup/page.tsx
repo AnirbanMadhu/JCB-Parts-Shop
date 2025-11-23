@@ -43,15 +43,15 @@ export default function SetupPage() {
 
   return (
     <ProtectedRoute>
-      <div className="h-full overflow-auto bg-background p-6">
-      <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
+      <div className="h-full overflow-auto bg-background p-3 sm:p-4 md:p-6">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 animate-in fade-in duration-500">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Setup</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Setup</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Configure your system settings and preferences
           </p>
         </div>
-        <div className="bg-card rounded-xl shadow-sm border border-border p-6 transition-all hover:shadow-md">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-4 sm:p-6 transition-all hover:shadow-md">
           <div className="space-y-6">
             {/* User Management - Admin Only */}
             {isAdmin() && (
@@ -61,23 +61,23 @@ export default function SetupPage() {
             )}
 
             {/* Sales Configuration */}
-            <div className="border-b border-border pb-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <span className="w-1 h-6 bg-primary rounded-full" />
+            <div className="border-b border-border pb-4 sm:pb-6">
+              <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4 flex items-center gap-2">
+                <span className="w-1 h-5 sm:h-6 bg-primary rounded-full" />
                 Sales Configuration
               </h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border hover:border-primary/50 transition-all duration-200 group">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 bg-muted/50 rounded-lg border border-border hover:border-primary/50 transition-all duration-200 group">
                   <div className="flex-1">
                     <h3 className="text-sm font-medium text-foreground mb-1 group-hover:text-primary transition-colors">
                       Allow Editing of Submitted Invoices
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Enable this to allow modification and updates to sales invoices after they have been submitted (status is not DRAFT)
                     </p>
                   </div>
-                  <div className="ml-4">
-                    <label className="relative inline-flex items-center cursor-pointer">
+                  <div className="flex justify-start sm:ml-4">
+                    <label className="relative inline-flex items-center cursor-pointer touch-manipulation">
                       <input
                         type="checkbox"
                         className="sr-only peer"

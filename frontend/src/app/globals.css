@@ -209,6 +209,49 @@ body {
   *:is([data-no-transition], .recharts-surface, svg, path, circle, rect) {
     transition: none !important;
   }
+
+  /* Mobile-friendly touch targets */
+  @media (max-width: 768px) {
+    button,
+    [role="button"],
+    a {
+      min-height: 44px;
+      min-width: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  /* Touch manipulation for better mobile experience */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent text selection on interactive elements */
+  button,
+  [role="button"] {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* Professional animations */
@@ -443,5 +486,51 @@ text.recharts-text,
 
 .group[data-collapsible="icon"] [data-sidebar="menu-button"] span {
   display: none !important;
+}
+
+/* Date input calendar - ALWAYS force light mode calendar picker for visibility */
+input[type="date"] {
+  color-scheme: light !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer !important;
+  opacity: 1 !important;
+}
+
+.dark input[type="date"] {
+  color-scheme: light !important;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+}
+
+/* Global fix for info/note boxes - ensure maximum contrast in all themes */
+/* Target divs with blue backgrounds and their text content */
+div[class*="bg-blue-50"] p,
+div[class*="bg-blue-50"] span,
+div[class*="bg-blue-50"] strong,
+div[class*="bg-blue-100"] p,
+div[class*="bg-blue-100"] span,
+div[class*="bg-blue-100"] strong {
+  color: rgb(30 58 138) !important; /* blue-900 for maximum contrast in light theme */
+}
+
+.dark div[class*="bg-blue-50"] p,
+.dark div[class*="bg-blue-50"] span,
+.dark div[class*="bg-blue-50"] strong,
+.dark div[class*="bg-blue-100"] p,
+.dark div[class*="bg-blue-100"] span,
+.dark div[class*="bg-blue-100"] strong,
+.dark div[class*="bg-blue-900"] p,
+.dark div[class*="bg-blue-900"] span,
+.dark div[class*="bg-blue-900"] strong,
+.dark div[class*="bg-blue-950"] p,
+.dark div[class*="bg-blue-950"] span,
+.dark div[class*="bg-blue-950"] strong {
+  color: rgb(219 234 254) !important; /* blue-100 for maximum contrast in dark theme */
 }
 

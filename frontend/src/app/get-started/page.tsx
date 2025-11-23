@@ -55,7 +55,7 @@ export default function GetStartedPage() {
   ];
 
   return (
-    <div className="h-full overflow-auto bg-background p-6 lg:p-8">
+    <div className="h-full overflow-auto bg-background p-3 sm:p-4 md:p-6 lg:p-8">
       <motion.div 
         className="max-w-7xl mx-auto"
         variants={containerVariants}
@@ -65,7 +65,7 @@ export default function GetStartedPage() {
         {/* Hero Section */}
         <motion.div 
           variants={itemVariants}
-          className="relative overflow-hidden bg-card rounded-3xl shadow-lg p-8 lg:p-12 mb-8 border border-border"
+          className="relative overflow-hidden bg-card rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 lg:p-12 mb-6 sm:mb-8 border border-border"
         >
           {/* Decorative Elements */}
           <div className="absolute top-0 right-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
@@ -77,7 +77,7 @@ export default function GetStartedPage() {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="mb-8 relative w-64 h-48 lg:w-80 lg:h-60"
+              className="mb-6 sm:mb-8 relative w-48 h-36 sm:w-64 sm:h-48 lg:w-80 lg:h-60 mx-auto"
             >
               <Image 
                 src="/logo.svg" 
@@ -93,18 +93,18 @@ export default function GetStartedPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-center mb-8"
+              className="text-center mb-6 sm:mb-8 px-4"
             >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 bg-clip-text text-transparent mb-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 bg-clip-text text-transparent mb-3 sm:mb-4">
                 Welcome to S.P.TRADERS AND BUILDERS
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                 Your Complete Business Management System for Seamless Operations
               </p>
             </motion.div>
 
             {/* Key Features Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full mt-6 sm:mt-8">
               {features.map((feature, index) => (
                 <motion.div
                   key={index}
@@ -112,13 +112,13 @@ export default function GetStartedPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
                   whileHover={{ scale: 1.05, y: -5 }}
-                  className="relative overflow-hidden bg-card p-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 border border-border"
+                  className="relative overflow-hidden bg-card p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 border border-border touch-manipulation"
                 >
-                  <div className="text-5xl mb-4 drop-shadow-lg">{feature.icon}</div>
-                  <h3 className="font-bold text-lg mb-2 text-card-foreground">
+                  <div className="text-4xl sm:text-5xl mb-3 sm:mb-4 drop-shadow-lg">{feature.icon}</div>
+                  <h3 className="font-bold text-base sm:text-lg mb-1 sm:mb-2 text-card-foreground">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{feature.description}</p>
                 </motion.div>
               ))}
             </div>
@@ -126,17 +126,17 @@ export default function GetStartedPage() {
         </motion.div>
 
         {/* Content Grid */}
-        <div className="grid lg:grid-cols-2 gap-6 mb-6">
+        <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
           {/* Quick Start Guide */}
           <motion.div 
             variants={itemVariants}
-            className="bg-card rounded-2xl shadow-md p-6 lg:p-8 border border-border hover:shadow-lg transition-shadow duration-300"
+            className="bg-card rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 lg:p-8 border border-border hover:shadow-lg transition-shadow duration-300"
           >
-            <div className="flex items-center mb-6">
-              <div className="w-1.5 h-12 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full mr-4" />
+            <div className="flex items-center mb-4 sm:mb-6">
+              <div className="w-1 sm:w-1.5 h-10 sm:h-12 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full mr-3 sm:mr-4" />
               <div>
-                <h2 className="text-2xl font-bold text-card-foreground">Quick Start Guide</h2>
-                <p className="text-sm text-muted-foreground">Get up and running in minutes</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-card-foreground">Quick Start Guide</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">Get up and running in minutes</p>
               </div>
             </div>
             <div className="space-y-4">

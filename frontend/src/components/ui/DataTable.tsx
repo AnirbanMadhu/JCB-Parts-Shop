@@ -159,13 +159,13 @@ export function DataTable<T extends Record<string, any>>({
   }
 
   return (
-    <div className={`bg-white rounded-lg shadow ${className}`}>
+    <div className={`bg-white dark:bg-card rounded-lg shadow ${className}`}>
       {/* Header with search and export */}
       {(searchable || exportable) && (
-        <div className="p-4 border-b border-gray-200 flex flex-wrap items-center gap-3">
+        <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-border flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           {searchable && (
-            <div className="flex-1 min-w-[200px] max-w-md relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <div className="flex-1 min-w-0 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search..."
@@ -174,32 +174,33 @@ export function DataTable<T extends Record<string, any>>({
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="w-full pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-border rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary focus:border-blue-500 dark:focus:border-primary outline-none bg-white dark:bg-background text-gray-900 dark:text-foreground"
               />
             </div>
           )}
           {exportable && (
             <button
               onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium cursor-pointer"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 dark:bg-muted hover:bg-gray-200 dark:hover:bg-muted/80 text-gray-700 dark:text-foreground rounded-lg transition-colors font-medium cursor-pointer touch-manipulation text-sm sm:text-base"
             >
               <Download className="w-4 h-4" />
-              Export CSV
+              <span className="hidden sm:inline">Export CSV</span>
+              <span className="sm:hidden">Export</span>
             </button>
           )}
         </div>
       )}
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Table - Desktop View */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-gray-50 dark:bg-muted/30 border-b border-gray-200 dark:border-border">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    column.sortable ? 'cursor-pointer select-none hover:bg-gray-100' : ''
+                  className={`px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-muted-foreground uppercase tracking-wider ${
+                    column.sortable ? 'cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-muted/50' : ''
                   } ${column.className || ''}`}
                   onClick={() => column.sortable && handleSort(column.key)}
                 >
@@ -215,12 +216,12 @@ export function DataTable<T extends Record<string, any>>({
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
-            className="bg-white divide-y divide-gray-200"
+            className="bg-white dark:bg-card divide-y divide-gray-200 dark:divide-border"
           >
             {paginatedData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-6 py-12 text-center">
-                  <p className="text-gray-500">{emptyMessage}</p>
+                  <p className="text-gray-500 dark:text-muted-foreground">{emptyMessage}</p>
                 </td>
               </tr>
             ) : (
@@ -228,12 +229,12 @@ export function DataTable<T extends Record<string, any>>({
                 <motion.tr
                   key={rowIndex}
                   variants={staggerItem}
-                  className="hover:bg-gray-50 transition-colors"
+                  className="hover:bg-gray-50 dark:hover:bg-muted/20 transition-colors"
                 >
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${column.className || ''}`}
+                      className={`px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-foreground ${column.className || ''}`}
                     >
                       {column.render ? column.render(row) : row[column.key]}
                     </td>
@@ -245,10 +246,42 @@ export function DataTable<T extends Record<string, any>>({
         </table>
       </div>
 
+      {/* Card View - Mobile */}
+      <div className="md:hidden">
+        {paginatedData.length === 0 ? (
+          <div className="px-4 py-12 text-center">
+            <p className="text-gray-500 dark:text-muted-foreground">{emptyMessage}</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200 dark:divide-border">
+            {paginatedData.map((row, rowIndex) => (
+              <motion.div
+                key={rowIndex}
+                variants={staggerItem}
+                initial="hidden"
+                animate="visible"
+                className="p-4 space-y-2"
+              >
+                {columns.map((column) => (
+                  <div key={column.key} className="flex justify-between items-start gap-2">
+                    <span className="text-xs font-medium text-gray-500 dark:text-muted-foreground uppercase">
+                      {column.header}:
+                    </span>
+                    <span className="text-sm text-gray-900 dark:text-foreground text-right flex-1">
+                      {column.render ? column.render(row) : row[column.key]}
+                    </span>
+                  </div>
+                ))}
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Pagination */}
       {pagination && totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-700">
+        <div className="px-3 sm:px-6 py-3 sm:py-4 border-t border-gray-200 dark:border-border flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs sm:text-sm text-gray-700 dark:text-foreground text-center sm:text-left">
             Showing{' '}
             <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> to{' '}
             <span className="font-medium">
@@ -256,20 +289,22 @@ export function DataTable<T extends Record<string, any>>({
             </span>{' '}
             of <span className="font-medium">{sortedData.length}</span> results
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer touch-manipulation"
+              aria-label="First page"
             >
-              <ChevronsLeft className="w-4 h-4" />
+              <ChevronsLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
             <button
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer touch-manipulation"
+              aria-label="Previous page"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -282,14 +317,14 @@ export function DataTable<T extends Record<string, any>>({
                 .map((page, index, array) => (
                   <div key={page} className="flex items-center">
                     {index > 0 && array[index - 1] !== page - 1 && (
-                      <span className="px-2 text-gray-400">...</span>
+                      <span className="px-1 sm:px-2 text-gray-400 dark:text-muted-foreground text-xs sm:text-sm">...</span>
                     )}
                     <button
                       onClick={() => setCurrentPage(page)}
-                      className={`min-w-[36px] px-3 py-1 rounded-lg transition-colors cursor-pointer ${
+                      className={`min-w-[28px] sm:min-w-[36px] px-2 sm:px-3 py-1 rounded-lg transition-colors cursor-pointer touch-manipulation text-xs sm:text-sm ${
                         currentPage === page
-                          ? 'bg-blue-600 text-white'
-                          : 'hover:bg-gray-100 text-gray-700'
+                          ? 'bg-blue-600 dark:bg-primary text-white'
+                          : 'hover:bg-gray-100 dark:hover:bg-muted text-gray-700 dark:text-foreground'
                       }`}
                     >
                       {page}
@@ -300,16 +335,18 @@ export function DataTable<T extends Record<string, any>>({
             <button
               onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer touch-manipulation"
+              aria-label="Next page"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer touch-manipulation"
+              aria-label="Last page"
             >
-              <ChevronsRight className="w-4 h-4" />
+              <ChevronsRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
         </div>
