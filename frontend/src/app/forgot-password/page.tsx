@@ -1,10 +1,9 @@
-import { API_BASE_URL } from '@/lib/constants';
-
 'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { API_BASE_URL } from '@/lib/constants';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();

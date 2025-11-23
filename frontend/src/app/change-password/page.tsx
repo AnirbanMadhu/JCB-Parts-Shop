@@ -1,11 +1,10 @@
-import { API_BASE_URL } from '@/lib/constants';
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_BASE_URL } from '@/lib/constants';
 
 export default function ChangePasswordPage() {
   const router = useRouter();

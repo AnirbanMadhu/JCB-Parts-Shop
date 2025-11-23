@@ -67,6 +67,8 @@ const SidebarProvider = React.forwardRef<
   ) => {
     const [openMobile, setOpenMobile] = React.useState(false)
     const [_open, _setOpen] = React.useState(defaultOpen ?? true)
+    const [isMobile, setIsMobile] = React.useState(false)
+    
     const open = openProp ?? _open
     const setOpen = React.useCallback(
       (value: boolean | ((value: boolean) => boolean)) => {
@@ -82,6 +84,17 @@ const SidebarProvider = React.forwardRef<
       },
       [setOpenProp, open]
     )
+    
+    // Detect mobile viewport
+    React.useEffect(() => {
+      const checkMobile = () => {
+        setIsMobile(window.innerWidth < 768)
+      }
+      
+      checkMobile()
+      window.addEventListener("resize", checkMobile)
+      return () => window.removeEventListener("resize", checkMobile)
+    }, [])
 
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
@@ -113,12 +126,12 @@ const SidebarProvider = React.forwardRef<
         state,
         open,
         setOpen,
-        isMobile: false,
+        isMobile,
         openMobile,
         setOpenMobile,
         toggleSidebar,
       }),
-      [state, open, setOpen, openMobile, setOpenMobile, toggleSidebar]
+      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
     )
 
     return (
@@ -230,7 +243,7 @@ const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, isMobile, setOpenMobile } = useSidebar()
 
   return (
     <Button
@@ -241,7 +254,11 @@ const SidebarTrigger = React.forwardRef<
       className={cn("h-7 w-7", className)}
       onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
         onClick?.(event)
-        toggleSidebar()
+        if (isMobile) {
+          setOpenMobile(true)
+        } else {
+          toggleSidebar()
+        }
       }}
       {...props}
     >

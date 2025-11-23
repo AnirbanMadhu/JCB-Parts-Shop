@@ -128,7 +128,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="h-full bg-background p-4 sm:p-6 md:p-8 overflow-auto">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">

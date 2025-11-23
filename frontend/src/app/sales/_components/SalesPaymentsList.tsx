@@ -136,26 +136,27 @@ export default function SalesPaymentsList({ payments }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Header - Fixed */}
-      <header className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-10 bg-card border-b border-border px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between shadow-sm flex-shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <BackButton />
-          <div className="flex items-center gap-2">
-            <span className="w-1 h-6 bg-primary rounded-full" />
-            <h1 className="text-[17px] font-semibold text-foreground">Sales Payments</h1>
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <span className="w-1 h-5 sm:h-6 bg-primary rounded-full flex-shrink-0" />
+            <h1 className="text-sm sm:text-[17px] font-semibold text-foreground truncate">Sales Payments</h1>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/sales/invoices/new" className="px-4 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
-            New Sale
+        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+          <Link href="/sales/invoices/new" className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-all shadow-sm whitespace-nowrap flex items-center gap-1">
+            <Plus className="w-4 h-4 sm:hidden" />
+            <span className="hidden sm:inline">New Sale</span>
           </Link>
         </div>
       </header>
 
       {/* Summary Cards */}
-      <div className="px-6 pt-6 animate-fade-in">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="px-3 sm:px-6 pt-4 sm:pt-6 animate-fade-in">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/30 hover:border-blue-500/50 transition-all hover:shadow-lg animate-slide-up">
             <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">Total Sales</p>
             <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">

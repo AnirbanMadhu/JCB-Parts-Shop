@@ -221,10 +221,46 @@ body {
       align-items: center;
       justify-content: center;
     }
+    
+    /* Larger font sizes on mobile for better readability */
+    body {
+      font-size: 16px;
+    }
+    
+    /* Ensure inputs don't zoom on iOS */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+    
+    /* Better spacing for mobile forms */
+    input,
+    select,
+    textarea {
+      padding: 12px !important;
+    }
+    
+    /* Improve table scrolling on mobile */
+    .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+    }
   }
 
   /* Touch manipulation for better mobile experience */
-  .touch-manipulation {
+  .touch-manipulation,
+  button,
+  [role="button"],
+  a,
+  input[type="button"],
+  input[type="submit"] {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
@@ -488,7 +524,7 @@ text.recharts-text,
   display: none !important;
 }
 
-/* Date input calendar - ALWAYS force light mode calendar picker for visibility */
+  /* Date input calendar - ALWAYS force light mode calendar picker for visibility */
 input[type="date"] {
   color-scheme: light !important;
 }
@@ -508,7 +544,29 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 1 !important;
 }
 
-/* Global fix for info/note boxes - ensure maximum contrast in all themes */
+/* Select dropdown options - Fix visibility in dark mode */
+select option {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark select option {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Select element styling */
+select {
+  cursor: pointer !important;
+}
+
+/* Firefox specific select option styling */
+@-moz-document url-prefix() {
+  select option {
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+}/* Global fix for info/note boxes - ensure maximum contrast in all themes */
 /* Target divs with blue backgrounds and their text content */
 div[class*="bg-blue-50"] p,
 div[class*="bg-blue-50"] span,

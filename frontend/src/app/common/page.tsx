@@ -4,10 +4,10 @@ export const dynamic = 'force-dynamic';
 
 export default function CommonPage() {
   return (
-    <div className="h-full overflow-auto bg-gray-50 dark:bg-background p-3 sm:p-4 md:p-6">
+    <div className="h-full overflow-auto bg-background p-4 sm:p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-foreground mb-4 sm:mb-6">Common</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-4 sm:mb-6">Common</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link
             href="/common/items"
             className="bg-white dark:bg-card rounded-lg shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow touch-manipulation"

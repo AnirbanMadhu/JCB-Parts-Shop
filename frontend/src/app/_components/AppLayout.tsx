@@ -25,12 +25,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={false}>
       <div className="flex h-screen w-full overflow-hidden">
         <AppSidebar />
-        <SidebarInset className="flex flex-col flex-1 min-w-0">
-          <header className="sticky top-0 flex h-12 sm:h-14 shrink-0 items-center gap-2 border-b bg-background px-2 sm:px-4 z-20">
-            <SidebarTrigger className="-ml-1 touch-manipulation" />
+        <SidebarInset className="flex flex-col flex-1 min-w-0 overflow-hidden">
+          <header className="sticky top-0 flex h-14 md:h-16 shrink-0 items-center gap-2 border-b bg-background px-3 sm:px-4 z-20 touch-manipulation">
+            <SidebarTrigger className="-ml-1 touch-manipulation min-h-[44px] min-w-[44px]" />
             <div className="h-4 w-px bg-border hidden sm:block" />
             <div className="flex flex-1 items-center gap-2">
               {/* You can add breadcrumb or page title here */}
