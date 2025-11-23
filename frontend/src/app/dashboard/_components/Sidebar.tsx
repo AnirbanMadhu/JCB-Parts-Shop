@@ -95,9 +95,9 @@ export default function AppSidebar() {
   }
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar" className="mobile-auto-close flex flex-col h-full">
+    <Sidebar collapsible="icon" variant="sidebar" className="mobile-auto-close flex flex-col h-full max-h-screen">
       {/* Logo Header */}
-      <SidebarHeader className="border-b border-sidebar-border shrink-0" data-sidebar="header">
+      <SidebarHeader className="border-b border-sidebar-border shrink-0 flex-none" data-sidebar="header">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild tooltip={APP_NAME}>
@@ -116,7 +116,7 @@ export default function AppSidebar() {
       </SidebarHeader>
 
       {/* Main Navigation */}
-      <SidebarContent className="flex-1 overflow-y-auto">
+      <SidebarContent className="flex-1 overflow-y-auto min-h-0">
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -182,7 +182,7 @@ export default function AppSidebar() {
       </SidebarContent>
 
       {/* User Footer */}
-      <SidebarFooter className="border-t border-sidebar-border mt-auto shrink-0" data-sidebar="footer">
+      <SidebarFooter className="border-t border-sidebar-border mt-auto shrink-0 flex-none sticky bottom-0 bg-sidebar z-10" data-sidebar="footer">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild tooltip={`${user?.name || 'User'} - Profile`}>
@@ -204,7 +204,7 @@ export default function AppSidebar() {
             <SidebarMenuButton 
               onClick={handleLogout} 
               tooltip="Logout"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 min-h-[44px]"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 min-h-[44px] touch-manipulation"
             >
               <LogOut className="w-[18px] h-[18px] shrink-0" />
               <span>Logout</span>
