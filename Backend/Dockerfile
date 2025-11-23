@@ -4,9 +4,9 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Install dependencies for production build
+# Install ALL dependencies (including devDependencies for build)
 COPY package*.json tsconfig.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 # Copy prisma schema and generate client
 COPY prisma ./prisma
