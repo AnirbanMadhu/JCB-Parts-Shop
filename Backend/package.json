@@ -6,9 +6,13 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "start:prod": "NODE_ENV=production node dist/index.js",
+    "validate:env": "ts-node src/validate-env.ts",
     "seed": "ts-node prisma/seed.ts",
     "studio": "prisma studio",
-    "import-data": "ts-node scripts/import-data.ts"
+    "import-data": "ts-node scripts/import-data.ts",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:status": "prisma migrate status"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.0.0",

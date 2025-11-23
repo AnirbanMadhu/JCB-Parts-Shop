@@ -5,10 +5,15 @@ node_modules/
 dist/
 build/
 
-# Environment variables
+# Environment variables - NEVER commit these!
 .env
 .env.local
+.env.production
+.env.development
 .env*.local
+
+# Keep example files
+!.env.example
 
 # IDE
 .vscode/

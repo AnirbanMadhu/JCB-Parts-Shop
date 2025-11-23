@@ -1,23 +1,44 @@
+# Production-optimized Dockerfile for JCB Backend
+FROM node:20-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies for production build
+COPY package*.json tsconfig.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy prisma schema and generate client
+COPY prisma ./prisma
+RUN npx prisma generate
+
+# Copy source code and build
+COPY src ./src
+RUN npm run build
+
+# Production stage
 FROM node:20-alpine
+
+# Add security: create non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package*.json tsconfig.json ./
-RUN npm install
+# Copy built application and dependencies
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 
-# Copy prisma schema
-COPY prisma ./prisma
+# Switch to non-root user
+USER nodejs
 
-# Generate Prisma client
-RUN npx prisma generate
+# Expose port
+EXPOSE 4001
 
-# Copy source code
-COPY src ./src
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:4001/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Build TypeScript
-RUN npm run build
-
-EXPOSE 4000
-
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+# Start application (migrations run in docker-compose command)
+CMD ["node", "dist/index.js"]

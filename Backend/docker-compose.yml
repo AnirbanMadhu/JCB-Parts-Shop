@@ -2,30 +2,65 @@ version: '3.9'
 
 services:
   db:
-    image: postgres:16
-    restart: always
+    image: postgres:16-alpine
+    container_name: jcb_postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: jcbuser
-      POSTGRES_PASSWORD: jcbpassword
-      POSTGRES_DB: jcbdb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8"
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    networks:
+      - jcb_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
 
-  app:
-    build: .
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jcb_backend
+    restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://jcbuser:jcbpassword@db:5432/jcbdb?schema=public
-      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      PORT: ${PORT:-4001}
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+      EMAIL_SERVICE: ${EMAIL_SERVICE}
     ports:
-      - "4000:4000"
+      - "${PORT:-4001}:${PORT:-4001}"
+    networks:
+      - jcb_network
     command: >
-      sh -c "npx prisma migrate deploy &&
-             node dist/index.js"
+      sh -c "npx prisma migrate deploy && node dist/index.js"
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+
+networks:
+  jcb_network:
+    driver: bridge
 
 volumes:
-  db_data:
+  postgres_data:
+    driver: local
