@@ -109,7 +109,7 @@ cd frontend
 npm install
 
 # Create .env.local file
-cp .env.local.example .env.local
+cp .env
 
 # Configure your .env.local file with:
 # NEXT_PUBLIC_API_URL="http://localhost:5000/api"
