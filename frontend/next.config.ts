@@ -20,17 +20,25 @@ const nextConfig: NextConfig = {
   // Production: Enable standalone output for Docker
   output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
 
-  // Proxy API requests to backend (development only)
+  // Proxy API requests to backend
   async rewrites() {
-    // In production, use NEXT_PUBLIC_API_URL or same-origin
-    if (process.env.NODE_ENV === 'production') {
+    // If NEXT_PUBLIC_API_URL is not set (same-origin setup), proxy to backend
+    // In production Docker, use internal backend service URL
+    // In development, use localhost
+    const backendUrl = process.env.INTERNAL_API_URL || 
+                      (process.env.NODE_ENV === 'production' 
+                        ? 'http://backend:4001' 
+                        : 'http://localhost:4001');
+    
+    // Only rewrite if NEXT_PUBLIC_API_URL is not set (same-origin setup)
+    if (process.env.NEXT_PUBLIC_API_URL) {
       return [];
     }
     
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:4001/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
       },
     ];
   },

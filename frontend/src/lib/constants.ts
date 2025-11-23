@@ -4,9 +4,13 @@ export const APP_NAME = "S.P.TRADERS AND BUILDERS";
 export const APP_DESCRIPTION = "JCB Parts Shop Management System";
 
 // API Configuration
-// Empty string means use same origin (Next.js will proxy to backend via rewrites)
+// In production: if NEXT_PUBLIC_API_URL is not set, use same origin (empty string)
+// In development: use localhost:4001 as fallback
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
+  process.env.NEXT_PUBLIC_API_URL || 
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+    ? '' 
+    : 'http://localhost:4001');
 
 // Pagination
 export const DEFAULT_PAGE_SIZE = 20;
