@@ -203,15 +203,26 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground z-50"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
               } as React.CSSProperties
             }
             side={side}
+            onClose={() => setOpenMobile(false)}
           >
-            <div className="flex h-full w-full flex-col">{children}</div>
+            <div 
+              className="flex h-full w-full flex-col"
+              onClick={(e) => {
+                // Close sidebar when clicking any link on mobile
+                if ((e.target as HTMLElement).closest('a')) {
+                  setOpenMobile(false)
+                }
+              }}
+            >
+              {children}
+            </div>
           </SheetContent>
         </Sheet>
       )
@@ -221,7 +232,7 @@ const Sidebar = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "group peer flex h-screen flex-col bg-sidebar text-sidebar-foreground border-r transition-all duration-200 ease-linear shrink-0 sticky top-0 left-0",
+          "group peer flex h-screen flex-col bg-sidebar text-sidebar-foreground border-r transition-all duration-200 ease-linear shrink-0 sticky top-0 left-0 z-10",
           state === "collapsed" ? "w-[--sidebar-width-icon]" : "w-[--sidebar-width]",
           "hidden md:flex",
           className

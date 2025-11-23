@@ -95,7 +95,7 @@ export default function AppSidebar() {
   }
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar">
+    <Sidebar collapsible="icon" variant="sidebar" className="mobile-auto-close">
       {/* Logo Header */}
       <SidebarHeader className="border-b border-sidebar-border" data-sidebar="header">
         <SidebarMenu>

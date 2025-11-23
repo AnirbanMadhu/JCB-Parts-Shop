@@ -26,18 +26,18 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider defaultOpen={false}>
-      <div className="flex h-screen w-full overflow-hidden">
+      <div className="flex h-screen w-screen overflow-hidden relative">
         <AppSidebar />
-        <SidebarInset className="flex flex-col flex-1 min-w-0 overflow-hidden">
-          <header className="sticky top-0 flex h-14 md:h-16 shrink-0 items-center gap-2 border-b bg-background px-3 sm:px-4 z-20 touch-manipulation">
-            <SidebarTrigger className="-ml-1 touch-manipulation min-h-[44px] min-w-[44px]" />
-            <div className="h-4 w-px bg-border hidden sm:block" />
-            <div className="flex flex-1 items-center gap-2">
+        <SidebarInset className="flex flex-col flex-1 min-w-0 overflow-hidden w-full md:w-auto">
+          <header className="sticky top-0 flex h-14 md:h-16 shrink-0 items-center gap-2 border-b bg-background px-3 sm:px-4 z-30 touch-manipulation w-full">
+            <SidebarTrigger className="-ml-1 touch-manipulation min-h-[44px] min-w-[44px] flex-shrink-0" />
+            <div className="h-4 w-px bg-border hidden sm:block flex-shrink-0" />
+            <div className="flex flex-1 items-center gap-2 min-w-0">
               {/* You can add breadcrumb or page title here */}
             </div>
             <ThemeToggle />
           </header>
-          <main className="flex-1 overflow-auto bg-background">
+          <main className="flex-1 overflow-auto bg-background w-full">
             {children}
           </main>
         </SidebarInset>

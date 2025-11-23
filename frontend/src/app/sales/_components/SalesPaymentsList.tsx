@@ -190,22 +190,23 @@ export default function SalesPaymentsList({ payments }: Props) {
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
           {/* Search */}
           <div className="relative md:col-span-2">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <input
               ref={searchInputRef}
               type="text"
-              placeholder="Search by invoice number, customer, or remarks..."
+              placeholder="Search by invoice, customer..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-input bg-background text-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+              className="w-full pl-10 pr-10 py-2.5 sm:py-2 border border-input bg-background text-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all touch-manipulation"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center -mr-2"
+                aria-label="Clear search"
               >
                 ✕
               </button>
@@ -214,17 +215,18 @@ export default function SalesPaymentsList({ payments }: Props) {
 
           {/* Date Filter */}
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <input
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-input bg-background text-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all [color-scheme:light] dark:[color-scheme:dark]"
+              className="w-full pl-10 pr-10 py-2.5 sm:py-2 border border-input bg-background text-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all [color-scheme:light] dark:[color-scheme:dark] touch-manipulation"
             />
             {dateFilter && (
               <button
                 onClick={() => setDateFilter("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center -mr-2"
+                aria-label="Clear date"
               >
                 ✕
               </button>
@@ -233,15 +235,15 @@ export default function SalesPaymentsList({ payments }: Props) {
         </div>
 
         {/* Status Filter Tabs */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2 mt-3 sm:mt-4 overflow-x-auto pb-2 hide-scrollbar">
           {['ALL', 'PAID', 'SUBMITTED', 'DRAFT', 'CANCELLED'].map(status => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-4 py-1.5 text-sm rounded-md transition-all ${
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-md transition-all whitespace-nowrap touch-manipulation flex-shrink-0 ${
                 statusFilter === status
                   ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground active:bg-muted/80'
               }`}
             >
               {status}
@@ -251,127 +253,222 @@ export default function SalesPaymentsList({ payments }: Props) {
       </div>
 
       {/* Table Container - Flex grow to fill remaining space */}
-      <div className="px-6 py-6 flex-1 flex flex-col min-h-0">
-        <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm flex flex-col flex-1">
+      <div className="px-3 sm:px-6 py-3 sm:py-6 flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm flex flex-col flex-1 max-w-full">
           {!hasRows ? (
             /* Empty State */
-            <div className="flex flex-col items-center justify-center flex-1 py-16">
+            <div className="flex flex-col items-center justify-center flex-1 py-16 px-4">
               <div className="mb-4">
-                <svg className="w-20 h-20 text-muted" viewBox="0 0 80 80" fill="none">
+                <svg className="w-16 h-16 sm:w-20 sm:h-20 text-muted" viewBox="0 0 80 80" fill="none">
                   <rect x="22" y="14" width="40" height="48" rx="2" fill="hsl(var(--card))" stroke="currentColor" strokeWidth="1.5" />
                   <rect x="18" y="18" width="40" height="48" rx="2" fill="hsl(var(--card))" stroke="currentColor" strokeWidth="1.5" />
                 </svg>
               </div>
-              <p className="text-sm text-muted-foreground mb-5">No sales transactions found</p>
-              <Link href="/sales/invoices/new" className="px-5 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
+              <p className="text-sm text-muted-foreground mb-5 text-center">No sales transactions found</p>
+              <Link href="/sales/invoices/new" className="px-5 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-all shadow-sm hover:shadow-md touch-manipulation">
                 Create First Sale
               </Link>
             </div>
           ) : (
             <>
-              {/* Table Header */}
-              <div className="grid grid-cols-[50px_minmax(100px,130px)_minmax(150px,200px)_minmax(120px,150px)_minmax(100px,120px)_minmax(100px,130px)_minmax(100px,1fr)_minmax(120px,150px)_80px] gap-3 px-4 py-3 bg-muted/30 border-b border-border">
-                <div className="text-xs font-medium text-muted-foreground">#</div>
-                <div className="text-xs font-medium text-muted-foreground">Invoice No</div>
-                <div className="text-xs font-medium text-muted-foreground">Customer</div>
-                <div className="text-xs font-medium text-muted-foreground">Date & Time</div>
-                <div className="text-xs font-medium text-muted-foreground">Status</div>
-                <div className="text-xs font-medium text-muted-foreground">Payment</div>
-                <div className="text-xs font-medium text-muted-foreground">Remarks</div>
-                <div className="text-xs font-medium text-muted-foreground text-right">Amount</div>
-                <div className="text-xs font-medium text-muted-foreground text-center">Actions</div>
-              </div>
-              {/* Table Body - Flex grow to fill available space */}
-              <div className="flex-1 overflow-y-auto">
-                {filteredPayments.map((payment, i) => (
-                  <div key={payment.id} className="grid grid-cols-[50px_minmax(100px,130px)_minmax(150px,200px)_minmax(120px,150px)_minmax(100px,120px)_minmax(100px,130px)_minmax(100px,1fr)_minmax(120px,150px)_80px] gap-3 px-4 py-3 border-b border-border hover:bg-muted/50">
-                    <div className="text-sm text-foreground">{i + 1}</div>
-                    <div className="text-sm">
-                      <Link href={`/sales/invoices/${payment.id}`} className="text-blue-600 hover:underline font-medium">
-                        {payment.invoiceNumber}
-                      </Link>
-                    </div>
-                    <div className="text-sm overflow-hidden">
-                      {payment.customer ? (
-                        <Link href={`/common/customers/${payment.customer.id}`} className="text-foreground hover:text-primary">
-                          <div className="font-medium truncate">{payment.customer.name}</div>
-                          {payment.customer.indexId && (
-                            <div className="text-xs text-muted-foreground font-mono truncate">{payment.customer.indexId}</div>
-                          )}
+              {/* Desktop Table View - Hidden on mobile */}
+              <div className="hidden lg:flex flex-col flex-1 min-h-0">
+                {/* Table Header */}
+                <div className="grid grid-cols-[50px_minmax(100px,130px)_minmax(150px,200px)_minmax(120px,150px)_minmax(100px,120px)_minmax(100px,130px)_minmax(100px,1fr)_minmax(120px,150px)_80px] gap-3 px-4 py-3 bg-muted/30 border-b border-border flex-shrink-0">
+                  <div className="text-xs font-medium text-muted-foreground">#</div>
+                  <div className="text-xs font-medium text-muted-foreground">Invoice No</div>
+                  <div className="text-xs font-medium text-muted-foreground">Customer</div>
+                  <div className="text-xs font-medium text-muted-foreground">Date & Time</div>
+                  <div className="text-xs font-medium text-muted-foreground">Status</div>
+                  <div className="text-xs font-medium text-muted-foreground">Payment</div>
+                  <div className="text-xs font-medium text-muted-foreground">Remarks</div>
+                  <div className="text-xs font-medium text-muted-foreground text-right">Amount</div>
+                  <div className="text-xs font-medium text-muted-foreground text-center">Actions</div>
+                </div>
+                {/* Table Body - Flex grow to fill available space */}
+                <div className="flex-1 overflow-y-auto">
+                  {filteredPayments.map((payment, i) => (
+                    <div key={payment.id} className="grid grid-cols-[50px_minmax(100px,130px)_minmax(150px,200px)_minmax(120px,150px)_minmax(100px,120px)_minmax(100px,130px)_minmax(100px,1fr)_minmax(120px,150px)_80px] gap-3 px-4 py-3 border-b border-border hover:bg-muted/50">
+                      <div className="text-sm text-foreground">{i + 1}</div>
+                      <div className="text-sm">
+                        <Link href={`/sales/invoices/${payment.id}`} className="text-blue-600 hover:underline font-medium">
+                          {payment.invoiceNumber}
                         </Link>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </div>
-                    <div className="text-sm text-foreground">
-                      <div>{new Date(payment.date).toLocaleDateString('en-IN', { 
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                      })}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(payment.createdAt || payment.date).toLocaleTimeString('en-IN', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                      </div>
+                      <div className="text-sm overflow-hidden">
+                        {payment.customer ? (
+                          <Link href={`/common/customers/${payment.customer.id}`} className="text-foreground hover:text-primary">
+                            <div className="font-medium truncate">{payment.customer.name}</div>
+                            {payment.customer.indexId && (
+                              <div className="text-xs text-muted-foreground font-mono truncate">{payment.customer.indexId}</div>
+                            )}
+                          </Link>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </div>
+                      <div className="text-sm text-foreground">
+                        <div>{new Date(payment.date).toLocaleDateString('en-IN', { 
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric'
+                        })}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(payment.createdAt || payment.date).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </div>
+                      <div className="text-sm">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          payment.status === 'PAID' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                            : payment.status === 'CANCELLED'
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                            : payment.status === 'DRAFT'
+                            ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                        }`}>
+                          {payment.status}
+                        </span>
+                      </div>
+                      <div className="text-sm">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          payment.paymentStatus === 'PAID' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                            : payment.paymentStatus === 'PARTIAL'
+                            ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+                            : payment.paymentStatus === 'ON_CREDIT'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                        }`}>
+                          {payment.paymentStatus === 'PAID' ? 'Paid' 
+                            : payment.paymentStatus === 'PARTIAL' ? 'Partial'
+                            : payment.paymentStatus === 'ON_CREDIT' ? 'Credit'
+                            : 'Due'}
+                        </span>
+                        {payment.paidAmount !== undefined && payment.paidAmount > 0 && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            ₹{Number(payment.paidAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground truncate" title={payment.note || ''}>
+                        {payment.note || '-'}
+                      </div>
+                      <div className="text-sm text-foreground text-right">
+                        <div className="font-semibold">
+                          ₹{Number(payment.total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                        {payment.dueAmount !== undefined && payment.dueAmount > 0 && (
+                          <div className="text-xs text-orange-600 dark:text-orange-400">
+                            Due: ₹{Number(payment.dueAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-center">
+                        <button
+                          onClick={() => handleOpenPaymentModal(payment)}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors touch-manipulation"
+                          title="Edit Payment Status"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-                    <div className="text-sm">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        payment.status === 'PAID' 
-                          ? 'bg-green-100 text-green-800'
-                          : payment.status === 'CANCELLED'
-                          ? 'bg-red-100 text-red-800'
-                          : payment.status === 'DRAFT'
-                          ? 'bg-gray-100 text-gray-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {payment.status}
-                      </span>
-                    </div>
-                    <div className="text-sm">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        payment.paymentStatus === 'PAID' 
-                          ? 'bg-green-100 text-green-800'
-                          : payment.paymentStatus === 'PARTIAL'
-                          ? 'bg-orange-100 text-orange-800'
-                          : payment.paymentStatus === 'ON_CREDIT'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {payment.paymentStatus === 'PAID' ? 'Paid' 
-                          : payment.paymentStatus === 'PARTIAL' ? 'Partial'
-                          : payment.paymentStatus === 'ON_CREDIT' ? 'Credit'
-                          : 'Due'}
-                      </span>
-                      {payment.paidAmount !== undefined && payment.paidAmount > 0 && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          ₹{Number(payment.paidAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-sm text-muted-foreground truncate" title={payment.note || ''}>
-                      {payment.note || '-'}
-                    </div>
-                    <div className="text-sm text-foreground text-right">
-                      <div className="font-semibold">
-                        ₹{Number(payment.total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ))}
+                </div>
+              </div>
+
+              {/* Mobile Card View - Visible only on mobile */}
+              <div className="lg:hidden flex-1 overflow-y-auto">
+                {filteredPayments.map((payment, i) => (
+                  <div key={payment.id} className="p-4 border-b border-border hover:bg-muted/50 active:bg-muted/70 transition-colors mobile-card">
+                    <div className="flex items-start justify-between mb-3 gap-2">
+                      <div className="flex-1 min-w-0">
+                        <Link href={`/sales/invoices/${payment.id}`} className="text-blue-600 hover:underline font-medium text-sm block mb-1 truncate touch-manipulation">
+                          {payment.invoiceNumber}
+                        </Link>
+                        {payment.customer && (
+                          <Link href={`/common/customers/${payment.customer.id}`} className="text-xs text-muted-foreground block truncate hover:text-primary">
+                            {payment.customer.name}
+                          </Link>
+                        )}
                       </div>
-                      {payment.dueAmount !== undefined && payment.dueAmount > 0 && (
-                        <div className="text-xs text-orange-600">
-                          Due: ₹{Number(payment.dueAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </div>
-                      )}
+                      <div className="flex flex-col gap-1 flex-shrink-0 items-end">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          payment.status === 'PAID' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                            : payment.status === 'CANCELLED'
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                            : payment.status === 'DRAFT'
+                            ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                        }`}>
+                          {payment.status}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-center">
+                    
+                    <div className="grid grid-cols-2 gap-3 text-xs mb-3">
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">Date:</span>
+                        <span className="text-foreground font-medium">
+                          {new Date(payment.date).toLocaleDateString('en-IN', { 
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">Payment:</span>
+                        <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${
+                          payment.paymentStatus === 'PAID' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                            : payment.paymentStatus === 'PARTIAL'
+                            ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+                            : payment.paymentStatus === 'ON_CREDIT'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                        }`}>
+                          {payment.paymentStatus === 'PAID' ? 'Paid' 
+                            : payment.paymentStatus === 'PARTIAL' ? 'Partial'
+                            : payment.paymentStatus === 'ON_CREDIT' ? 'Credit'
+                            : 'Due'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between pt-3 border-t border-border">
+                      <div>
+                        <span className="text-xs text-muted-foreground block mb-0.5">Total Amount:</span>
+                        <span className="text-base font-bold text-foreground">
+                          ₹{Number(payment.total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        {payment.dueAmount !== undefined && payment.dueAmount > 0 && (
+                          <span className="text-xs text-orange-600 dark:text-orange-400 block mt-0.5">
+                            Due: ₹{Number(payment.dueAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        )}
+                      </div>
                       <button
                         onClick={() => handleOpenPaymentModal(payment)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        className="px-3 py-2 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm touch-manipulation flex items-center gap-1"
                         title="Edit Payment Status"
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-3.5 h-3.5" />
+                        <span>Edit</span>
                       </button>
                     </div>
+                    
+                    {payment.note && (
+                      <div className="mt-2 pt-2 border-t border-border">
+                        <span className="text-xs text-muted-foreground">Note: </span>
+                        <span className="text-xs text-foreground">{payment.note}</span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
