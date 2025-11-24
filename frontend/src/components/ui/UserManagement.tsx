@@ -302,7 +302,7 @@ export default function UserManagement() {
                     <div className="text-xs sm:text-sm text-muted-foreground truncate max-w-[150px] sm:max-w-none">{user.email}</div>
                   </div>
                 </td>
-                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">nowrap">
+                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       user.role === 'ADMIN'
@@ -313,7 +313,7 @@ export default function UserManagement() {
                     {user.role}
                   </span>
                 </td>
-                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">nowrap">
+                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                   <button
                     onClick={() => handleToggleActive(user.id, user.isActive ?? true)}
                     className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer transition-colors ${
@@ -325,7 +325,7 @@ export default function UserManagement() {
                     {user.isActive ? 'Active' : 'Inactive'}
                   </button>
                 </td>
-                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground hidden sm:table-cell">ted-foreground hidden sm:table-cell">
+                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground hidden sm:table-cell">
                   {(user as any).inviter?.name || '-'}
                 </td>
                 <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
