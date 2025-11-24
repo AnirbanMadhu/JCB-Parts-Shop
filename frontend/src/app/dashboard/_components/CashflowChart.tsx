@@ -211,14 +211,14 @@ export default function CashflowChart() {
             >
               <SelectValue placeholder="Last 12 months" />
             </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="3" className="rounded-lg">
+            <SelectContent className="rounded-xl bg-popover border-border shadow-lg z-50">
+              <SelectItem value="3" className="rounded-lg cursor-pointer">
                 Last 3 months
               </SelectItem>
-              <SelectItem value="6" className="rounded-lg">
+              <SelectItem value="6" className="rounded-lg cursor-pointer">
                 Last 6 months
               </SelectItem>
-              <SelectItem value="12" className="rounded-lg">
+              <SelectItem value="12" className="rounded-lg cursor-pointer">
                 Last 12 months
               </SelectItem>
             </SelectContent>
