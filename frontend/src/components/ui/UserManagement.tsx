@@ -272,69 +272,69 @@ export default function UserManagement() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-card rounded-lg shadow-sm overflow-x-auto border border-border">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-muted/50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                 User
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                 Role
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">
                 Invited By
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-card divide-y divide-border">
             {users.map((user) => (
-              <tr key={user.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
+              <tr key={user.id} className="hover:bg-muted/30 transition-colors">
+                <td className="px-3 sm:px-6 py-4">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                    <div className="text-sm text-gray-500">{user.email}</div>
+                    <div className="text-sm font-medium text-foreground">{user.name}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground truncate max-w-[150px] sm:max-w-none">{user.email}</div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">nowrap">
                   <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       user.role === 'ADMIN'
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-gray-100 text-gray-800'
+                        ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300'
+                        : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {user.role}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">nowrap">
                   <button
                     onClick={() => handleToggleActive(user.id, user.isActive ?? true)}
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
+                    className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer transition-colors ${
                       user.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-500/30'
+                        : 'bg-red-500/20 text-red-700 dark:text-red-300 hover:bg-red-500/30'
                     }`}
                   >
                     {user.isActive ? 'Active' : 'Inactive'}
                   </button>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground hidden sm:table-cell">ted-foreground hidden sm:table-cell">
                   {(user as any).inviter?.name || '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button
                     onClick={() => handleDeleteUser(user.id, user.name)}
-                    className="text-red-600 hover:text-red-900 ml-4 cursor-pointer"
+                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 sm:ml-4 cursor-pointer transition-colors"
                     title="Delete user"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                   </button>
                 </td>
               </tr>

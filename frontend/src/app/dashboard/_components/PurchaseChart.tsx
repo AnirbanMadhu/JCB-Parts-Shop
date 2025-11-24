@@ -199,7 +199,7 @@ export default function PurchaseChart() {
       <CardContent className="px-2 sm:p-6">
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
+          className="aspect-auto h-[280px] sm:h-[250px] w-full"
         >
           <BarChart
             accessibilityLayer
@@ -220,8 +220,11 @@ export default function PurchaseChart() {
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              minTickGap={32}
-              tick={{ fill: 'currentColor' }}
+              tick={{ fill: 'currentColor', fontSize: 11 }}
+              interval={0}
+              angle={-45}
+              textAnchor="end"
+              height={60}
             />
             <YAxis
               tickLine={false}

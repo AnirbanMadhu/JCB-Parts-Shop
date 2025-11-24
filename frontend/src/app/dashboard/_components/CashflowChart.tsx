@@ -196,31 +196,17 @@ export default function CashflowChart() {
 
   return (
     <Card className="pt-0">
-      <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
-        <div className="grid flex-1 gap-1">
-          <CardTitle>Monthly Cashflow Analysis</CardTitle>
-          <CardDescription>
-            {cashflowData.startMonth} - {cashflowData.endMonth}
-          </CardDescription>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* Summary Stats */}
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[hsl(142,76%,36%)] dark:bg-[hsl(142,70%,45%)]" />
-              <span className="font-medium text-foreground">Sales: {formatCurrency(totalSales)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[hsl(0,84%,60%)] dark:bg-[hsl(0,62%,50%)]" />
-              <span className="font-medium text-foreground">Purchases: {formatCurrency(totalPurchases)}</span>
-            </div>
-            <div className={`font-semibold ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-              Net: {formatCurrency(netProfit)}
-            </div>
+      <CardHeader className="flex flex-col gap-4 space-y-0 border-b py-5">
+        <div className="flex items-start justify-between gap-2 w-full">
+          <div className="grid flex-1 gap-1">
+            <CardTitle>Monthly Cashflow Analysis</CardTitle>
+            <CardDescription>
+              {cashflowData.startMonth} - {cashflowData.endMonth}
+            </CardDescription>
           </div>
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger
-              className="w-[160px] rounded-lg sm:ml-auto"
+              className="w-[130px] sm:w-[160px] rounded-lg shrink-0"
               aria-label="Select time range"
             >
               <SelectValue placeholder="Last 12 months" />
@@ -238,11 +224,25 @@ export default function CashflowChart() {
             </SelectContent>
           </Select>
         </div>
+        {/* Summary Stats */}
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm w-full">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[hsl(142,76%,36%)] dark:bg-[hsl(142,70%,45%)] shrink-0" />
+            <span className="font-medium text-foreground whitespace-nowrap">Sales: {formatCurrency(totalSales)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[hsl(0,84%,60%)] dark:bg-[hsl(0,62%,50%)] shrink-0" />
+            <span className="font-medium text-foreground whitespace-nowrap">Purchases: {formatCurrency(totalPurchases)}</span>
+          </div>
+          <div className={`font-semibold whitespace-nowrap ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+            Net: {formatCurrency(netProfit)}
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6 overflow-x-auto">
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[300px] w-full"
+          className="aspect-auto h-[250px] sm:h-[300px] w-full min-w-[300px]"
         >
           <AreaChart data={filteredData}>
             <defs>
@@ -295,7 +295,8 @@ export default function CashflowChart() {
               axisLine={false}
               tickMargin={8}
               minTickGap={32}
-              tick={{ fill: 'currentColor' }}
+              tick={{ fill: 'currentColor', fontSize: 12 }}
+              interval="preserveStartEnd"
               tickFormatter={(value) => {
                 const date = new Date(value);
                 return date.toLocaleDateString("en-US", {
@@ -308,8 +309,9 @@ export default function CashflowChart() {
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tick={{ fill: 'currentColor' }}
+              tick={{ fill: 'currentColor', fontSize: 12 }}
               tickFormatter={formatCurrency}
+              width={45}
             />
             <ChartTooltip
               cursor={false}
@@ -357,7 +359,10 @@ export default function CashflowChart() {
               strokeWidth={2}
               dot={false}
             />
-            <ChartLegend content={<ChartLegendContent />} />
+            <ChartLegend 
+              content={<ChartLegendContent className="flex-wrap gap-2" />}
+              wrapperStyle={{ paddingTop: '16px' }}
+            />
           </AreaChart>
         </ChartContainer>
       </CardContent>
