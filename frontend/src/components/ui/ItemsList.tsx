@@ -142,7 +142,7 @@ export default function ItemsList(props: Props) {
       </header>
 
       {/* Search Bar and Filters */}
-      <div className="px-3 sm:px-6 pt-3 sm:pt-6 flex flex-col gap-3 sm:gap-4">
+      <div className="sticky top-[49px] z-[9] bg-background px-3 sm:px-6 pt-3 sm:pt-6 pb-3 sm:pb-4 border-b border-border shadow-sm">
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <input
@@ -165,7 +165,7 @@ export default function ItemsList(props: Props) {
         </div>
       </div>
 
-      <div className="px-3 sm:px-6 py-3 sm:py-6">
+      <div className="px-3 sm:px-6 py-3 sm:py-6 max-h-[calc(100vh-180px)] overflow-y-auto">
         <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm animate-fade-in">
           {!hasRows ? (
             <div className="flex flex-col items-center justify-center py-16 sm:py-32 px-4">
