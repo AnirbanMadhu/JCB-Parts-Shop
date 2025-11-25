@@ -1,28 +1,67 @@
-import { Router } from 'express';
-import { prisma } from '../prisma';
-import { PartCreateBody } from '../types';
+import { Router } from "express";
+import { prisma } from "../prisma";
+import { PartCreateBody } from "../types";
 
 const router = Router();
 
+// Get all parts (paginated)
+router.get("/", async (req, res) => {
+  const { page = "1", limit = "50" } = req.query as {
+    page?: string;
+    limit?: string;
+  };
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
+  const skip = (pageNum - 1) * limitNum;
+
+  try {
+    const [parts, total] = await Promise.all([
+      prisma.part.findMany({
+        where: { isDeleted: false },
+        take: limitNum,
+        skip: skip,
+        orderBy: { partNumber: "asc" },
+      }),
+      prisma.part.count({ where: { isDeleted: false } }),
+    ]);
+
+    res.json({
+      data: parts,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to fetch parts" });
+  }
+});
+
 // Create / update part from manual entry or barcode scan
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   const body = req.body as PartCreateBody;
 
   if (!body.partNumber || !body.itemName || !body.hsnCode) {
-    return res.status(400).json({ error: 'partNumber, itemName, hsnCode required' });
+    return res
+      .status(400)
+      .json({ error: "partNumber, itemName, hsnCode required" });
   }
 
   // Validate part number format (e.g., 550/42835C, 336/E8026)
   const partNumberPattern = /^[0-9]+\/[A-Z0-9]+$/;
   if (!partNumberPattern.test(body.partNumber)) {
-    return res.status(400).json({ 
-      error: 'Invalid part number format. Use format: Number/Alphanumeric (e.g., 550/42835C, 336/E8026)' 
+    return res.status(400).json({
+      error:
+        "Invalid part number format. Use format: Number/Alphanumeric (e.g., 550/42835C, 336/E8026)",
     });
   }
 
   // Set defaults for required fields if not provided
   const gstPercent = body.gstPercent ?? 18;
-  const unit = body.unit ?? 'PCS';
+  const unit = body.unit ?? "PCS";
 
   try {
     const part = await prisma.part.upsert({
@@ -36,7 +75,7 @@ router.post('/', async (req, res) => {
         mrp: body.mrp,
         rtl: body.rtl,
         barcode: body.barcode,
-        qrCode: body.qrCode
+        qrCode: body.qrCode,
       },
       create: {
         partNumber: body.partNumber,
@@ -48,33 +87,37 @@ router.post('/', async (req, res) => {
         mrp: body.mrp,
         rtl: body.rtl,
         barcode: body.barcode,
-        qrCode: body.qrCode
-      }
+        qrCode: body.qrCode,
+      },
     });
 
     res.json(part);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'Failed to save part' });
+    res.status(500).json({ error: "Failed to save part" });
   }
 });
 
 // Search by partNumber, barcode, or QR code (used when scanning)
-router.get('/search', async (req, res) => {
-  const { q, barcode, qrCode } = req.query as { q?: string; barcode?: string; qrCode?: string };
+router.get("/search", async (req, res) => {
+  const { q, barcode, qrCode } = req.query as {
+    q?: string;
+    barcode?: string;
+    qrCode?: string;
+  };
 
   try {
     // Helper function to add stock info to a part
     const addStockInfo = async (part: any) => {
       const [incoming, outgoing] = await Promise.all([
         prisma.inventoryTransaction.aggregate({
-          where: { partId: part.id, direction: 'IN' },
-          _sum: { quantity: true }
+          where: { partId: part.id, direction: "IN" },
+          _sum: { quantity: true },
         }),
         prisma.inventoryTransaction.aggregate({
-          where: { partId: part.id, direction: 'OUT' },
-          _sum: { quantity: true }
-        })
+          where: { partId: part.id, direction: "OUT" },
+          _sum: { quantity: true },
+        }),
       ]);
       const inQty = incoming._sum.quantity ?? 0;
       const outQty = outgoing._sum.quantity ?? 0;
@@ -83,11 +126,11 @@ router.get('/search', async (req, res) => {
 
     // Search by barcode
     if (barcode) {
-      const part = await prisma.part.findUnique({ 
+      const part = await prisma.part.findUnique({
         where: { barcode },
       });
       if (!part || part.isDeleted) {
-        return res.status(404).json({ error: 'Part not found' });
+        return res.status(404).json({ error: "Part not found" });
       }
       const partWithStock = await addStockInfo(part);
       return res.json(partWithStock);
@@ -95,11 +138,11 @@ router.get('/search', async (req, res) => {
 
     // Search by QR code
     if (qrCode) {
-      const part = await prisma.part.findUnique({ 
+      const part = await prisma.part.findUnique({
         where: { qrCode },
       });
       if (!part || part.isDeleted) {
-        return res.status(404).json({ error: 'Part not found' });
+        return res.status(404).json({ error: "Part not found" });
       }
       const partWithStock = await addStockInfo(part);
       return res.json(partWithStock);
@@ -111,64 +154,71 @@ router.get('/search', async (req, res) => {
         ? {
             isDeleted: false,
             OR: [
-              { partNumber: { contains: q, mode: 'insensitive' } },
-              { itemName: { contains: q, mode: 'insensitive' } }
-            ]
+              { partNumber: { contains: q, mode: "insensitive" } },
+              { itemName: { contains: q, mode: "insensitive" } },
+            ],
           }
         : { isDeleted: false },
       take: 50,
-      orderBy: { partNumber: 'asc' }
+      orderBy: { partNumber: "asc" },
     });
 
     res.json(parts);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'Failed to search parts' });
+    res.status(500).json({ error: "Failed to search parts" });
   }
 });
 
 // Get single part by ID
-router.get('/:id', async (req, res) => {
+router.get("/:id", async (req, res) => {
   const id = Number(req.params.id);
-  
+
   // Check if ID is a valid number
   if (isNaN(id)) {
-    return res.status(400).json({ error: 'Invalid part ID. Must be a number.' });
+    return res
+      .status(400)
+      .json({ error: "Invalid part ID. Must be a number." });
   }
-  
+
   try {
     const part = await prisma.part.findUnique({ where: { id } });
-    if (!part) return res.status(404).json({ error: 'Part not found' });
+    if (!part) return res.status(404).json({ error: "Part not found" });
     res.json(part);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'Failed to load part' });
+    res.status(500).json({ error: "Failed to load part" });
   }
 });
 
 // Update part
-router.put('/:id', async (req, res) => {
+router.put("/:id", async (req, res) => {
   const id = Number(req.params.id);
   const body = req.body as PartCreateBody;
 
   if (isNaN(id)) {
-    return res.status(400).json({ error: 'Invalid part ID. Must be a number.' });
+    return res
+      .status(400)
+      .json({ error: "Invalid part ID. Must be a number." });
   }
 
   if (!body.partNumber || !body.itemName || !body.hsnCode) {
-    return res.status(400).json({ error: 'partNumber, itemName, hsnCode required' });
+    return res
+      .status(400)
+      .json({ error: "partNumber, itemName, hsnCode required" });
   }
 
   // Validate part number format (e.g., 550/42835C, 336/E8026)
   const partNumberPattern = /^[0-9]+\/[A-Z0-9]+$/;
   if (!partNumberPattern.test(body.partNumber)) {
-    return res.status(400).json({ 
-      error: 'Invalid part number format. Use format: Number/Alphanumeric (e.g., 550/42835C, 336/E8026)' 
+    return res.status(400).json({
+      error:
+        "Invalid part number format. Use format: Number/Alphanumeric (e.g., 550/42835C, 336/E8026)",
     });
   }
 
   const gstPercent = body.gstPercent ?? 18;
-  const unit = body.unit ?? 'PCS';
+  const unit = body.unit ?? "PCS";
 
   try {
     const part = await prisma.part.update({
@@ -183,39 +233,45 @@ router.put('/:id', async (req, res) => {
         mrp: body.mrp,
         rtl: body.rtl,
         barcode: body.barcode || null,
-        qrCode: body.qrCode || null
-      }
+        qrCode: body.qrCode || null,
+      },
     });
 
     res.json(part);
   } catch (e: any) {
     console.error(e);
     // Handle unique constraint violations
-    if (e.code === 'P2002') {
-      const field = e.meta?.target?.[0] || 'field';
-      return res.status(400).json({ error: `${field} already exists. Please use a different value.` });
+    if (e.code === "P2002") {
+      const field = e.meta?.target?.[0] || "field";
+      return res
+        .status(400)
+        .json({
+          error: `${field} already exists. Please use a different value.`,
+        });
     }
-    res.status(500).json({ error: 'Failed to update part' });
+    res.status(500).json({ error: "Failed to update part" });
   }
 });
 
 // Delete part (soft delete)
-router.delete('/:id', async (req, res) => {
+router.delete("/:id", async (req, res) => {
   const id = Number(req.params.id);
 
   if (isNaN(id)) {
-    return res.status(400).json({ error: 'Invalid part ID. Must be a number.' });
+    return res
+      .status(400)
+      .json({ error: "Invalid part ID. Must be a number." });
   }
 
   try {
     const part = await prisma.part.update({
       where: { id },
-      data: { isDeleted: true }
+      data: { isDeleted: true },
     });
-    res.json({ success: true, message: 'Part deleted successfully' });
+    res.json({ success: true, message: "Part deleted successfully" });
   } catch (e: any) {
     console.error(e);
-    res.status(500).json({ error: 'Failed to delete part' });
+    res.status(500).json({ error: "Failed to delete part" });
   }
 });
 

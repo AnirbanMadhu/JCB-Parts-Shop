@@ -4,13 +4,15 @@ export const APP_NAME = "S.P.TRADERS AND BUILDERS";
 export const APP_DESCRIPTION = "JCB Parts Shop Management System";
 
 // API Configuration
-// In production: if NEXT_PUBLIC_API_URL is not set, use same origin (empty string)
-// In development: use localhost:4001 as fallback
+// NEXT_PUBLIC_API_URL: Used by client-side (browser) code
+// INTERNAL_API_URL: Used by server-side (SSR) code inside Docker - communicates with backend container
+// In Docker: frontend container can reach backend via container name "backend"
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 
-  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
-    ? '' 
-    : 'http://localhost:4001');
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
+
+// For server-side requests (SSR), use internal Docker network URL
+// This allows the frontend container to reach the backend container directly
+export const INTERNAL_API_URL = process.env.INTERNAL_API_URL || API_BASE_URL;
 
 // Pagination
 export const DEFAULT_PAGE_SIZE = 20;

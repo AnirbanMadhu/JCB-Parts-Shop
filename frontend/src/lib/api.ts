@@ -1,21 +1,21 @@
 // lib/api.ts - Server and Client-side API utilities
-import { cookies } from 'next/headers';
-import { API_BASE_URL } from '@/lib/constants';
+import { cookies } from "next/headers";
+import { INTERNAL_API_URL } from "@/lib/constants";
 
 // Helper to get auth headers for server-side requests
 async function getAuthHeaders(): Promise<HeadersInit> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('auth_token')?.value;
-    
+    const token = cookieStore.get("auth_token")?.value;
+
     return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
     };
   } catch {
     // In client-side context, cookies() is not available
     return {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
   }
 }
@@ -78,15 +78,15 @@ export type Payment = {
 export async function fetchPurchaseInvoices(): Promise<Invoice[]> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${API_BASE_URL}/api/invoices?type=PURCHASE`, {
+    const res = await fetch(`${INTERNAL_API_URL}/api/invoices?type=PURCHASE`, {
       headers,
-      cache: 'no-store', // Always fetch fresh data
+      cache: "no-store", // Always fetch fresh data
       next: { revalidate: 0 },
     });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
-    console.error('Failed to fetch purchase invoices:', error);
+    console.error("Failed to fetch purchase invoices:", error);
     return [];
   }
 }
@@ -94,15 +94,15 @@ export async function fetchPurchaseInvoices(): Promise<Invoice[]> {
 export async function fetchSalesInvoices(): Promise<Invoice[]> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${API_BASE_URL}/api/invoices?type=SALE`, {
+    const res = await fetch(`${INTERNAL_API_URL}/api/invoices?type=SALE`, {
       headers,
-      cache: 'no-store',
+      cache: "no-store",
       next: { revalidate: 0 },
     });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
-    console.error('Failed to fetch sales invoices:', error);
+    console.error("Failed to fetch sales invoices:", error);
     return [];
   }
 }
@@ -110,32 +110,36 @@ export async function fetchSalesInvoices(): Promise<Invoice[]> {
 export async function fetchCustomers(): Promise<Customer[]> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${API_BASE_URL}/api/customers`, {
+    const res = await fetch(`${INTERNAL_API_URL}/api/customers`, {
       headers,
-      cache: 'no-store',
+      cache: "no-store",
       next: { revalidate: 0 },
     });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
-    console.error('Failed to fetch customers:', error);
+    console.error("Failed to fetch customers:", error);
     return [];
   }
 }
 
-export async function fetchItems(onlyPurchased: boolean = false): Promise<Item[]> {
+export async function fetchItems(
+  onlyPurchased: boolean = false
+): Promise<Item[]> {
   try {
     const headers = await getAuthHeaders();
-    const url = `${API_BASE_URL}/api/stock${onlyPurchased ? '?onlyPurchased=true' : ''}`;
+    const url = `${INTERNAL_API_URL}/api/stock${
+      onlyPurchased ? "?onlyPurchased=true" : ""
+    }`;
     const res = await fetch(url, {
       headers,
-      cache: 'no-store',
-      next: { revalidate: 0 }
+      cache: "no-store",
+      next: { revalidate: 0 },
     });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
-    console.error('Failed to fetch items:', error);
+    console.error("Failed to fetch items:", error);
     return [];
   }
 }
@@ -143,15 +147,15 @@ export async function fetchItems(onlyPurchased: boolean = false): Promise<Item[]
 export async function fetchPurchasePayments(): Promise<Payment[]> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${API_BASE_URL}/api/payments?type=PURCHASE`, {
+    const res = await fetch(`${INTERNAL_API_URL}/api/payments?type=PURCHASE`, {
       headers,
-      cache: 'no-store',
+      cache: "no-store",
       next: { revalidate: 0 },
     });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
-    console.error('Failed to fetch purchase payments:', error);
+    console.error("Failed to fetch purchase payments:", error);
     return [];
   }
 }
@@ -159,15 +163,15 @@ export async function fetchPurchasePayments(): Promise<Payment[]> {
 export async function fetchSalesPayments(): Promise<Payment[]> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${API_BASE_URL}/api/payments?type=SALE`, {
+    const res = await fetch(`${INTERNAL_API_URL}/api/payments?type=SALE`, {
       headers,
-      cache: 'no-store',
+      cache: "no-store",
       next: { revalidate: 0 },
     });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
-    console.error('Failed to fetch sales payments:', error);
+    console.error("Failed to fetch sales payments:", error);
     return [];
   }
 }

@@ -1,9 +1,7 @@
 import SuppliersList from "@/components/ui/SuppliersList";
-import { API_BASE_URL } from '@/lib/constants';
+import { INTERNAL_API_URL } from "@/lib/constants";
 
-
-
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Suppliers",
@@ -12,19 +10,19 @@ export const metadata = {
 
 async function fetchSuppliers() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/suppliers`, {
-      cache: 'no-store',
+    const res = await fetch(`${INTERNAL_API_URL}/api/suppliers`, {
+      cache: "no-store",
     });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
-    console.error('Failed to fetch suppliers:', error);
+    console.error("Failed to fetch suppliers:", error);
     return [];
   }
 }
 
 export default async function SuppliersPage() {
   const suppliers = await fetchSuppliers();
-  
+
   return <SuppliersList suppliers={suppliers} />;
 }

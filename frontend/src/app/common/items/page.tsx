@@ -1,7 +1,7 @@
 import ItemsList from "@/components/ui/ItemsList";
-import { API_BASE_URL } from "@/lib/constants";
+import { INTERNAL_API_URL } from "@/lib/constants";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata = {
@@ -11,9 +11,13 @@ export const metadata = {
 
 async function fetchItems() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/parts`, { cache: "no-store" });
+    const res = await fetch(`${INTERNAL_API_URL}/api/parts`, {
+      cache: "no-store",
+    });
     if (!res.ok) return [];
-    return await res.json();
+    const data = await res.json();
+    // Handle both array response and paginated response
+    return Array.isArray(data) ? data : data.data || [];
   } catch (error) {
     console.error("Failed to fetch items:", error);
     return [];
