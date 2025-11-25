@@ -133,9 +133,40 @@ export default function SalesInvoiceForm() {
   const [partSearchQuery, setPartSearchQuery] = useState("");
   const [partSuggestions, setPartSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  
+
   // Track available stock for each part
   const [partStock, setPartStock] = useState<Record<number, number>>({});
+
+  // For manual item entry
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualEntry, setManualEntry] = useState({
+    partNumber: "",
+    itemName: "",
+    description: "",
+    hsnCode: "",
+    gstPercent: "18",
+    unit: "Nos",
+    mrp: "",
+    rtl: "",
+    barcode: "",
+    qty: "1",
+  });
+  const [savingManualItem, setSavingManualItem] = useState(false);
+
+  // Handle keyboard shortcuts for manual entry modal
+  useEffect(() => {
+    if (!showManualEntry) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape key to close modal
+      if (e.key === "Escape" && !savingManualItem) {
+        setShowManualEntry(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showManualEntry, savingManualItem]);
 
   const totals = useMemo(() => {
     const sub = lines.reduce((s, l) => s + l.qty * (l.price - l.discount), 0);
@@ -252,6 +283,196 @@ export default function SalesInvoiceForm() {
 
   const removeLine = (idx: number) => {
     setLines((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleManualItemSubmit = async () => {
+    // Trim all string inputs
+    const trimmedPartNumber = manualEntry.partNumber.trim();
+    const trimmedItemName = manualEntry.itemName.trim();
+    const trimmedHsnCode = manualEntry.hsnCode.trim();
+    const trimmedBarcode = manualEntry.barcode.trim();
+
+    // Validate required fields
+    if (!trimmedPartNumber || !trimmedItemName || !trimmedHsnCode) {
+      toastError("Part Number, Item Name, and HSN Code are required");
+      return;
+    }
+
+    // Validate part number format (Number/Alphanumeric)
+    const partNumberPattern = /^[0-9]+\/[A-Z0-9]+$/i;
+    if (!partNumberPattern.test(trimmedPartNumber)) {
+      toastError("Invalid part number format. Use: Number/Alphanumeric (e.g., 550/42835C or 02/100028)");
+      return;
+    }
+
+    // Validate HSN code format (4-8 digits)
+    const hsnPattern = /^[0-9]{4,8}$/;
+    if (!hsnPattern.test(trimmedHsnCode)) {
+      toastError("Invalid HSN Code. Must be 4-8 digits (e.g., 8431, 84314990)");
+      return;
+    }
+
+    // Validate GST percent (0-100)
+    const gstPercent = parseFloat(manualEntry.gstPercent);
+    if (isNaN(gstPercent) || gstPercent < 0 || gstPercent > 100) {
+      toastError("GST % must be between 0 and 100");
+      return;
+    }
+
+    // Validate quantity (positive integer >= 1)
+    const qty = parseInt(manualEntry.qty);
+    if (isNaN(qty) || qty < 1 || !Number.isInteger(parseFloat(manualEntry.qty))) {
+      toastError("Quantity must be a positive whole number (minimum 1)");
+      return;
+    }
+
+    // Validate MRP if provided
+    if (manualEntry.mrp) {
+      const mrp = parseFloat(manualEntry.mrp);
+      if (isNaN(mrp) || mrp < 0) {
+        toastError("MRP must be a positive number");
+        return;
+      }
+    }
+
+    // Validate RTL if provided
+    if (manualEntry.rtl) {
+      const rtl = parseFloat(manualEntry.rtl);
+      if (isNaN(rtl) || rtl < 0) {
+        toastError("RTL must be a positive number");
+        return;
+      }
+    }
+
+    // Check if at least one price is provided
+    if (!manualEntry.mrp && !manualEntry.rtl) {
+      toastError("Please provide at least MRP or RTL price");
+      return;
+    }
+
+    // Check if item already exists in current invoice lines
+    const upperPartNumber = trimmedPartNumber.toUpperCase();
+    const existingItem = lines.find((l) => l.code.toUpperCase() === upperPartNumber);
+    if (existingItem) {
+      toastError(`Item "${upperPartNumber}" is already added to this invoice. Update quantity in the table instead.`);
+      return;
+    }
+
+    setSavingManualItem(true);
+    try {
+      // Check if part already exists in database
+      const checkRes = await fetch(
+        `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(upperPartNumber)}`,
+        { cache: "no-store" }
+      );
+
+      let partExistsInDb = false;
+      if (checkRes.ok) {
+        const existingParts = await checkRes.json();
+        partExistsInDb = existingParts.some((p: any) => p.partNumber.toUpperCase() === upperPartNumber);
+      }
+
+      // Create or update the part in the database
+      const res = await fetch(`${API_BASE_URL}/api/parts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          partNumber: upperPartNumber,
+          itemName: trimmedItemName,
+          description: manualEntry.description.trim() || null,
+          hsnCode: trimmedHsnCode,
+          gstPercent: gstPercent,
+          unit: manualEntry.unit,
+          mrp: manualEntry.mrp ? parseFloat(manualEntry.mrp) : null,
+          rtl: manualEntry.rtl ? parseFloat(manualEntry.rtl) : null,
+          barcode: trimmedBarcode || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create part");
+      }
+
+      const part = await res.json();
+
+      // Check stock for the newly created part
+      const stockRes = await fetch(`${API_BASE_URL}/api/stock/${part.id}`, { cache: "no-store" });
+      let availableStock = 0;
+      if (stockRes.ok) {
+        const stockData = await stockRes.json();
+        availableStock = stockData.stock;
+      }
+
+      // Store stock info
+      setPartStock(prev => ({ ...prev, [part.id]: availableStock }));
+
+      // Warn if trying to sell more than available stock
+      if (qty > availableStock) {
+        toastError(`Warning: Item created but insufficient stock. Available: ${availableStock}, Requested: ${qty}`);
+        // Don't add to invoice if insufficient stock
+        setManualEntry({
+          partNumber: "",
+          itemName: "",
+          description: "",
+          hsnCode: "",
+          gstPercent: "18",
+          unit: "Nos",
+          mrp: "",
+          rtl: "",
+          barcode: "",
+          qty: "1",
+        });
+        setShowManualEntry(false);
+        return;
+      }
+
+      // Calculate the price to use (prefer RTL for sales, fallback to MRP)
+      const itemPrice = Number(part.rtl ?? part.mrp ?? 0);
+
+      // Add the part to the invoice lines
+      setLines((prev) => [
+        ...prev,
+        {
+          code: part.partNumber,
+          partId: part.id,
+          name: part.itemName,
+          uom: part.unit,
+          price: itemPrice,
+          qty: qty,
+          taxRate: Number(part.gstPercent ?? 0),
+          discount: 0,
+        },
+      ]);
+
+      // Highlight the new row
+      setHighlightedRow(lines.length);
+      setTimeout(() => setHighlightedRow(null), 1500);
+
+      // Show appropriate success message
+      const action = partExistsInDb ? "updated and added" : "created and added";
+      success(`✓ Item ${action}: ${part.itemName} (Qty: ${qty}, Available Stock: ${availableStock})`);
+
+      // Reset form and close modal
+      setManualEntry({
+        partNumber: "",
+        itemName: "",
+        description: "",
+        hsnCode: "",
+        gstPercent: "18",
+        unit: "Nos",
+        mrp: "",
+        rtl: "",
+        barcode: "",
+        qty: "1",
+      });
+      setShowManualEntry(false);
+    } catch (error: any) {
+      console.error("Error creating manual item:", error);
+      toastError(error.message || "Failed to create item. Please try again.");
+    } finally {
+      setSavingManualItem(false);
+    }
   };
 
   const save = async (submit: boolean) => {
@@ -506,11 +727,19 @@ export default function SalesInvoiceForm() {
       <div className="mt-8 rounded-xl border border-border bg-card p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-medium text-foreground">Add Items</h2>
-          <BarcodeScanner 
-            onScan={handleScan}
-            enabled={true}
-            showIndicator={true}
-          />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowManualEntry(true)}
+              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium cursor-pointer"
+            >
+              + Add Manually
+            </button>
+            <BarcodeScanner
+              onScan={handleScan}
+              enabled={true}
+              showIndicator={true}
+            />
+          </div>
         </div>
         <div className="mt-3 mb-8 relative">
           <div className="flex gap-2">
@@ -929,6 +1158,194 @@ export default function SalesInvoiceForm() {
                 className="rounded-md px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium shadow-sm cursor-pointer"
               >
                 Confirm & Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Entry Modal */}
+      {showManualEntry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-card border border-border shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
+              <h3 className="text-lg font-semibold text-foreground">Add Item Manually</h3>
+              <button
+                onClick={() => setShowManualEntry(false)}
+                className="rounded-md border border-border bg-background text-foreground px-3 py-1.5 hover:bg-muted transition-colors text-sm font-medium cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                {/* Part Number */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-foreground mb-1">
+                    Part Number <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    value={manualEntry.partNumber}
+                    onChange={(e) => setManualEntry({ ...manualEntry, partNumber: e.target.value })}
+                    placeholder="e.g., 550/42835C"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                    autoFocus
+                  />
+                  <span className="text-xs text-muted-foreground mt-1">Format: Number/Alphanumeric</span>
+                </div>
+
+                {/* Item Name */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-foreground mb-1">
+                    Item Name <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    value={manualEntry.itemName}
+                    onChange={(e) => setManualEntry({ ...manualEntry, itemName: e.target.value })}
+                    placeholder="e.g., Hydraulic Pump"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="flex flex-col md:col-span-2">
+                  <label className="text-sm font-medium text-foreground mb-1">Description</label>
+                  <textarea
+                    value={manualEntry.description}
+                    onChange={(e) => setManualEntry({ ...manualEntry, description: e.target.value })}
+                    placeholder="Optional description"
+                    rows={2}
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                  />
+                </div>
+
+                {/* HSN Code */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-foreground mb-1">
+                    HSN Code <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    value={manualEntry.hsnCode}
+                    onChange={(e) => setManualEntry({ ...manualEntry, hsnCode: e.target.value })}
+                    placeholder="e.g., 8431"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                  />
+                  <span className="text-xs text-muted-foreground mt-1">4-8 digit code</span>
+                </div>
+
+                {/* GST Percent */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-foreground mb-1">GST %</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={manualEntry.gstPercent}
+                    onChange={(e) => setManualEntry({ ...manualEntry, gstPercent: e.target.value })}
+                    placeholder="18"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                  />
+                  <span className="text-xs text-muted-foreground mt-1">Value between 0-100</span>
+                </div>
+
+                {/* Unit */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-foreground mb-1">Unit</label>
+                  <select
+                    value={manualEntry.unit}
+                    onChange={(e) => setManualEntry({ ...manualEntry, unit: e.target.value })}
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="Nos">Nos</option>
+                    <option value="Pcs">Pcs</option>
+                    <option value="Ltr">Ltr</option>
+                    <option value="Kg">Kg</option>
+                    <option value="Mtr">Mtr</option>
+                    <option value="Set">Set</option>
+                  </select>
+                </div>
+
+                {/* Quantity */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-foreground mb-1">Quantity</label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={manualEntry.qty}
+                    onChange={(e) => setManualEntry({ ...manualEntry, qty: e.target.value })}
+                    placeholder="1"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                  />
+                  <span className="text-xs text-muted-foreground mt-1">Minimum 1</span>
+                </div>
+
+                {/* MRP */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-foreground mb-1">
+                    MRP (₹) <span className="text-orange-500 text-xs">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={manualEntry.mrp}
+                    onChange={(e) => setManualEntry({ ...manualEntry, mrp: e.target.value })}
+                    placeholder="0.00"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                  />
+                  <span className="text-xs text-orange-500 mt-1">MRP or RTL required</span>
+                </div>
+
+                {/* RTL */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-foreground mb-1">
+                    RTL (₹) <span className="text-orange-500 text-xs">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={manualEntry.rtl}
+                    onChange={(e) => setManualEntry({ ...manualEntry, rtl: e.target.value })}
+                    placeholder="0.00"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                  />
+                  <span className="text-xs text-orange-500 mt-1">MRP or RTL required</span>
+                </div>
+
+                {/* Barcode */}
+                <div className="flex flex-col md:col-span-2">
+                  <label className="text-sm font-medium text-foreground mb-1">Barcode</label>
+                  <input
+                    value={manualEntry.barcode}
+                    onChange={(e) => setManualEntry({ ...manualEntry, barcode: e.target.value })}
+                    placeholder="Optional barcode"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border bg-muted/30">
+              <button
+                onClick={() => setShowManualEntry(false)}
+                disabled={savingManualItem}
+                className="rounded-md border border-border bg-background text-foreground px-4 py-2 hover:bg-muted transition-colors text-sm font-medium cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleManualItemSubmit}
+                disabled={savingManualItem || !manualEntry.partNumber || !manualEntry.itemName || !manualEntry.hsnCode}
+                className="rounded-md px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingManualItem ? "Creating..." : "Create & Add Item"}
               </button>
             </div>
           </div>
