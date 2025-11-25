@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
-import { InvoiceStatus } from '@prisma/client';
+import { InvoiceStatus } from '../types/prisma-enums';
 
 const router = Router();
 
@@ -92,24 +92,24 @@ router.post('/bulk-delete', async (req, res) => {
       select: { id: true, status: true }
     });
 
-    const nonDraftInvoices = invoices.filter(inv => inv.status !== InvoiceStatus.DRAFT);
-    
+    const nonDraftInvoices = invoices.filter((inv: { id: number; status: string }) => inv.status !== InvoiceStatus.DRAFT);
+
     if (nonDraftInvoices.length > 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: `Cannot delete ${nonDraftInvoices.length} non-draft invoice(s). Only DRAFT invoices can be deleted.`,
-        nonDraftIds: nonDraftInvoices.map(inv => inv.id)
+        nonDraftIds: nonDraftInvoices.map((inv: { id: number; status: string }) => inv.id)
       });
     }
 
     // Delete in transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Get all invoice items
       const items = await tx.invoiceItem.findMany({
         where: { invoiceId: { in: ids } },
         select: { id: true }
       });
 
-      const itemIds = items.map(item => item.id);
+      const itemIds = items.map((item: { id: number }) => item.id);
 
       // Delete inventory transactions
       await tx.inventoryTransaction.deleteMany({

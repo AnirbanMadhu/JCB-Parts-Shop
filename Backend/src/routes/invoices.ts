@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
 import { InvoiceCreateBody } from '../types';
-import { InvoiceType, InventoryDirection, InvoiceStatus } from '@prisma/client';
+import { InvoiceType, InventoryDirection, InvoiceStatus } from '../types/prisma-enums';
 import { Decimal } from '@prisma/client/runtime/library';
 
 const router = Router();
@@ -88,7 +88,7 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // calculate totals
       let subtotal = new Decimal(0);
       const itemsData: any[] = [];
@@ -330,12 +330,12 @@ router.put('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Only DRAFT invoices can be edited. Enable "Allow Editing of Submitted Invoices" in Setup to edit submitted invoices.' });
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Delete existing invoice items and their inventory transactions
       await tx.inventoryTransaction.deleteMany({
         where: {
           invoiceItemId: {
-            in: existingInvoice.items.map(item => item.id)
+            in: existingInvoice.items.map((item: { id: number }) => item.id)
           }
         }
       });

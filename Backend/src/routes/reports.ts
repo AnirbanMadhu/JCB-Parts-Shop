@@ -124,12 +124,12 @@ router.get('/weekly-purchases', async (req, res) => {
       }
 
       // Calculate purchases for this week
-      const weekPurchases = purchaseInvoices.filter(inv => {
+      const weekPurchases = purchaseInvoices.filter((inv: any) => {
         const invDate = new Date(inv.date);
         return invDate >= currentWeekStart && invDate <= currentWeekEnd;
       });
 
-      const totalPurchases = weekPurchases.reduce((sum, inv) => {
+      const totalPurchases = weekPurchases.reduce((sum: number, inv: any) => {
         return sum + parseFloat(inv.total.toString());
       }, 0);
 
@@ -226,12 +226,12 @@ router.get('/weekly-sales', async (req, res) => {
       }
 
       // Calculate sales for this week
-      const weekSales = salesInvoices.filter(inv => {
+      const weekSales = salesInvoices.filter((inv: any) => {
         const invDate = new Date(inv.date);
         return invDate >= currentWeekStart && invDate <= currentWeekEnd;
       });
 
-      const totalSales = weekSales.reduce((sum, inv) => {
+      const totalSales = weekSales.reduce((sum: number, inv: any) => {
         return sum + parseFloat(inv.total.toString());
       }, 0);
 
@@ -327,8 +327,8 @@ router.get('/cashflow', async (req, res) => {
       const targetYear = targetDate.getFullYear();
       const targetMonth = targetDate.getMonth() + 1;
 
-      const sales = salesData.find(s => s.year === targetYear && s.month === targetMonth);
-      const purchase = purchaseData.find(p => p.year === targetYear && p.month === targetMonth);
+      const sales = salesData.find((s: any) => s.year === targetYear && s.month === targetMonth);
+      const purchase = purchaseData.find((p: any) => p.year === targetYear && p.month === targetMonth);
 
       const salesAmount = sales ? parseFloat(sales.total.toString()) : 0;
       const purchaseAmount = purchase ? parseFloat(purchase.total.toString()) : 0;
@@ -398,7 +398,7 @@ router.get('/monthly', async (req, res) => {
       monthlyData[month] = { purchase: new Decimal(0), sale: new Decimal(0) };
     }
 
-    invoices.forEach(inv => {
+    invoices.forEach((inv: any) => {
       const month = (inv.date.getMonth() + 1).toString().padStart(2, '0');
       if (inv.type === 'PURCHASE') {
         monthlyData[month].purchase = monthlyData[month].purchase.add(inv.total);

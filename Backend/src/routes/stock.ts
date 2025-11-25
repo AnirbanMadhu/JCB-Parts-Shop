@@ -100,19 +100,19 @@ router.get('/', async (req, res) => {
         distinct: ['partId']
       });
       
-      const partIds = partsWithPurchases.map(t => t.partId);
-      partFilter = { 
+      const partIds = partsWithPurchases.map((t: { partId: number }) => t.partId);
+      partFilter = {
         isDeleted: false,
         id: { in: partIds }
       };
     }
-    
-    const parts = await prisma.part.findMany({ 
+
+    const parts = await prisma.part.findMany({
       where: partFilter,
-      orderBy: { partNumber: 'asc' } 
+      orderBy: { partNumber: 'asc' }
     });
 
-    const stockPromises = parts.map(async (p) => {
+    const stockPromises = parts.map(async (p: any) => {
       const [incoming, outgoing] = await Promise.all([
         prisma.inventoryTransaction.aggregate({
           where: { partId: p.id, direction: 'IN' },

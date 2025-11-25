@@ -26,8 +26,8 @@ async function checkUsers() {
     }
 
     console.log(`Found ${users.length} user(s):\n`);
-    
-    users.forEach((user, index) => {
+
+    users.forEach((user: any, index: number) => {
       console.log(`${index + 1}. ${user.name} (${user.email})`);
       console.log(`   - ID: ${user.id}`);
       console.log(`   - Role: ${user.role}`);
@@ -39,12 +39,12 @@ async function checkUsers() {
 
     // Check for users that might need mustChangePassword set
     const invitedUsersWithoutFlag = users.filter(
-      u => u.invitedBy !== null && u.mustChangePassword === false
+      (u: any) => u.invitedBy !== null && u.mustChangePassword === false
     );
 
     if (invitedUsersWithoutFlag.length > 0) {
       console.log('\n⚠️  WARNING: Found invited users without mustChangePassword flag:');
-      invitedUsersWithoutFlag.forEach(user => {
+      invitedUsersWithoutFlag.forEach((user: any) => {
         console.log(`   - ${user.name} (${user.email})`);
       });
       console.log('\nThese users should have mustChangePassword: true');
