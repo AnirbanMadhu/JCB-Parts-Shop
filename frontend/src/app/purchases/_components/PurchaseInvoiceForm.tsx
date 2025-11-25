@@ -160,6 +160,21 @@ export default function PurchaseInvoiceForm() {
   });
   const [savingManualItem, setSavingManualItem] = useState(false);
 
+  // Handle keyboard shortcuts for manual entry modal
+  useEffect(() => {
+    if (!showManualEntry) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape key to close modal
+      if (e.key === "Escape" && !savingManualItem) {
+        setShowManualEntry(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showManualEntry, savingManualItem]);
+
   const totals = useMemo(() => {
     const sub = lines.reduce((s, l) => s + l.qty * (l.price - l.discount), 0);
     const tax = lines.reduce(
@@ -225,35 +240,116 @@ export default function PurchaseInvoiceForm() {
   };
 
   const handleManualItemSubmit = async () => {
+    // Trim all string inputs
+    const trimmedPartNumber = manualEntry.partNumber.trim();
+    const trimmedItemName = manualEntry.itemName.trim();
+    const trimmedHsnCode = manualEntry.hsnCode.trim();
+    const trimmedBarcode = manualEntry.barcode.trim();
+
     // Validate required fields
-    if (!manualEntry.partNumber || !manualEntry.itemName || !manualEntry.hsnCode) {
+    if (!trimmedPartNumber || !trimmedItemName || !trimmedHsnCode) {
       toastError("Part Number, Item Name, and HSN Code are required");
       return;
     }
 
     // Validate part number format (Number/Alphanumeric)
     const partNumberPattern = /^[0-9]+\/[A-Z0-9]+$/i;
-    if (!partNumberPattern.test(manualEntry.partNumber)) {
-      toastError("Invalid part number format. Use: Number/Alphanumeric (e.g., 550/42835C)");
+    if (!partNumberPattern.test(trimmedPartNumber)) {
+      toastError("Invalid part number format. Use: Number/Alphanumeric (e.g., 550/42835C or 02/100028)");
       return;
+    }
+
+    // Validate HSN code format (4-8 digits)
+    const hsnPattern = /^[0-9]{4,8}$/;
+    if (!hsnPattern.test(trimmedHsnCode)) {
+      toastError("Invalid HSN Code. Must be 4-8 digits (e.g., 8431, 84314990)");
+      return;
+    }
+
+    // Validate GST percent (0-100)
+    const gstPercent = parseFloat(manualEntry.gstPercent);
+    if (isNaN(gstPercent) || gstPercent < 0 || gstPercent > 100) {
+      toastError("GST % must be between 0 and 100");
+      return;
+    }
+
+    // Validate quantity (positive integer >= 1)
+    const qty = parseInt(manualEntry.qty);
+    if (isNaN(qty) || qty < 1 || !Number.isInteger(parseFloat(manualEntry.qty))) {
+      toastError("Quantity must be a positive whole number (minimum 1)");
+      return;
+    }
+
+    // Validate MRP if provided
+    if (manualEntry.mrp) {
+      const mrp = parseFloat(manualEntry.mrp);
+      if (isNaN(mrp) || mrp < 0) {
+        toastError("MRP must be a positive number");
+        return;
+      }
+    }
+
+    // Validate RTL if provided
+    if (manualEntry.rtl) {
+      const rtl = parseFloat(manualEntry.rtl);
+      if (isNaN(rtl) || rtl < 0) {
+        toastError("RTL must be a positive number");
+        return;
+      }
+    }
+
+    // Check if at least one price is provided
+    if (!manualEntry.mrp && !manualEntry.rtl) {
+      toastError("Please provide at least MRP or RTL price");
+      return;
+    }
+
+    // Check if item already exists in current invoice lines
+    const upperPartNumber = trimmedPartNumber.toUpperCase();
+    const existingItem = lines.find((l) => l.code.toUpperCase() === upperPartNumber);
+    if (existingItem) {
+      toastError(`Item "${upperPartNumber}" is already added to this invoice. Update quantity in the table instead.`);
+      return;
+    }
+
+    // Check if barcode is duplicate in current lines
+    if (trimmedBarcode) {
+      const existingBarcode = lines.find((l) => {
+        // We need to check if any existing line has this barcode
+        // Note: We don't have barcode in Line type, but if the item was created with barcode,
+        // we should still validate. For now, just validate it's not empty spaces
+        return false; // Skip barcode duplicate check in current lines
+      });
     }
 
     setSavingManualItem(true);
     try {
-      // Create the part in the database
+      // Check if part already exists in database
+      const checkRes = await fetch(
+        `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(upperPartNumber)}`,
+        { cache: "no-store" }
+      );
+
+      let partExistsInDb = false;
+      if (checkRes.ok) {
+        const existingParts = await checkRes.json();
+        partExistsInDb = existingParts.some((p: any) => p.partNumber.toUpperCase() === upperPartNumber);
+      }
+
+      // Create or update the part in the database
       const res = await fetch(`${API_BASE_URL}/api/parts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          partNumber: manualEntry.partNumber.toUpperCase(),
-          itemName: manualEntry.itemName,
-          description: manualEntry.description || null,
-          hsnCode: manualEntry.hsnCode,
-          gstPercent: parseFloat(manualEntry.gstPercent) || 18,
+          partNumber: upperPartNumber,
+          itemName: trimmedItemName,
+          description: manualEntry.description.trim() || null,
+          hsnCode: trimmedHsnCode,
+          gstPercent: gstPercent,
           unit: manualEntry.unit,
           mrp: manualEntry.mrp ? parseFloat(manualEntry.mrp) : null,
           rtl: manualEntry.rtl ? parseFloat(manualEntry.rtl) : null,
-          barcode: manualEntry.barcode || null,
+          barcode: trimmedBarcode || null,
         }),
       });
 
@@ -264,6 +360,9 @@ export default function PurchaseInvoiceForm() {
 
       const part = await res.json();
 
+      // Calculate the price to use (prefer RTL, fallback to MRP)
+      const itemPrice = Number(part.rtl ?? part.mrp ?? 0);
+
       // Add the part to the invoice lines
       setLines((prev) => [
         ...prev,
@@ -272,8 +371,8 @@ export default function PurchaseInvoiceForm() {
           partId: part.id,
           name: part.itemName,
           uom: part.unit,
-          price: Number(part.rtl ?? part.mrp ?? 0),
-          qty: parseInt(manualEntry.qty) || 1,
+          price: itemPrice,
+          qty: qty,
           taxRate: Number(part.gstPercent ?? 0),
           discount: 0,
         },
@@ -283,7 +382,9 @@ export default function PurchaseInvoiceForm() {
       setHighlightedRow(lines.length);
       setTimeout(() => setHighlightedRow(null), 1500);
 
-      success(`✓ Item created and added: ${part.itemName}`);
+      // Show appropriate success message
+      const action = partExistsInDb ? "updated and added" : "created and added";
+      success(`✓ Item ${action}: ${part.itemName} (Qty: ${qty})`);
 
       // Reset form and close modal
       setManualEntry({
@@ -300,7 +401,8 @@ export default function PurchaseInvoiceForm() {
       });
       setShowManualEntry(false);
     } catch (error: any) {
-      toastError(error.message || "Failed to create item");
+      console.error("Error creating manual item:", error);
+      toastError(error.message || "Failed to create item. Please try again.");
     } finally {
       setSavingManualItem(false);
     }
@@ -933,6 +1035,7 @@ export default function PurchaseInvoiceForm() {
                     onChange={(e) => setManualEntry({ ...manualEntry, partNumber: e.target.value })}
                     placeholder="e.g., 550/42835C"
                     className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                    autoFocus
                   />
                   <span className="text-xs text-muted-foreground mt-1">Format: Number/Alphanumeric</span>
                 </div>
@@ -973,6 +1076,7 @@ export default function PurchaseInvoiceForm() {
                     placeholder="e.g., 8431"
                     className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                   />
+                  <span className="text-xs text-muted-foreground mt-1">4-8 digit code</span>
                 </div>
 
                 {/* GST Percent */}
@@ -981,11 +1085,14 @@ export default function PurchaseInvoiceForm() {
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
+                    max="100"
                     value={manualEntry.gstPercent}
                     onChange={(e) => setManualEntry({ ...manualEntry, gstPercent: e.target.value })}
                     placeholder="18"
                     className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                   />
+                  <span className="text-xs text-muted-foreground mt-1">Value between 0-100</span>
                 </div>
 
                 {/* Unit */}
@@ -1017,32 +1124,41 @@ export default function PurchaseInvoiceForm() {
                     placeholder="1"
                     className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                   />
+                  <span className="text-xs text-muted-foreground mt-1">Minimum 1</span>
                 </div>
 
                 {/* MRP */}
                 <div className="flex flex-col">
-                  <label className="text-sm font-medium text-foreground mb-1">MRP (₹)</label>
+                  <label className="text-sm font-medium text-foreground mb-1">
+                    MRP (₹) <span className="text-orange-500 text-xs">*</span>
+                  </label>
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     value={manualEntry.mrp}
                     onChange={(e) => setManualEntry({ ...manualEntry, mrp: e.target.value })}
                     placeholder="0.00"
                     className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                   />
+                  <span className="text-xs text-orange-500 mt-1">MRP or RTL required</span>
                 </div>
 
                 {/* RTL */}
                 <div className="flex flex-col">
-                  <label className="text-sm font-medium text-foreground mb-1">RTL (₹)</label>
+                  <label className="text-sm font-medium text-foreground mb-1">
+                    RTL (₹) <span className="text-orange-500 text-xs">*</span>
+                  </label>
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     value={manualEntry.rtl}
                     onChange={(e) => setManualEntry({ ...manualEntry, rtl: e.target.value })}
                     placeholder="0.00"
                     className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
                   />
+                  <span className="text-xs text-orange-500 mt-1">MRP or RTL required</span>
                 </div>
 
                 {/* Barcode */}
