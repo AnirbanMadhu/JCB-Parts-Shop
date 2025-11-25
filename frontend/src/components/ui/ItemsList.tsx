@@ -13,7 +13,6 @@ import { useToast } from "@/hooks/useToast";
 
 type Props = {
   items: Item[];
-  initialOnlyPurchased?: boolean;
 };
 
 
@@ -24,7 +23,6 @@ export default function ItemsList(props: Props) {
   const { toasts, removeToast, success, error } = useToast();
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showOnlyPurchased, setShowOnlyPurchased] = useState(props.initialOnlyPurchased ?? false);
   const [editingStockId, setEditingStockId] = useState<number | null>(null);
   const [stockValues, setStockValues] = useState<{ [key: number]: number }>({});
   const [updatingStockId, setUpdatingStockId] = useState<number | null>(null);
@@ -48,20 +46,13 @@ export default function ItemsList(props: Props) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Handle filter toggle - navigate to update URL params
-  const handlePurchasedFilterChange = (checked: boolean) => {
-    setShowOnlyPurchased(checked);
-    const url = checked ? '/common/items?onlyPurchased=true' : '/common/items';
-    router.push(url);
-  };
-
   const filteredItems = useMemo(() => {
     let filtered = items;
 
-    // Filter by search term (client-side for better UX)
+    // Filter by search term (search within purchased items)
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         item.partNumber.toLowerCase().includes(term) ||
         item.itemName.toLowerCase().includes(term)
       );
@@ -171,18 +162,6 @@ export default function ItemsList(props: Props) {
               ✕
             </button>
           )}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
-            <input
-              type="checkbox"
-              checked={showOnlyPurchased}
-              onChange={(e) => handlePurchasedFilterChange(e.target.checked)}
-              className="w-4 h-4 rounded border-input text-primary focus:ring-2 focus:ring-ring touch-manipulation"
-            />
-            <span className="text-xs sm:text-sm text-foreground">Show only purchased items</span>
-          </label>
         </div>
       </div>
 

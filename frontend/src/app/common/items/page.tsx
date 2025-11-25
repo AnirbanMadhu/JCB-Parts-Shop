@@ -11,15 +11,15 @@ export const metadata = {
 
 async function fetchItems() {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/api/parts`, {
+    const res = await fetch(`${INTERNAL_API_URL}/api/stock?onlyPurchased=true`, {
       cache: "no-store",
     });
     if (!res.ok) return [];
     const data = await res.json();
-    // Handle both array response and paginated response
-    return Array.isArray(data) ? data : data.data || [];
+    // Stock API returns array of parts with stock
+    return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("Failed to fetch items:", error);
+    console.error("Failed to fetch purchased items:", error);
     return [];
   }
 }
