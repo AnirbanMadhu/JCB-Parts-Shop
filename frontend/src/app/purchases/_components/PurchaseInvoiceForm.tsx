@@ -258,10 +258,10 @@ export default function PurchaseInvoiceForm() {
       return;
     }
 
-    // Validate part number format (Number/Alphanumeric)
-    const partNumberPattern = /^[0-9]+\/[A-Z0-9]+$/i;
+    // Validate part number format (Number/Alphanumeric or purely numeric)
+    const partNumberPattern = /^[0-9]+(\/[A-Z0-9]+)?$/i;
     if (!partNumberPattern.test(trimmedPartNumber)) {
-      toastError("Invalid part number format. Use: Number/Alphanumeric (e.g., 550/42835C or 02/100028)");
+      toastError("Invalid part number format. Use: Number/Alphanumeric (e.g., 550/48325C or 027800028)");
       return;
     }
 
