@@ -160,6 +160,12 @@ export default function PurchaseInvoiceForm() {
   });
   const [savingManualItem, setSavingManualItem] = useState(false);
 
+  // Debug: Log whenever lines changes
+  useEffect(() => {
+    console.log("Lines state updated. Current lines count:", lines.length);
+    console.log("Lines data:", lines);
+  }, [lines]);
+
   // Handle keyboard shortcuts for manual entry modal
   useEffect(() => {
     if (!showManualEntry) return;
@@ -324,6 +330,8 @@ export default function PurchaseInvoiceForm() {
 
     setSavingManualItem(true);
     try {
+      console.log("Starting manual item creation...");
+
       // Check if part already exists in database
       const checkRes = await fetch(
         `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(upperPartNumber)}`,
@@ -335,6 +343,8 @@ export default function PurchaseInvoiceForm() {
         const existingParts = await checkRes.json();
         partExistsInDb = existingParts.some((p: any) => p.partNumber.toUpperCase() === upperPartNumber);
       }
+
+      console.log("Part exists in DB:", partExistsInDb);
 
       // Create or update the part in the database
       const res = await fetch(`${API_BASE_URL}/api/parts`, {
@@ -353,34 +363,55 @@ export default function PurchaseInvoiceForm() {
         }),
       });
 
+      console.log("API response status:", res.status);
+
       if (!res.ok) {
         const error = await res.json();
+        console.error("API error:", error);
         throw new Error(error.error || "Failed to create part");
       }
 
       const part = await res.json();
+      console.log("Part created/updated:", part);
 
       // Calculate the price to use (prefer RTL, fallback to MRP)
       const itemPrice = Number(part.rtl ?? part.mrp ?? 0);
 
+      console.log("Adding item to lines with:", {
+        code: part.partNumber,
+        partId: part.id,
+        name: part.itemName,
+        uom: part.unit,
+        price: itemPrice,
+        qty: qty,
+        taxRate: Number(part.gstPercent ?? 0),
+        discount: 0,
+      });
+
       // Add the part to the invoice lines
-      setLines((prev) => [
-        ...prev,
-        {
-          code: part.partNumber,
-          partId: part.id,
-          name: part.itemName,
-          uom: part.unit,
-          price: itemPrice,
-          qty: qty,
-          taxRate: Number(part.gstPercent ?? 0),
-          discount: 0,
-        },
-      ]);
+      setLines((prev) => {
+        const newLines = [
+          ...prev,
+          {
+            code: part.partNumber,
+            partId: part.id,
+            name: part.itemName,
+            uom: part.unit,
+            price: itemPrice,
+            qty: qty,
+            taxRate: Number(part.gstPercent ?? 0),
+            discount: 0,
+          },
+        ];
+        console.log("Lines after adding item:", newLines);
+        return newLines;
+      });
 
       // Highlight the new row
       setHighlightedRow(lines.length);
       setTimeout(() => setHighlightedRow(null), 1500);
+
+      console.log("Item successfully added to invoice!");
 
       // Show appropriate success message
       const action = partExistsInDb ? "updated and added" : "created and added";
@@ -763,8 +794,8 @@ export default function PurchaseInvoiceForm() {
                 const lineTotal = l.qty * net + (l.qty * net * l.taxRate) / 100;
                 const isHighlighted = highlightedRow === i;
                 return (
-                  <tr 
-                    key={l.code} 
+                  <tr
+                    key={`${l.partId}-${i}`}
                     className={`border-t border-border transition-all duration-500 ${
                       isHighlighted ? 'bg-green-100 animate-pulse dark:bg-green-900/30' : 'hover:bg-muted/50'
                     }`}
