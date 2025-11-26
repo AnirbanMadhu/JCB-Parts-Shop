@@ -289,7 +289,7 @@ export default function SalesInvoiceForm() {
     // Trim all string inputs
     const trimmedPartNumber = manualEntry.partNumber.trim();
     const trimmedItemName = manualEntry.itemName.trim();
-    const trimmedHsnCode = manualEntry.hsnCode.trim();
+    const trimmedHsnCode = manualEntry.hsnCode.trim().replace(/\s+/g, ''); // Remove all spaces
     const trimmedBarcode = manualEntry.barcode.trim();
 
     // Validate required fields
@@ -305,10 +305,10 @@ export default function SalesInvoiceForm() {
       return;
     }
 
-    // Validate HSN code format (4-8 digits)
+    // Validate HSN code format (4-8 digits, spaces allowed)
     const hsnPattern = /^[0-9]{4,8}$/;
     if (!hsnPattern.test(trimmedHsnCode)) {
-      toastError("Invalid HSN Code. Must be 4-8 digits (e.g., 8431, 84314990)");
+      toastError("Invalid HSN Code. Must be 4-8 digits (e.g., 8431, 7318 11 10)");
       return;
     }
 
