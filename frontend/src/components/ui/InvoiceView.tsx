@@ -290,13 +290,13 @@ export default function InvoiceView({ invoice }: InvoiceViewProps) {
               <div className="flex justify-end">
                 <div className="w-80 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal:</span>
+                    <span className="text-gray-600">Total Amount:</span>
                     <span className="font-medium">₹{Number(invoice.subtotal).toFixed(2)}</span>
                   </div>
                   {invoice.discountPercent && Number(invoice.discountPercent) > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Discount ({invoice.discountPercent}%):</span>
-                      <span className="font-medium">- ₹{Number(invoice.discountAmount).toFixed(2)}</span>
+                      <span className="text-gray-600">Discount @{invoice.discountPercent}%:</span>
+                      <span className="font-medium">₹{Number(invoice.discountAmount).toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
@@ -305,18 +305,18 @@ export default function InvoiceView({ invoice }: InvoiceViewProps) {
                   </div>
                   {invoice.cgstPercent && Number(invoice.cgstPercent) > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">CGST ({invoice.cgstPercent}%):</span>
+                      <span className="text-gray-600">CGST @{invoice.cgstPercent}%:</span>
                       <span className="font-medium">₹{Number(invoice.cgstAmount).toFixed(2)}</span>
                     </div>
                   )}
                   {invoice.sgstPercent && Number(invoice.sgstPercent) > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">SGST ({invoice.sgstPercent}%):</span>
+                      <span className="text-gray-600">SGST @{invoice.sgstPercent}%:</span>
                       <span className="font-medium">₹{Number(invoice.sgstAmount).toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Round Off:</span>
+                    <span className="text-gray-600">Round off:</span>
                     <span className="font-medium">₹{Number(invoice.roundOff).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold border-t pt-2">
