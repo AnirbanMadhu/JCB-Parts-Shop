@@ -209,7 +209,7 @@ export default function InvoicePrint({
 
         {/* Right: Invoice Info */}
         <div>
-          <div className="border-b border-black p-1.5">
+          <div className="border-b-2 border-black p-1.5">
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <span className="text-[9px] font-semibold text-black">
@@ -268,7 +268,7 @@ export default function InvoicePrint({
 
         {/* Buyer Info */}
         <div>
-          <div className="border-b border-black p-1.5">
+          <div className="border-b-2 border-black p-1.5">
             <div className="text-[9px] font-semibold text-black">
               Buyer's Order No.
             </div>
@@ -276,7 +276,7 @@ export default function InvoicePrint({
               {invoice.buyerOrderNo || ""}
             </div>
           </div>
-          <div className="border-b border-black p-1.5">
+          <div className="border-b-2 border-black p-1.5">
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <div className="text-[9px] font-semibold text-black">
@@ -341,28 +341,28 @@ export default function InvoicePrint({
 
   const ItemsTableHeader = () => (
     <thead>
-      <tr className="border-b border-black bg-white">
-        <th className="border-r border-black p-1 text-center text-[10px] font-semibold w-12 text-black align-middle">
+      <tr className="border-b-2 border-black bg-white">
+        <th className="border-r-2 border-black p-1 text-center text-[10px] font-semibold w-12 text-black align-middle">
           Sl
           <br />
           No
         </th>
-        <th className="border-r border-black p-1 text-center text-[10px] font-semibold w-24 text-black align-middle">
+        <th className="border-r-2 border-black p-1 text-center text-[10px] font-semibold w-24 text-black align-middle">
           Product Code
         </th>
-        <th className="border-r border-black p-1 text-center text-[10px] font-semibold text-black align-middle">
+        <th className="border-r-2 border-black p-1 text-center text-[10px] font-semibold text-black align-middle">
           Description of Goods
         </th>
-        <th className="border-r border-black p-1 text-center text-[10px] font-semibold w-20 text-black align-middle">
+        <th className="border-r-2 border-black p-1 text-center text-[10px] font-semibold w-20 text-black align-middle">
           HSN/SAC
         </th>
-        <th className="border-r border-black p-1 text-center text-[10px] font-semibold w-16 text-black align-middle">
+        <th className="border-r-2 border-black p-1 text-center text-[10px] font-semibold w-16 text-black align-middle">
           Quantity
         </th>
-        <th className="border-r border-black p-1 text-center text-[10px] font-semibold w-20 text-black align-middle">
+        <th className="border-r-2 border-black p-1 text-center text-[10px] font-semibold w-20 text-black align-middle">
           Rate
         </th>
-        <th className="border-r border-black p-1 text-center text-[10px] font-semibold w-12 text-black align-middle">
+        <th className="border-r-2 border-black p-1 text-center text-[10px] font-semibold w-12 text-black align-middle">
           per
         </th>
         <th className="p-1 text-center text-[10px] font-semibold w-24 text-black align-middle">
@@ -376,6 +376,11 @@ export default function InvoicePrint({
     <div className="invoice-print bg-white">
       <style jsx global>{`
         @media print {
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
           body {
             margin: 0;
             padding: 0;
@@ -388,11 +393,12 @@ export default function InvoicePrint({
             visibility: visible;
           }
           .invoice-print {
-            position: absolute;
-            left: 0;
+            position: fixed;
+            left: 50%;
             top: 0;
-            width: 100%;
-            height: 100%;
+            transform: translateX(-50%);
+            width: 210mm;
+            height: 297mm;
             margin: 0;
             padding: 0;
           }
@@ -400,9 +406,8 @@ export default function InvoicePrint({
             page-break-after: always;
             page-break-inside: avoid;
             box-shadow: none !important;
-            max-width: 100% !important;
             width: 100% !important;
-            height: 297mm !important;
+            height: 100% !important;
             margin: 0 !important;
             padding: 5mm !important;
             display: flex !important;
@@ -446,7 +451,7 @@ export default function InvoicePrint({
               <InvoiceHeader />
 
               {/* Items Table */}
-              <div className="flex-1 flex flex-col border-b border-black">
+              <div className="flex-1 flex flex-col border-b-2 border-black">
                 <table className="w-full text-[9px] h-full" style={{ tableLayout: 'fixed' }}>
                   <ItemsTableHeader />
                   <tbody>
@@ -509,11 +514,11 @@ export default function InvoicePrint({
                   <div>
                     <div className="flex">
                       {/* Left Empty Space */}
-                      <div className="flex-1 border-r border-black"></div>
+                      <div className="flex-1 border-r-2 border-black"></div>
 
                       {/* Right Column with Totals */}
                       <div className="w-80">
-                        <div className="flex border-b border-black">
+                        <div className="flex border-b-2 border-black">
                           <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
                             Total Amount
                           </div>
@@ -523,7 +528,7 @@ export default function InvoicePrint({
                         </div>
                         {(Number(invoice.discountPercent || 0) > 0 ||
                           Number(invoice.discountAmount || 0) > 0) && (
-                          <div className="flex border-b border-black">
+                          <div className="flex border-b-2 border-black">
                             <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
                               Discount
                               {(invoice.discountPercent ?? 0) > 0
@@ -535,7 +540,7 @@ export default function InvoicePrint({
                             </div>
                           </div>
                         )}
-                        <div className="flex border-b border-black">
+                        <div className="flex border-b-2 border-black">
                           <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
                             Taxable Value
                           </div>
@@ -544,7 +549,7 @@ export default function InvoicePrint({
                           </div>
                         </div>
                         {Number(invoice.cgstPercent || 0) > 0 && (
-                          <div className="flex border-b border-black">
+                          <div className="flex border-b-2 border-black">
                             <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
                               CGST @{invoice.cgstPercent}%
                             </div>
@@ -554,7 +559,7 @@ export default function InvoicePrint({
                           </div>
                         )}
                         {Number(invoice.sgstPercent || 0) > 0 && (
-                          <div className="flex border-b border-black">
+                          <div className="flex border-b-2 border-black">
                             <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
                               SGST @{invoice.sgstPercent}%
                             </div>
@@ -563,7 +568,7 @@ export default function InvoicePrint({
                             </div>
                           </div>
                         )}
-                        <div className="flex border-b border-black">
+                        <div className="flex border-b-2 border-black">
                           <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
                             Round off
                           </div>
@@ -571,7 +576,7 @@ export default function InvoicePrint({
                             {formatAmount(invoice.roundOff)}
                           </div>
                         </div>
-                        <div className="flex border-b border-black">
+                        <div className="flex border-b-2 border-black">
                           <div className="flex-1 p-1.5 text-[10px] font-bold text-right text-black">
                             Total
                           </div>
@@ -587,7 +592,7 @@ export default function InvoicePrint({
                   </div>
 
                   {/* Amount in Words */}
-                  <div className="border-b border-black border-t border-black p-2.5">
+                  <div className="border-b-2 border-black border-t-2 border-black p-2.5">
                     <div className="text-[10px] font-bold text-black mb-1">
                       Total Amount (In words)
                     </div>
@@ -602,7 +607,7 @@ export default function InvoicePrint({
                   {/* Footer with Declaration and Signature */}
                   <div className="grid grid-cols-2" style={{ minHeight: '140px' }}>
                     {/* Declaration */}
-                    <div className="border-r border-black p-3">
+                    <div className="border-r-2 border-black p-3">
                       <div className="text-[10px] font-bold mb-2 text-black">
                         Declaration
                       </div>
@@ -629,7 +634,7 @@ export default function InvoicePrint({
                   </div>
 
                   {/* Computer Generated Invoice Note */}
-                  <div className="text-center text-[9px] py-1.5 border-t border-black text-black">
+                  <div className="text-center text-[9px] py-1.5 border-t-2 border-black text-black">
                     This is a Computer Generated Invoice
                   </div>
                 </>
