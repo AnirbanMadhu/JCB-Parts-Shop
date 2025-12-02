@@ -402,16 +402,17 @@ export default function InvoicePrint({
             box-shadow: none !important;
             max-width: 100% !important;
             width: 100% !important;
-            height: 100vh !important;
+            height: 297mm !important;
             margin: 0 !important;
-            padding: 8mm !important;
-            display: flex;
-            flex-direction: column;
+            padding: 5mm !important;
+            display: flex !important;
+            flex-direction: column !important;
           }
           .invoice-page > div {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+            flex: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100% !important;
           }
           .invoice-page:last-child {
             page-break-after: auto;
@@ -445,8 +446,8 @@ export default function InvoicePrint({
               <InvoiceHeader />
 
               {/* Items Table */}
-              <div>
-                <table className="w-full text-[9px]">
+              <div className="flex-1 flex flex-col border-b border-black">
+                <table className="w-full text-[9px] h-full" style={{ tableLayout: 'fixed' }}>
                   <ItemsTableHeader />
                   <tbody>
                     {pageItems.map((item, index) => (
@@ -454,38 +455,49 @@ export default function InvoicePrint({
                         key={item.id}
                         className="border-b border-black bg-white"
                       >
-                        <td className="border-r border-black p-1.5 text-center text-[10px] text-black align-top">
+                        <td className="border-r border-black p-2 text-center text-[10px] text-black align-top">
                           {startIndex + index + 1}
                         </td>
-                        <td className="border-r border-black p-1.5 text-[10px] text-black align-top">
+                        <td className="border-r border-black p-2 text-[10px] text-black align-top">
                           {item.part?.partNumber || ""}
                         </td>
-                        <td className="border-r border-black p-1.5 text-[10px] text-black align-top">
+                        <td className="border-r border-black p-2 text-[10px] text-black align-top">
                           {item.part?.itemName || ""}
                         </td>
-                        <td className="border-r border-black p-1.5 text-center text-[10px] text-black align-top">
+                        <td className="border-r border-black p-2 text-center text-[10px] text-black align-top">
                           {(item.hsnCode || item.part?.hsnCode || "").replace(
                             /(\d{4})(\d{2})(\d{2})/,
                             "$1 $2 $3"
                           )}
                         </td>
-                        <td className="border-r border-black p-1.5 text-center text-[10px] text-black align-top">
+                        <td className="border-r border-black p-2 text-center text-[10px] text-black align-top">
                           {item.quantity}
                         </td>
-                        <td className="border-r border-black p-1.5 text-right text-[10px] text-black align-top">
+                        <td className="border-r border-black p-2 text-right text-[10px] text-black align-top">
                           ₹
                           <span className="ml-2">
                             {formatAmount(item.rate)}
                           </span>
                         </td>
-                        <td className="border-r border-black p-1.5 text-center text-[10px] text-black align-top">
+                        <td className="border-r border-black p-2 text-center text-[10px] text-black align-top">
                           {item.unit || item.part?.unit || ""}
                         </td>
-                        <td className="p-1.5 text-right text-[10px] text-black align-top">
+                        <td className="p-2 text-right text-[10px] text-black align-top">
                           {formatAmount(item.amount)}
                         </td>
                       </tr>
                     ))}
+                    {/* Add one large row that fills remaining space */}
+                    <tr className="bg-white" style={{ height: '100%' }}>
+                      <td className="border-r border-black p-2 text-center text-[10px] text-black align-top">&nbsp;</td>
+                      <td className="border-r border-black p-2">&nbsp;</td>
+                      <td className="border-r border-black p-2">&nbsp;</td>
+                      <td className="border-r border-black p-2">&nbsp;</td>
+                      <td className="border-r border-black p-2">&nbsp;</td>
+                      <td className="border-r border-black p-2">&nbsp;</td>
+                      <td className="border-r border-black p-2">&nbsp;</td>
+                      <td className="p-2">&nbsp;</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -494,7 +506,7 @@ export default function InvoicePrint({
               {isLastPage && (
                 <>
                   {/* Totals Section - Full Width with Right Column for Amounts */}
-                  <div className="border-t border-black">
+                  <div>
                     <div className="flex">
                       {/* Left Empty Space */}
                       <div className="flex-1 border-r border-black"></div>
@@ -588,7 +600,7 @@ export default function InvoicePrint({
                   </div>
 
                   {/* Footer with Declaration and Signature */}
-                  <div className="grid grid-cols-2 min-h-[120px]">
+                  <div className="grid grid-cols-2" style={{ minHeight: '140px' }}>
                     {/* Declaration */}
                     <div className="border-r border-black p-3">
                       <div className="text-[10px] font-bold mb-2 text-black">
