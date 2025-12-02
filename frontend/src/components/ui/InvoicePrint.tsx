@@ -394,6 +394,10 @@ export default function InvoicePrint({
           .invoice-page {
             page-break-after: always;
             page-break-inside: avoid;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
           }
           .invoice-page:last-child {
             page-break-after: auto;
@@ -402,7 +406,7 @@ export default function InvoicePrint({
             display: none !important;
           }
           @page {
-            margin: 10mm;
+            margin: 0;
             size: A4 portrait;
           }
         }
@@ -421,9 +425,9 @@ export default function InvoicePrint({
         return (
           <div
             key={pageIndex}
-            className="invoice-page max-w-[210mm] mx-auto p-4"
+            className="invoice-page max-w-[210mm] mx-auto p-4 print:p-0 print:max-w-full"
           >
-            <div className="border-2 border-black">
+            <div className="border-2 border-black print:border-0">
               <InvoiceHeader />
 
               {/* Items Table */}
