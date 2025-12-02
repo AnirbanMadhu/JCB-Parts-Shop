@@ -376,6 +376,10 @@ export default function InvoicePrint({
     <div className="invoice-print bg-white">
       <style jsx global>{`
         @media print {
+          body {
+            margin: 0;
+            padding: 0;
+          }
           body * {
             visibility: hidden;
           }
@@ -388,6 +392,7 @@ export default function InvoicePrint({
             left: 0;
             top: 0;
             width: 100%;
+            height: 100%;
             margin: 0;
             padding: 0;
           }
@@ -395,6 +400,18 @@ export default function InvoicePrint({
             page-break-after: always;
             page-break-inside: avoid;
             box-shadow: none !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            height: 100vh !important;
+            margin: 0 !important;
+            padding: 8mm !important;
+            display: flex;
+            flex-direction: column;
+          }
+          .invoice-page > div {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
           }
           .invoice-page:last-child {
             page-break-after: auto;
@@ -403,7 +420,7 @@ export default function InvoicePrint({
             display: none !important;
           }
           @page {
-            margin: 10mm;
+            margin: 0;
             size: A4 portrait;
           }
         }
@@ -424,7 +441,7 @@ export default function InvoicePrint({
             key={pageIndex}
             className="invoice-page max-w-[210mm] mx-auto p-4"
           >
-            <div className="border-2 border-black">
+            <div className="border-2 border-black flex flex-col h-full">
               <InvoiceHeader />
 
               {/* Items Table */}
@@ -486,10 +503,32 @@ export default function InvoicePrint({
                       <div className="w-80">
                         <div className="flex border-b border-black">
                           <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
-                            Subtotal
+                            Total Amount
                           </div>
                           <div className="w-28 p-1.5 text-[10px] text-right text-black">
                             {formatAmount(invoice.subtotal)}
+                          </div>
+                        </div>
+                        {(Number(invoice.discountPercent || 0) > 0 ||
+                          Number(invoice.discountAmount || 0) > 0) && (
+                          <div className="flex border-b border-black">
+                            <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
+                              Discount
+                              {(invoice.discountPercent ?? 0) > 0
+                                ? ` @${invoice.discountPercent}%`
+                                : ""}
+                            </div>
+                            <div className="w-28 p-1.5 text-[10px] text-right text-black">
+                              {formatAmount(invoice.discountAmount)}
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex border-b border-black">
+                          <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
+                            Taxable Value
+                          </div>
+                          <div className="w-28 p-1.5 text-[10px] text-right text-black">
+                            {formatAmount(invoice.taxableValue)}
                           </div>
                         </div>
                         {Number(invoice.cgstPercent || 0) > 0 && (
@@ -512,20 +551,6 @@ export default function InvoicePrint({
                             </div>
                           </div>
                         )}
-                        {(Number(invoice.discountPercent || 0) > 0 ||
-                          Number(invoice.discountAmount || 0) > 0) && (
-                          <div className="flex border-b border-black">
-                            <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
-                              Discount
-                              {(invoice.discountPercent ?? 0) > 0
-                                ? ` @${invoice.discountPercent}%`
-                                : ""}
-                            </div>
-                            <div className="w-28 p-1.5 text-[10px] text-right text-black">
-                              -{formatAmount(invoice.discountAmount)}
-                            </div>
-                          </div>
-                        )}
                         <div className="flex border-b border-black">
                           <div className="flex-1 p-1.5 text-[10px] font-semibold text-right text-black">
                             Round off
@@ -536,7 +561,7 @@ export default function InvoicePrint({
                         </div>
                         <div className="flex border-b border-black">
                           <div className="flex-1 p-1.5 text-[10px] font-bold text-right text-black">
-                            Grand Total
+                            Total
                           </div>
                           <div className="w-28 p-1.5 text-[11px] font-bold text-right text-black">
                             ₹
