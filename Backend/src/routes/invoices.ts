@@ -112,19 +112,7 @@ router.post('/', async (req, res) => {
         });
       }
 
-      // Calculate tax on full subtotal (before discount)
-      const taxableValue = subtotal;
-
-      const cgstPercent = body.cgstPercent ?? 0;
-      const sgstPercent = body.sgstPercent ?? 0;
-
-      const cgstAmount = taxableValue.mul(cgstPercent).div(100);
-      const sgstAmount = taxableValue.mul(sgstPercent).div(100);
-
-      // Calculate gross before discount
-      const grossBeforeDiscount = taxableValue.add(cgstAmount).add(sgstAmount);
-
-      // Handle both percentage and fixed amount discount on grand total
+      // Handle both percentage and fixed amount discount on subtotal first
       const discountPercent = body.discountPercent ?? 0;
       let discountAmount = new Decimal(0);
       
@@ -132,11 +120,21 @@ router.post('/', async (req, res) => {
         // Fixed amount discount provided
         discountAmount = new Decimal(body.discountAmount);
       } else if (discountPercent > 0) {
-        // Percentage discount on grand total (after tax)
-        discountAmount = grossBeforeDiscount.mul(discountPercent).div(100);
+        // Percentage discount on subtotal (before tax)
+        discountAmount = subtotal.mul(discountPercent).div(100);
       }
 
-      const gross = grossBeforeDiscount.sub(discountAmount);
+      // Calculate taxable value after discount
+      const taxableValue = subtotal.sub(discountAmount);
+
+      const cgstPercent = body.cgstPercent ?? 0;
+      const sgstPercent = body.sgstPercent ?? 0;
+
+      const cgstAmount = taxableValue.mul(cgstPercent).div(100);
+      const sgstAmount = taxableValue.mul(sgstPercent).div(100);
+
+      // Calculate gross total (taxable value + taxes)
+      const gross = taxableValue.add(cgstAmount).add(sgstAmount);
 
       // round to nearest rupee like invoice
       const roundedTotal = gross.toDecimalPlaces(0);
