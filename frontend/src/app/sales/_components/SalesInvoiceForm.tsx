@@ -169,24 +169,36 @@ export default function SalesInvoiceForm() {
   }, [showManualEntry, savingManualItem]);
 
   const totals = useMemo(() => {
+    // Calculate subtotal (sum of line items before any discount or tax)
     const sub = lines.reduce((s, l) => s + l.qty * (l.price - l.discount), 0);
-    const tax = lines.reduce(
-      (s, l) => s + (l.qty * (l.price - l.discount) * l.taxRate) / 100,
-      0
-    );
-    const subtotalWithTax = sub + tax;
     
-    // Apply discount on grand total
+    // Calculate discount on subtotal (before tax)
     let discountAmount = 0;
     if (discountValue > 0) {
       if (discountType === "percentage") {
-        discountAmount = (subtotalWithTax * discountValue) / 100;
+        discountAmount = (sub * discountValue) / 100;
       } else {
         discountAmount = discountValue;
       }
     }
     
-    const grand = subtotalWithTax - discountAmount;
+    // Calculate taxable value (subtotal minus discount)
+    const taxableValue = sub - discountAmount;
+    
+    // Calculate tax on the taxable value (after discount)
+    const tax = lines.reduce(
+      (s, l) => {
+        const lineTotal = l.qty * (l.price - l.discount);
+        // Proportionally apply tax based on taxable value
+        const proportion = sub > 0 ? lineTotal / sub : 0;
+        const lineTaxableValue = taxableValue * proportion;
+        return s + (lineTaxableValue * l.taxRate) / 100;
+      },
+      0
+    );
+    
+    // Grand total = taxable value + tax
+    const grand = taxableValue + tax;
     
     return { sub, tax, discount: discountAmount, grand };
   }, [lines, discountType, discountValue]);
