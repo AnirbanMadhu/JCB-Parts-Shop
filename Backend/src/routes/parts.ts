@@ -50,12 +50,12 @@ router.post("/", async (req, res) => {
       .json({ error: "partNumber, itemName, hsnCode required" });
   }
 
-  // Validate part number format (e.g., 550/42835C, 336/E8026, or purely numeric like 1090520221)
-  const partNumberPattern = /^[0-9]+(\/[A-Z0-9]+)?$/i;
+  // Validate part number format (e.g., 550/42835C, 336/E8026)
+  const partNumberPattern = /^[0-9]+\/[A-Z0-9]+$/;
   if (!partNumberPattern.test(body.partNumber)) {
     return res.status(400).json({
       error:
-        "Invalid part number format. Use format: Number/Alphanumeric (e.g., 550/42835C, 1090520221)",
+        "Invalid part number format. Use format: Number/Alphanumeric (e.g., 550/42835C, 336/E8026)",
     });
   }
 
@@ -208,12 +208,12 @@ router.put("/:id", async (req, res) => {
       .json({ error: "partNumber, itemName, hsnCode required" });
   }
 
-  // Validate part number format (e.g., 550/42835C, 336/E8026, or purely numeric like 1090520221)
-  const partNumberPattern = /^[0-9]+(\/[A-Z0-9]+)?$/i;
+  // Validate part number format (e.g., 550/42835C, 336/E8026)
+  const partNumberPattern = /^[0-9]+\/[A-Z0-9]+$/;
   if (!partNumberPattern.test(body.partNumber)) {
     return res.status(400).json({
       error:
-        "Invalid part number format. Use format: Number/Alphanumeric (e.g., 550/42835C, 1090520221)",
+        "Invalid part number format. Use format: Number/Alphanumeric (e.g., 550/42835C, 336/E8026)",
     });
   }
 
