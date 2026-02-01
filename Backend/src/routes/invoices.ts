@@ -112,11 +112,7 @@ router.post('/', async (req, res) => {
         });
       }
 
-<<<<<<< HEAD
       // Handle both percentage and fixed amount discount on subtotal first
-=======
-      // Calculate discount on subtotal first
->>>>>>> 56a0a73686dac593871bb5185e1f489b6871c064
       const discountPercent = body.discountPercent ?? 0;
       let discountAmount = new Decimal(0);
       
@@ -124,11 +120,7 @@ router.post('/', async (req, res) => {
         // Fixed amount discount provided
         discountAmount = new Decimal(body.discountAmount);
       } else if (discountPercent > 0) {
-<<<<<<< HEAD
         // Percentage discount on subtotal (before tax)
-=======
-        // Percentage discount on subtotal
->>>>>>> 56a0a73686dac593871bb5185e1f489b6871c064
         discountAmount = subtotal.mul(discountPercent).div(100);
       }
 
@@ -141,11 +133,7 @@ router.post('/', async (req, res) => {
       const cgstAmount = taxableValue.mul(cgstPercent).div(100);
       const sgstAmount = taxableValue.mul(sgstPercent).div(100);
 
-<<<<<<< HEAD
       // Calculate gross total (taxable value + taxes)
-=======
-      // Calculate gross total
->>>>>>> 56a0a73686dac593871bb5185e1f489b6871c064
       const gross = taxableValue.add(cgstAmount).add(sgstAmount);
 
       // round to nearest rupee like invoice
