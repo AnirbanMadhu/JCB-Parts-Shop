@@ -417,6 +417,12 @@ router.put('/:id', async (req, res) => {
           sgstAmount,
           roundOff,
           total: roundedTotal,
+          deliveryNote: body.deliveryNote,
+          buyerOrderNo: body.buyerOrderNo,
+          dispatchDocNo: body.dispatchDocNo,
+          deliveryNoteDate: body.deliveryNoteDate ? new Date(body.deliveryNoteDate) : null,
+          dispatchedThrough: body.dispatchedThrough,
+          termsOfDelivery: body.termsOfDelivery,
           items: {
             create: itemsData
           }
@@ -516,6 +522,56 @@ router.patch('/:id', async (req, res) => {
   } catch (e: any) {
     console.error(e);
     res.status(500).json({ error: e.message || 'Failed to update payment status' });
+  }
+});
+
+// Delete invoice (only DRAFT invoices can be deleted)
+router.delete('/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  
+  if (isNaN(id)) {
+    return res.status(400).json({ error: 'Invalid invoice ID. Must be a number.' });
+  }
+
+  try {
+    const invoice = await prisma.invoice.findUnique({
+      where: { id },
+      include: { items: true }
+    });
+
+    if (!invoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    if (invoice.status !== InvoiceStatus.DRAFT) {
+      return res.status(400).json({ error: 'Only DRAFT invoices can be deleted' });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Delete inventory transactions
+      await tx.inventoryTransaction.deleteMany({
+        where: {
+          invoiceItemId: {
+            in: invoice.items.map(item => item.id)
+          }
+        }
+      });
+
+      // Delete invoice items
+      await tx.invoiceItem.deleteMany({
+        where: { invoiceId: id }
+      });
+
+      // Delete invoice
+      await tx.invoice.delete({
+        where: { id }
+      });
+    });
+
+    res.json({ success: true, message: 'Invoice deleted successfully' });
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Failed to delete invoice' });
   }
 });
 
