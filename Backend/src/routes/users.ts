@@ -46,9 +46,9 @@ router.post(
   '/invite',
   requireAdmin,
   [
-    body('email').isEmail().normalizeEmail(),
-    body('name').trim().notEmpty(),
-    body('password').isLength({ min: 6 }),
+    body('email').isEmail().normalizeEmail().trim().isLength({ max: 100 }),
+    body('name').trim().notEmpty().isLength({ max: 200 }),
+    body('password').isLength({ min: 6 }).matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).withMessage('Password must contain uppercase, lowercase, and number'),
     body('role').isIn(['USER', 'ADMIN']).optional(),
   ],
   async (req: AuthRequest, res: Response) => {
@@ -202,9 +202,13 @@ router.put(
 );
 
 // Delete user (admin only)
-router.delete('/:id', requireAdmin, async (req: AuthRequest, res) => {
+router.delete('/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.params.id);
+    
+    if (isNaN(userId) || userId <= 0) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
 
     // Prevent admin from deleting themselves
     if (userId === req.user!.id) {
@@ -222,14 +226,27 @@ router.delete('/:id', requireAdmin, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Delete user
-    await prisma.user.delete({
+    // Soft delete by deactivating instead of hard delete
+    const deactivatedUser = await prisma.user.update({
       where: { id: userId },
+      data: { isActive: false },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        isActive: true,
+      },
     });
 
-    res.json({ message: 'User deleted successfully' });
-  } catch (error) {
+    res.json({
+      message: 'User deactivated successfully',
+      user: deactivatedUser,
+    });
+  } catch (error: any) {
     console.error('Delete user error:', error);
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'User not found' });
+    }
     res.status(500).json({ error: 'Failed to delete user' });
   }
 });

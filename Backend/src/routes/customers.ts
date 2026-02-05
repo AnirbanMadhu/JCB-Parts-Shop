@@ -26,8 +26,40 @@ async function generateIndexId(): Promise<string> {
 router.post('/', async (req, res) => {
   const body = req.body as CustomerCreateBody;
 
-  if (!body.name) {
+  // Comprehensive validation
+  if (!body.name || !body.name.trim()) {
     return res.status(400).json({ error: 'Customer name is required' });
+  }
+
+  const name = body.name.trim();
+  const email = body.email?.trim();
+  const phone = body.phone?.trim();
+  const gstin = body.gstin?.trim();
+  const address = body.address?.trim();
+  const state = body.state?.trim();
+
+  // Validate lengths
+  if (name.length > 200) {
+    return res.status(400).json({ error: 'Name too long (max 200 characters)' });
+  }
+  if (email && email.length > 100) {
+    return res.status(400).json({ error: 'Email too long (max 100 characters)' });
+  }
+  if (phone && phone.length > 20) {
+    return res.status(400).json({ error: 'Phone too long (max 20 characters)' });
+  }
+  if (gstin && gstin.length > 15) {
+    return res.status(400).json({ error: 'GSTIN too long (max 15 characters)' });
+  }
+
+  // Validate email format if provided
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+
+  // Validate GSTIN format if provided (15 characters alphanumeric)
+  if (gstin && !/^[0-9A-Z]{15}$/i.test(gstin)) {
+    return res.status(400).json({ error: 'GSTIN must be 15 alphanumeric characters' });
   }
 
   try {
@@ -36,18 +68,18 @@ router.post('/', async (req, res) => {
     const customer = await prisma.customer.create({
       data: {
         indexId,
-        name: body.name,
-        email: body.email,
-        address: body.address,
-        phone: body.phone,
-        gstin: body.gstin,
-        state: body.state
+        name: name,
+        email: email || null,
+        address: address || null,
+        phone: phone || null,
+        gstin: gstin || null,
+        state: state || null
       }
     });
 
     res.status(201).json(customer);
-  } catch (e) {
-    console.error(e);
+  } catch (e: any) {
+    console.error('Customer creation error:', e);
     res.status(500).json({ error: 'Failed to create customer' });
   }
 });
@@ -114,30 +146,64 @@ router.put('/:id', async (req, res) => {
   const id = Number(req.params.id);
   const body = req.body as CustomerCreateBody;
 
-  if (isNaN(id)) {
-    return res.status(400).json({ error: 'Invalid customer ID. Must be a number.' });
+  if (isNaN(id) || id <= 0) {
+    return res.status(400).json({ error: 'Invalid customer ID. Must be a positive number.' });
   }
 
-  if (!body.name) {
+  if (!body.name || !body.name.trim()) {
     return res.status(400).json({ error: 'Customer name is required' });
+  }
+
+  const name = body.name.trim();
+  const email = body.email?.trim();
+  const phone = body.phone?.trim();
+  const gstin = body.gstin?.trim();
+  const address = body.address?.trim();
+  const state = body.state?.trim();
+
+  // Validate lengths
+  if (name.length > 200) {
+    return res.status(400).json({ error: 'Name too long (max 200 characters)' });
+  }
+  if (email && email.length > 100) {
+    return res.status(400).json({ error: 'Email too long (max 100 characters)' });
+  }
+  if (phone && phone.length > 20) {
+    return res.status(400).json({ error: 'Phone too long (max 20 characters)' });
+  }
+  if (gstin && gstin.length > 15) {
+    return res.status(400).json({ error: 'GSTIN too long (max 15 characters)' });
+  }
+
+  // Validate email format if provided
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+
+  // Validate GSTIN format if provided
+  if (gstin && !/^[0-9A-Z]{15}$/i.test(gstin)) {
+    return res.status(400).json({ error: 'GSTIN must be 15 alphanumeric characters' });
   }
 
   try {
     const customer = await prisma.customer.update({
       where: { id },
       data: {
-        name: body.name,
-        email: body.email,
-        address: body.address,
-        phone: body.phone,
-        gstin: body.gstin,
-        state: body.state
+        name: name,
+        email: email || null,
+        address: address || null,
+        phone: phone || null,
+        gstin: gstin || null,
+        state: state || null
       }
     });
 
     res.json(customer);
-  } catch (e) {
-    console.error(e);
+  } catch (e: any) {
+    console.error('Customer update error:', e);
+    if (e.code === 'P2025') {
+      return res.status(404).json({ error: 'Customer not found' });
+    }
     res.status(500).json({ error: 'Failed to update customer' });
   }
 });
@@ -146,19 +212,44 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id);
 
-  if (isNaN(id)) {
-    return res.status(400).json({ error: 'Invalid customer ID. Must be a number.' });
+  if (isNaN(id) || id <= 0) {
+    return res.status(400).json({ error: 'Invalid customer ID. Must be a positive number.' });
   }
 
   try {
-    const customer = await prisma.customer.update({
+    // Check if customer exists
+    const customer = await prisma.customer.findUnique({
+      where: { id },
+      include: {
+        salesInvoices: {
+          take: 1
+        }
+      }
+    });
+
+    if (!customer) {
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+
+    // Check if customer has any invoices
+    if (customer.salesInvoices.length > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete customer with existing invoices. Consider soft delete instead.',
+        hasInvoices: true 
+      });
+    }
+
+    const deletedCustomer = await prisma.customer.update({
       where: { id },
       data: { isDeleted: true }
     });
-    res.json({ success: true, message: 'Customer deleted successfully' });
+    
+    res.json({ success: true, message: 'Customer deleted successfully', customer: deletedCustomer });
   } catch (e: any) {
-    console.error(e);
+    console.error('Customer deletion error:', e);
     res.status(500).json({ error: 'Failed to delete customer' });
+  }
+});
   }
 });
 

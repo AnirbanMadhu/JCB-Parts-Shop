@@ -15,6 +15,11 @@ router.get('/next-number', async (req, res) => {
   };
 
   try {
+    // Validate type
+    if (!type || !['PURCHASE', 'SALE'].includes(type)) {
+      return res.status(400).json({ error: 'Valid type (PURCHASE or SALE) is required' });
+    }
+
     const now = new Date();
     const month = now.toLocaleString('en-US', { month: 'short' }).toUpperCase();
     const currentMonth = now.getMonth(); // 0-11
@@ -41,37 +46,40 @@ router.get('/next-number', async (req, res) => {
 
     let sequenceNumber = 1;
 
-    // Get count of ALL invoices of this type in current month/year (resets monthly)
-    if (type === 'SALE') {
-      const invoiceCount = await prisma.invoice.count({
-        where: {
-          type: InvoiceType.SALE,
-          date: {
-            gte: startOfMonth,
-            lte: endOfMonth
+    // Use transaction to prevent race conditions
+    await prisma.$transaction(async (tx) => {
+      // Get count of ALL invoices of this type in current month/year (resets monthly)
+      if (type === 'SALE') {
+        const invoiceCount = await tx.invoice.count({
+          where: {
+            type: InvoiceType.SALE,
+            date: {
+              gte: startOfMonth,
+              lte: endOfMonth
+            }
           }
-        }
-      });
-      sequenceNumber = invoiceCount + 1;
-    } else if (type === 'PURCHASE') {
-      const invoiceCount = await prisma.invoice.count({
-        where: {
-          type: InvoiceType.PURCHASE,
-          date: {
-            gte: startOfMonth,
-            lte: endOfMonth
+        });
+        sequenceNumber = invoiceCount + 1;
+      } else if (type === 'PURCHASE') {
+        const invoiceCount = await tx.invoice.count({
+          where: {
+            type: InvoiceType.PURCHASE,
+            date: {
+              gte: startOfMonth,
+              lte: endOfMonth
+            }
           }
-        }
-      });
-      sequenceNumber = invoiceCount + 1;
-    }
+        });
+        sequenceNumber = invoiceCount + 1;
+      }
+    });
 
     // Format: JCB/SequenceNumber/MONTH/YY-YY (e.g., JCB/02/NOV/25-26)
     const invoiceNumber = `JCB/${sequenceNumber.toString().padStart(2, '0')}/${month}/${year}-${nextYear}`;
 
-    res.json({ invoiceNumber, sequenceNumber, financialYear: `${year}-${nextYear}` });
+    res.json({ invoiceNumber, sequenceNumber, financialYear: `${year}-${nextYear}`, month, type });
   } catch (e: any) {
-    console.error(e);
+    console.error('Invoice number generation error:', e);
     res.status(500).json({ error: e.message || 'Failed to generate invoice number' });
   }
 });
@@ -82,23 +90,100 @@ router.post('/', async (req, res) => {
 
   console.log(`[INVOICE CREATE] Type: ${body.type}, Invoice#: ${body.invoiceNumber}, Items: ${body.items?.length || 0}, Discount: ${body.discountPercent}% / ₹${body.discountAmount}`);
 
+  // Comprehensive validation
   if (!body.invoiceNumber || !body.date || !body.type || !body.items?.length) {
     console.error('[INVOICE CREATE] Validation failed - missing required fields');
     return res.status(400).json({ error: 'invoiceNumber, date, type, items required' });
   }
 
+  // Validate invoice type
+  if (!['PURCHASE', 'SALE'].includes(body.type)) {
+    return res.status(400).json({ error: 'Invalid invoice type. Must be PURCHASE or SALE' });
+  }
+
+  // Validate items array is not empty
+  if (!Array.isArray(body.items) || body.items.length === 0) {
+    return res.status(400).json({ error: 'Invoice must contain at least one item' });
+  }
+
+  // Validate each item
+  for (const item of body.items) {
+    if (!item.partId || !item.quantity || !item.rate) {
+      return res.status(400).json({ error: 'Each item must have partId, quantity, and rate' });
+    }
+    if (item.quantity <= 0) {
+      return res.status(400).json({ error: 'Item quantity must be greater than 0' });
+    }
+    if (item.rate < 0) {
+      return res.status(400).json({ error: 'Item rate cannot be negative' });
+    }
+  }
+
+  // Validate supplier/customer based on type
+  if (body.type === 'PURCHASE' && !body.supplierId) {
+    return res.status(400).json({ error: 'Supplier is required for purchase invoices' });
+  }
+  if (body.type === 'SALE' && !body.customerId) {
+    return res.status(400).json({ error: 'Customer is required for sales invoices' });
+  }
+
+  // Validate discount values
+  if (body.discountPercent && (body.discountPercent < 0 || body.discountPercent > 100)) {
+    return res.status(400).json({ error: 'Discount percentage must be between 0 and 100' });
+  }
+  if (body.discountAmount && body.discountAmount < 0) {
+    return res.status(400).json({ error: 'Discount amount cannot be negative' });
+  }
+
   try {
     const result = await prisma.$transaction(async (tx) => {
+      // Check for duplicate invoice number
+      const existingInvoice = await tx.invoice.findFirst({
+        where: { invoiceNumber: body.invoiceNumber }
+      });
+      
+      if (existingInvoice) {
+        throw new Error(`Invoice number ${body.invoiceNumber} already exists`);
+      }
+
+      // Verify supplier/customer exists
+      if (body.type === 'PURCHASE' && body.supplierId) {
+        const supplier = await tx.supplier.findUnique({ where: { id: body.supplierId } });
+        if (!supplier || supplier.isDeleted) {
+          throw new Error('Supplier not found or deleted');
+        }
+      }
+      if (body.type === 'SALE' && body.customerId) {
+        const customer = await tx.customer.findUnique({ where: { id: body.customerId } });
+        if (!customer || customer.isDeleted) {
+          throw new Error('Customer not found or deleted');
+        }
+      }
+
       // calculate totals
       let subtotal = new Decimal(0);
       const itemsData: any[] = [];
 
       for (const item of body.items) {
         const part = await tx.part.findUnique({ where: { id: item.partId } });
-        if (!part) throw new Error(`Part ${item.partId} not found`);
+        if (!part) {
+          throw new Error(`Part with ID ${item.partId} not found`);
+        }
+        if (part.isDeleted) {
+          throw new Error(`Part ${part.partNumber} is deleted and cannot be used`);
+        }
 
         const qty = new Decimal(item.quantity);
         const rate = new Decimal(item.rate);
+        
+        // Validate positive values
+        if (qty.lte(0)) {
+          throw new Error(`Quantity must be positive for part ${part.partNumber}`);
+        }
+        if (rate.lt(0)) {
+          throw new Error(`Rate cannot be negative for part ${part.partNumber}`);
+        }
+        
         const amount = qty.mul(rate);
         subtotal = subtotal.add(amount);
 
@@ -119,6 +204,11 @@ router.post('/', async (req, res) => {
       if (body.discountAmount !== undefined && body.discountAmount !== null && body.discountAmount > 0) {
         // Fixed amount discount provided
         discountAmount = new Decimal(body.discountAmount);
+        
+        // Validate discount doesn't exceed subtotal
+        if (discountAmount.gt(subtotal)) {
+          throw new Error('Discount amount cannot exceed subtotal');
+        }
       } else if (discountPercent > 0) {
         // Percentage discount on subtotal (before tax)
         discountAmount = subtotal.mul(discountPercent).div(100);
@@ -126,6 +216,11 @@ router.post('/', async (req, res) => {
 
       // Calculate taxable value after discount
       const taxableValue = subtotal.sub(discountAmount);
+      
+      // Ensure taxable value is not negative
+      if (taxableValue.lt(0)) {
+        throw new Error('Taxable value cannot be negative');
+      }
 
       const cgstPercent = body.cgstPercent ?? 0;
       const sgstPercent = body.sgstPercent ?? 0;
@@ -216,28 +311,56 @@ router.get('/', async (req, res) => {
   console.log(`[INVOICE LIST] Fetching invoices - Type: ${type || 'ALL'}, Limit: ${limit}`);
 
   try {
+    // Validate limit
+    const limitNum = parseInt(limit);
+    if (isNaN(limitNum) || limitNum < 1 || limitNum > 1000) {
+      return res.status(400).json({ error: 'Limit must be between 1 and 1000' });
+    }
+
     const where: any = {};
     
+    // Validate type if provided
     if (type) {
+      if (!['PURCHASE', 'SALE'].includes(type)) {
+        return res.status(400).json({ error: 'Invalid type. Must be PURCHASE or SALE' });
+      }
       where.type = type;
     }
     
+    // Validate and parse dates
     if (startDate || endDate) {
       where.date = {};
       if (startDate) {
-        where.date.gte = new Date(startDate);
+        const start = new Date(startDate);
+        if (isNaN(start.getTime())) {
+          return res.status(400).json({ error: 'Invalid startDate format' });
+        }
+        where.date.gte = start;
       }
       if (endDate) {
-        where.date.lte = new Date(endDate);
+        const end = new Date(endDate);
+        if (isNaN(end.getTime())) {
+          return res.status(400).json({ error: 'Invalid endDate format' });
+        }
+        where.date.lte = end;
       }
     }
     
+    // Validate supplier/customer IDs
     if (supplierId) {
-      where.supplierId = Number(supplierId);
+      const id = Number(supplierId);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ error: 'Invalid supplierId' });
+      }
+      where.supplierId = id;
     }
     
     if (customerId) {
-      where.customerId = Number(customerId);
+      const id = Number(customerId);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ error: 'Invalid customerId' });
+      }
+      where.customerId = id;
     }
 
     const invoices = await prisma.invoice.findMany({
@@ -255,12 +378,12 @@ router.get('/', async (req, res) => {
         { date: 'desc' },
         { createdAt: 'desc' }
       ],
-      take: Number(limit)
+      take: limitNum
     });
 
     console.log(`[INVOICE LIST] ✓ Found ${invoices.length} invoices (Type: ${type || 'ALL'})`);
     res.json(invoices);
-  } catch (e) {
+  } catch (e: any) {
     console.error('[INVOICE LIST] ✗ Error:', e);
     res.status(500).json({ error: 'Failed to load invoices' });
   }
@@ -271,8 +394,8 @@ router.get('/:id', async (req, res) => {
   const id = Number(req.params.id);
   
   // Check if ID is a valid number
-  if (isNaN(id)) {
-    return res.status(400).json({ error: 'Invalid invoice ID. Must be a number.' });
+  if (isNaN(id) || id <= 0) {
+    return res.status(400).json({ error: 'Invalid invoice ID. Must be a positive number.' });
   }
   
   try {
@@ -289,11 +412,13 @@ router.get('/:id', async (req, res) => {
       }
     });
 
-    if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+    if (!invoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
 
     res.json(invoice);
-  } catch (e) {
-    console.error(e);
+  } catch (e: any) {
+    console.error('Invoice fetch error:', e);
     res.status(500).json({ error: 'Failed to load invoice' });
   }
 });
@@ -529,8 +654,8 @@ router.patch('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id);
   
-  if (isNaN(id)) {
-    return res.status(400).json({ error: 'Invalid invoice ID. Must be a number.' });
+  if (isNaN(id) || id <= 0) {
+    return res.status(400).json({ error: 'Invalid invoice ID. Must be a positive number.' });
   }
 
   try {
@@ -543,8 +668,13 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Invoice not found' });
     }
 
-    if (invoice.status !== InvoiceStatus.DRAFT) {
-      return res.status(400).json({ error: 'Only DRAFT invoices can be deleted' });
+    // Check if deletion is allowed
+    const allowDelete = req.query.force === 'true';
+    if (invoice.status !== InvoiceStatus.DRAFT && !allowDelete) {
+      return res.status(400).json({ 
+        error: 'Only DRAFT invoices can be deleted. Pass force=true to override.',
+        status: invoice.status
+      });
     }
 
     await prisma.$transaction(async (tx) => {
@@ -568,9 +698,16 @@ router.delete('/:id', async (req, res) => {
       });
     });
 
-    res.json({ success: true, message: 'Invoice deleted successfully' });
+    res.json({ 
+      success: true, 
+      message: 'Invoice deleted successfully',
+      deletedInvoiceNumber: invoice.invoiceNumber
+    });
   } catch (e: any) {
-    console.error(e);
+    console.error('Invoice deletion error:', e);
+    if (e.code === 'P2025') {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
     res.status(500).json({ error: e.message || 'Failed to delete invoice' });
   }
 });

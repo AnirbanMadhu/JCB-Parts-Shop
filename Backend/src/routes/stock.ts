@@ -7,7 +7,21 @@ const router = Router();
 router.get('/:partId', async (req, res) => {
   const partId = Number(req.params.partId);
 
+  // Validate part ID
+  if (isNaN(partId) || partId <= 0) {
+    return res.status(400).json({ error: 'Invalid part ID. Must be a positive number.' });
+  }
+
   try {
+    // Check if part exists
+    const part = await prisma.part.findUnique({ where: { id: partId } });
+    if (!part) {
+      return res.status(404).json({ error: 'Part not found' });
+    }
+    if (part.isDeleted) {
+      return res.status(404).json({ error: 'Part has been deleted' });
+    }
+
     const [incoming, outgoing] = await Promise.all([
       prisma.inventoryTransaction.aggregate({
         where: { partId, direction: 'IN' },
@@ -24,9 +38,9 @@ router.get('/:partId', async (req, res) => {
 
     const stock = inQty - outQty;
 
-    res.json({ partId, stock });
+    res.json({ partId, stock, incoming: inQty, outgoing: outQty });
   } catch (e) {
-    console.error(e);
+    console.error('Stock calculation error:', e);
     res.status(500).json({ error: 'Failed to calculate stock' });
   }
 });
@@ -36,15 +50,33 @@ router.post('/:partId/adjust', async (req, res) => {
   const partId = Number(req.params.partId);
   const { quantity } = req.body;
 
-  if (isNaN(partId)) {
-    return res.status(400).json({ error: 'Invalid part ID' });
+  // Comprehensive validation
+  if (isNaN(partId) || partId <= 0) {
+    return res.status(400).json({ error: 'Invalid part ID. Must be a positive number.' });
   }
 
-  if (typeof quantity !== 'number' || quantity < 0) {
-    return res.status(400).json({ error: 'Quantity must be a non-negative number' });
+  if (typeof quantity !== 'number') {
+    return res.status(400).json({ error: 'Quantity must be a number' });
+  }
+
+  if (quantity < 0) {
+    return res.status(400).json({ error: 'Quantity cannot be negative' });
+  }
+
+  if (!Number.isFinite(quantity)) {
+    return res.status(400).json({ error: 'Quantity must be a finite number' });
   }
 
   try {
+    // Check if part exists and is not deleted
+    const part = await prisma.part.findUnique({ where: { id: partId } });
+    if (!part) {
+      return res.status(404).json({ error: 'Part not found' });
+    }
+    if (part.isDeleted) {
+      return res.status(400).json({ error: 'Cannot adjust stock for deleted part' });
+    }
+
     // Get current stock
     const [incoming, outgoing] = await Promise.all([
       prisma.inventoryTransaction.aggregate({
@@ -74,12 +106,14 @@ router.post('/:partId/adjust', async (req, res) => {
     res.json({ 
       success: true, 
       partId, 
+      partNumber: part.partNumber,
       previousStock: currentStock, 
       newStock: quantity,
-      adjustment: difference
+      adjustment: difference,
+      message: difference === 0 ? 'No adjustment needed' : `Stock adjusted by ${difference}`,
     });
   } catch (e) {
-    console.error(e);
+    console.error('Stock adjustment error:', e);
     res.status(500).json({ error: 'Failed to adjust stock' });
   }
 });

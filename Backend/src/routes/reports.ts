@@ -7,29 +7,35 @@ const router = Router();
 // Dashboard statistics
 router.get('/dashboard', async (_req, res) => {
   try {
-    const [
-      totalParts,
-      totalSuppliers,
-      totalCustomers,
-      purchaseInvoices,
-      salesInvoices,
+    const [totalParts, activeParts, totalSuppliers, activeSuppliers, totalCustomers, activeCustomers] = await Promise.all([
+      prisma.part.count(),
+      prisma.part.count({ where: { isDeleted: false } }),
+      prisma.supplier.count(),
+      prisma.supplier.count({ where: { isDeleted: false } }),
+      prisma.customer.count(),
+      prisma.customer.count({ where: { isDeleted: false } })
+    ]);
+
+    const [purchaseInvoices, salesInvoices] = await Promise.all([
       lowStockParts
     ] = await Promise.all([
       prisma.part.count(),
       prisma.supplier.count(),
       prisma.customer.count(),
       prisma.invoice.aggregate({
-        where: { type: 'PURCHASE' },
+        where: { type: 'PURCHASE', status: { not: 'CANCELLED' } },
         _sum: { total: true },
         _count: true
       }),
       prisma.invoice.aggregate({
-        where: { type: 'SALE' },
+        where: { type: 'SALE', status: { not: 'CANCELLED' } },
         _sum: { total: true },
         _count: true
-      }),
-      // Get parts with low stock (less than 5 units)
-      prisma.$queryRaw`
+      })
+    ]);
+
+    // Get parts with low stock (less than 5 units)
+    const lowStockParts = await prisma.$queryRaw`
         SELECT 
           p.id,
           p."partNumber",
@@ -38,19 +44,22 @@ router.get('/dashboard', async (_req, res) => {
           COALESCE(SUM(CASE WHEN it.direction = 'OUT' THEN it.quantity ELSE 0 END), 0) as stock
         FROM "Part" p
         LEFT JOIN "InventoryTransaction" it ON it."partId" = p.id
+        WHERE p."isDeleted" = false
         GROUP BY p.id, p."partNumber", p."itemName"
         HAVING 
           COALESCE(SUM(CASE WHEN it.direction = 'IN' THEN it.quantity ELSE 0 END), 0) -
           COALESCE(SUM(CASE WHEN it.direction = 'OUT' THEN it.quantity ELSE 0 END), 0) < 5
         ORDER BY stock ASC
         LIMIT 10
-      `
-    ]);
+      ` as any[];
 
     res.json({
       totalParts,
+      activeParts,
       totalSuppliers,
+      activeSuppliers,
       totalCustomers,
+      activeCustomers,
       purchases: {
         count: purchaseInvoices._count,
         total: purchaseInvoices._sum.total || new Decimal(0)
@@ -72,12 +81,30 @@ router.get('/weekly-purchases', async (req, res) => {
   try {
     const { year, month } = req.query;
     const now = new Date();
-    const currentYear = year ? parseInt(year as string) : now.getFullYear();
-    const currentMonth = month ? parseInt(month as string) : now.getMonth() + 1; // 1-12
+    
+    // Validate year and month
+    let currentYear = now.getFullYear();
+    let currentMonth = now.getMonth() + 1; // 1-12
+    
+    if (year) {
+      const yearNum = parseInt(year as string);
+      if (isNaN(yearNum) || yearNum < 2000 || yearNum > 2100) {
+        return res.status(400).json({ error: 'Invalid year. Must be between 2000 and 2100' });
+      }
+      currentYear = yearNum;
+    }
+    
+    if (month) {
+      const monthNum = parseInt(month as string);
+      if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+        return res.status(400).json({ error: 'Invalid month. Must be between 1 and 12' });
+      }
+      currentMonth = monthNum;
+    }
 
     // Get first and last day of the month
     const firstDay = new Date(currentYear, currentMonth - 1, 1);
-    const lastDay = new Date(currentYear, currentMonth, 0);
+    const lastDay = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
 
     // Get all purchase invoices for the month
     const purchaseInvoices = await prisma.invoice.findMany({

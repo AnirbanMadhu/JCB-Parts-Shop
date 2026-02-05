@@ -12,9 +12,9 @@ const router = Router();
 router.post(
   '/register',
   [
-    body('email').isEmail().normalizeEmail(),
-    body('password').isLength({ min: 6 }),
-    body('name').trim().notEmpty(),
+    body('email').isEmail().normalizeEmail().trim(),
+    body('password').isLength({ min: 6 }).matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).withMessage('Password must contain uppercase, lowercase, and number'),
+    body('name').trim().notEmpty().isLength({ max: 200 }),
   ],
   async (req: Request, res: Response) => {
     try {
@@ -24,6 +24,11 @@ router.post(
       }
 
       const { email, password, name } = req.body;
+
+      // Additional email validation
+      if (email.length > 100) {
+        return res.status(400).json({ error: 'Email too long (max 100 characters)' });
+      }
 
       // Check if email already exists
       const existingUser = await prisma.user.findUnique({
@@ -81,7 +86,7 @@ router.post(
 router.post(
   '/login',
   [
-    body('email').isEmail().normalizeEmail(),
+    body('email').isEmail().normalizeEmail().trim(),
     body('password').notEmpty(),
   ],
   async (req: Request, res: Response) => {
@@ -93,25 +98,32 @@ router.post(
 
       const { email, password } = req.body;
 
+      // Prevent enumeration by using same error message
+      const invalidCredentialsError = { error: 'Invalid email or password' };
+
       // Find user
       const user = await prisma.user.findUnique({
         where: { email },
       });
 
       if (!user) {
-        return res.status(401).json({ error: 'Invalid email or password' });
+        // Add a small delay to prevent timing attacks
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return res.status(401).json(invalidCredentialsError);
       }
 
       // Check if user is active
       if (!user.isActive) {
-        return res.status(403).json({ error: 'Account is deactivated' });
+        return res.status(403).json({ error: 'Account is deactivated. Please contact administrator.' });
       }
 
       // Verify password
       const isPasswordValid = await comparePassword(password, user.password);
       
       if (!isPasswordValid) {
-        return res.status(401).json({ error: 'Invalid email or password' });
+        // Add a small delay to prevent timing attacks
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return res.status(401).json(invalidCredentialsError);
       }
 
       // Generate token
@@ -199,7 +211,7 @@ router.get('/status', async (_req, res) => {
 router.post(
   '/forgot-password',
   [
-    body('email').isEmail().normalizeEmail(),
+    body('email').isEmail().normalizeEmail().trim(),
   ],
   async (req: Request, res: Response) => {
     try {
@@ -210,6 +222,11 @@ router.post(
 
       const { email } = req.body;
 
+      // Always return success message to prevent email enumeration
+      const successMessage = {
+        message: 'If an account exists with this email, a password reset link has been sent.',
+      };
+
       // Find user by email
       const user = await prisma.user.findUnique({
         where: { email },
@@ -217,16 +234,15 @@ router.post(
 
       // Always return success message to prevent email enumeration
       if (!user) {
-        return res.json({
-          message: 'If an account exists with this email, a password reset link has been sent.',
-        });
+        // Add delay to prevent timing attacks
+        await new Promise(resolve => setTimeout(resolve, 200));
+        return res.json(successMessage);
       }
 
       // Check if user is active
       if (!user.isActive) {
-        return res.json({
-          message: 'If an account exists with this email, a password reset link has been sent.',
-        });
+        await new Promise(resolve => setTimeout(resolve, 200));
+        return res.json(successMessage);
       }
 
       // Generate random token
@@ -258,9 +274,7 @@ router.post(
         // Continue anyway - token is created
       }
 
-      res.json({
-        message: 'If an account exists with this email, a password reset link has been sent.',
-      });
+      res.json(successMessage);
     } catch (error) {
       console.error('Forgot password error:', error);
       res.status(500).json({ error: 'Failed to process password reset request' });
@@ -340,8 +354,8 @@ router.post(
   '/change-password',
   authenticateToken,
   [
-    body('currentPassword').notEmpty().optional(),
-    body('newPassword').isLength({ min: 6 }),
+    body('currentPassword').optional(),
+    body('newPassword').isLength({ min: 6 }).matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).withMessage('Password must contain uppercase, lowercase, and number'),
   ],
   async (req: AuthRequest, res: Response) => {
     try {
@@ -355,6 +369,11 @@ router.post(
       }
 
       const { currentPassword, newPassword } = req.body;
+
+      // Prevent using same password
+      if (currentPassword && currentPassword === newPassword) {
+        return res.status(400).json({ error: 'New password must be different from current password' });
+      }
 
       // Get user with password
       const user = await prisma.user.findUnique({

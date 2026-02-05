@@ -13,6 +13,9 @@ import usersRouter from './routes/users';
 
 const app = express();
 
+// Trust proxy - important for getting correct client IP behind reverse proxy
+app.set('trust proxy', 1);
+
 // Middleware
 const allowedOrigins = process.env.NODE_ENV === 'production'
   ? [process.env.FRONTEND_URL].filter(Boolean)
@@ -22,6 +25,11 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
       'http://192.168.1.12:3000',
     ];
 
+// Validate allowed origins
+if (allowedOrigins.length === 0) {
+  console.warn('WARNING: No allowed origins configured for CORS');
+}
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, etc.)
@@ -30,7 +38,7 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn(`Blocked CORS request from origin: ${origin}`);
+      console.warn(`[SECURITY] Blocked CORS request from unauthorized origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -41,7 +49,17 @@ app.use(cors({
 }));
 
 // JSON body parser with size limit
-app.use(json({ limit: '10mb' }));
+app.use(json({ 
+  limit: '10mb',
+  verify: (req, res, buf, encoding) => {
+    // Validate JSON payload
+    try {
+      JSON.parse(buf.toString());
+    } catch (e) {
+      throw new Error('Invalid JSON');
+    }
+  }
+}));
 
 // Custom JSON response handler for Prisma Decimal types
 app.use((_req, res, next) => {
@@ -112,27 +130,62 @@ app.use('/api/reports', reportsRouter);
 
 // 404 handler
 app.use((_req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
+  res.status(404).json({ 
+    error: 'Endpoint not found',
+    message: 'The requested resource does not exist'
+  });
 });
 
 // Global error handler
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   // Log full error in development, sanitized in production
   if (process.env.NODE_ENV !== 'production') {
     console.error('Unhandled error:', err);
   } else {
-    console.error('Error:', {
+    console.error('[ERROR]', {
       message: err.message,
       code: err.code,
+      path: req.path,
+      method: req.method,
       timestamp: new Date().toISOString()
     });
   }
   
+  // Handle specific error types
+  let statusCode = err.statusCode || 500;
+  let errorMessage = 'Internal server error';
+  
+  // Handle JSON parsing errors
+  if (err.type === 'entity.parse.failed') {
+    statusCode = 400;
+    errorMessage = 'Invalid JSON in request body';
+  }
+  
+  // Handle Prisma errors
+  if (err.code && err.code.startsWith('P')) {
+    statusCode = 400;
+    if (err.code === 'P2002') {
+      errorMessage = 'A record with this value already exists';
+    } else if (err.code === 'P2025') {
+      errorMessage = 'Record not found';
+    } else {
+      errorMessage = 'Database operation failed';
+    }
+  }
+  
+  // Handle validation errors
+  if (err.name === 'ValidationError') {
+    statusCode = 400;
+    errorMessage = err.message;
+  }
+  
   // Send appropriate response
-  const statusCode = err.statusCode || 500;
   res.status(statusCode).json({ 
-    error: statusCode === 500 ? 'Internal server error' : err.message,
-    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    error: statusCode === 500 && process.env.NODE_ENV === 'production' ? errorMessage : err.message,
+    ...(process.env.NODE_ENV !== 'production' && { 
+      stack: err.stack,
+      code: err.code 
+    })
   });
 });
 

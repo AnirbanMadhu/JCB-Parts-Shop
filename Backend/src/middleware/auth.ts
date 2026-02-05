@@ -10,28 +10,52 @@ export interface AuthRequest extends Request {
   };
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+// Enforce JWT_SECRET is set and strong
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET must be set and at least 32 characters long');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export const authenticateToken = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
-  if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
-  }
-
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid or expired token' });
+    if (!token) {
+      return res.status(401).json({ error: 'Access token required' });
     }
-    
-    req.user = decoded as { id: number; email: string; role: string; name: string };
-    next();
-  });
+
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (err) {
+        if (err.name === 'TokenExpiredError') {
+          return res.status(401).json({ error: 'Token expired', code: 'TOKEN_EXPIRED' });
+        }
+        return res.status(403).json({ error: 'Invalid token' });
+      }
+      
+      // Validate decoded token structure
+      const user = decoded as any;
+      if (!user || !user.id || !user.email || !user.role) {
+        return res.status(403).json({ error: 'Invalid token payload' });
+      }
+      
+      req.user = { 
+        id: user.id, 
+        email: user.email, 
+        role: user.role, 
+        name: user.name 
+      };
+      next();
+    });
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return res.status(500).json({ error: 'Authentication failed' });
+  }
 };
 
 export const requireAdmin = (
@@ -51,5 +75,13 @@ export const requireAdmin = (
 };
 
 export const generateToken = (payload: { id: number; email: string; role: string; name: string }) => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  // Validate payload
+  if (!payload || !payload.id || !payload.email || !payload.role) {
+    throw new Error('Invalid token payload');
+  }
+  
+  return jwt.sign(payload, JWT_SECRET, { 
+    expiresIn: '7d',
+    algorithm: 'HS256'
+  });
 };
