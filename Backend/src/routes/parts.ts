@@ -50,18 +50,20 @@ router.post("/", async (req, res) => {
       .json({ error: "partNumber, itemName, hsnCode required" });
   }
 
-  // Validate part number format (e.g., 550/42835C, 336/E8026)
-  const partNumberPattern = /^[0-9]+\/[A-Z0-9]+$/;
+  // Validate part number format - accepts both formats:
+  // 1. Number/Alphanumeric (e.g., 550/42835C, 336/E8026)
+  // 2. Purely numeric (e.g., 027800028)
+  const partNumberPattern = /^[0-9]+(\/[A-Z0-9]+)?$/i;
   if (!partNumberPattern.test(body.partNumber)) {
     return res.status(400).json({
       error:
-        "Invalid part number format. Use format: Number/Alphanumeric (e.g., 550/42835C, 336/E8026)",
+        "Invalid part number format. Use: Number/Alphanumeric (e.g., 550/42835C) or numeric (e.g., 027800028)",
     });
   }
 
   // Set defaults for required fields if not provided
   const gstPercent = body.gstPercent ?? 18;
-  const unit = body.unit ?? "PCS";
+  const unit = body.unit ?? "Nos"; // Match frontend default
 
   try {
     const part = await prisma.part.upsert({
@@ -92,8 +94,16 @@ router.post("/", async (req, res) => {
     });
 
     res.json(part);
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
+    // Handle unique constraint violations for barcode or QR code
+    if (e.code === "P2002") {
+      const field = e.meta?.target?.[0] || "field";
+      const fieldName = field === "barcode" ? "Barcode" : field === "qrCode" ? "QR Code" : "Part Number";
+      return res.status(400).json({
+        error: `${fieldName} already exists. Please use a different value.`,
+      });
+    }
     res.status(500).json({ error: "Failed to save part" });
   }
 });
@@ -208,17 +218,19 @@ router.put("/:id", async (req, res) => {
       .json({ error: "partNumber, itemName, hsnCode required" });
   }
 
-  // Validate part number format (e.g., 550/42835C, 336/E8026)
-  const partNumberPattern = /^[0-9]+\/[A-Z0-9]+$/;
+  // Validate part number format - accepts both formats:
+  // 1. Number/Alphanumeric (e.g., 550/42835C, 336/E8026)
+  // 2. Purely numeric (e.g., 027800028)
+  const partNumberPattern = /^[0-9]+(\/[A-Z0-9]+)?$/i;
   if (!partNumberPattern.test(body.partNumber)) {
     return res.status(400).json({
       error:
-        "Invalid part number format. Use format: Number/Alphanumeric (e.g., 550/42835C, 336/E8026)",
+        "Invalid part number format. Use: Number/Alphanumeric (e.g., 550/42835C) or numeric (e.g., 027800028)",
     });
   }
 
   const gstPercent = body.gstPercent ?? 18;
-  const unit = body.unit ?? "PCS";
+  const unit = body.unit ?? "Nos"; // Match frontend default
 
   try {
     const part = await prisma.part.update({
