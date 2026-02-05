@@ -760,7 +760,7 @@ export default function PurchaseInvoiceForm() {
                   setPartSuggestions([]);
                 }
               }}
-              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+              className="px-6 py-2.5 min-h-[44px] bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 active:bg-primary/80 transition-colors font-medium touch-manipulation"
             >
               Add
             </button>
@@ -852,7 +852,7 @@ export default function PurchaseInvoiceForm() {
                     <td className="px-3 py-2 text-right">
                       <button
                         onClick={() => removeLine(i)}
-                        className="rounded-md border border-border bg-background text-destructive px-2 py-1 hover:bg-destructive/10 transition-colors"
+                        className="rounded-md border border-border bg-background text-destructive px-3 py-2 min-h-[44px] hover:bg-destructive/10 active:bg-destructive/20 transition-colors touch-manipulation"
                       >
                         Remove
                       </button>
@@ -920,23 +920,23 @@ export default function PurchaseInvoiceForm() {
 
       {/* Preview modal */}
       {showPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-4xl rounded-2xl bg-card border border-border shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
+          <div className="w-full max-w-4xl rounded-2xl bg-card border border-border shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
-              <h3 className="text-lg font-semibold text-foreground">Preview — {number}</h3>
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border bg-muted/30">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground truncate mr-2">Preview — {number}</h3>
               <button
                 onClick={() => setShowPreview(false)}
-                className="rounded-md border border-border bg-background text-foreground px-3 py-1.5 hover:bg-muted transition-colors text-sm font-medium cursor-pointer"
+                className="rounded-md border border-border bg-background text-foreground px-3 py-2 min-h-[44px] hover:bg-muted active:bg-muted/80 transition-colors text-sm font-medium touch-manipulation flex-shrink-0"
               >
                 Close
               </button>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 overscroll-contain">
               {/* Invoice Details */}
-              <div className="grid gap-3 text-sm mb-4">
+              <div className="grid gap-2 sm:gap-3 text-xs sm:text-sm mb-4">
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground font-medium">Date:</span>
                   <span className="text-foreground font-semibold">
@@ -950,8 +950,8 @@ export default function PurchaseInvoiceForm() {
               </div>
 
               {/* Items Table */}
-              <div className="overflow-x-auto rounded-lg border border-border">
-                <table className="min-w-[900px] w-full text-sm">
+              <div className="overflow-x-auto rounded-lg border border-border -mx-4 sm:mx-0">
+                <table className="min-w-[900px] w-full text-xs sm:text-sm">
                   <thead className="bg-muted">
                     <tr>
                       <th className="px-3 py-2.5 text-left text-foreground font-semibold">Code</th>
@@ -1040,21 +1040,21 @@ export default function PurchaseInvoiceForm() {
 
       {/* Manual Entry Modal */}
       {showManualEntry && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-2xl rounded-2xl bg-card border border-border shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-card border border-border shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
-              <h3 className="text-lg font-semibold text-foreground">Add Item Manually</h3>
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border bg-muted/30">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground">Add Item Manually</h3>
               <button
                 onClick={() => setShowManualEntry(false)}
-                className="rounded-md border border-border bg-background text-foreground px-3 py-1.5 hover:bg-muted transition-colors text-sm font-medium cursor-pointer"
+                className="rounded-md border border-border bg-background text-foreground px-3 py-2 min-h-[44px] hover:bg-muted active:bg-muted/80 transition-colors text-sm font-medium touch-manipulation"
               >
                 Cancel
               </button>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 overscroll-contain">
               <div className="grid gap-4 md:grid-cols-2">
                 {/* Part Number */}
                 <div className="flex flex-col">
@@ -1065,7 +1065,7 @@ export default function PurchaseInvoiceForm() {
                     value={manualEntry.partNumber}
                     onChange={(e) => setManualEntry({ ...manualEntry, partNumber: e.target.value })}
                     placeholder="e.g., 550/42835C"
-                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground touch-manipulation"
                     autoFocus
                   />
                   <span className="text-xs text-muted-foreground mt-1">Format: Number/Alphanumeric</span>
@@ -1080,7 +1080,7 @@ export default function PurchaseInvoiceForm() {
                     value={manualEntry.itemName}
                     onChange={(e) => setManualEntry({ ...manualEntry, itemName: e.target.value })}
                     placeholder="e.g., Hydraulic Pump"
-                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground touch-manipulation"
                   />
                 </div>
 
@@ -1105,7 +1105,7 @@ export default function PurchaseInvoiceForm() {
                     value={manualEntry.hsnCode}
                     onChange={(e) => setManualEntry({ ...manualEntry, hsnCode: e.target.value })}
                     placeholder="e.g., 8431"
-                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground touch-manipulation"
                   />
                   <span className="text-xs text-muted-foreground mt-1">4-8 digit code</span>
                 </div>
@@ -1121,7 +1121,7 @@ export default function PurchaseInvoiceForm() {
                     value={manualEntry.gstPercent}
                     onChange={(e) => setManualEntry({ ...manualEntry, gstPercent: e.target.value })}
                     placeholder="18"
-                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground touch-manipulation"
                   />
                   <span className="text-xs text-muted-foreground mt-1">Value between 0-100</span>
                 </div>
@@ -1132,7 +1132,7 @@ export default function PurchaseInvoiceForm() {
                   <select
                     value={manualEntry.unit}
                     onChange={(e) => setManualEntry({ ...manualEntry, unit: e.target.value })}
-                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-primary touch-manipulation"
                   >
                     <option value="Nos">Nos</option>
                     <option value="Pcs">Pcs</option>
@@ -1153,7 +1153,7 @@ export default function PurchaseInvoiceForm() {
                     value={manualEntry.qty}
                     onChange={(e) => setManualEntry({ ...manualEntry, qty: e.target.value })}
                     placeholder="1"
-                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground touch-manipulation"
                   />
                   <span className="text-xs text-muted-foreground mt-1">Minimum 1</span>
                 </div>
@@ -1170,7 +1170,7 @@ export default function PurchaseInvoiceForm() {
                     value={manualEntry.mrp}
                     onChange={(e) => setManualEntry({ ...manualEntry, mrp: e.target.value })}
                     placeholder="0.00"
-                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground touch-manipulation"
                   />
                   <span className="text-xs text-orange-500 mt-1">MRP or RTL required</span>
                 </div>
@@ -1187,7 +1187,7 @@ export default function PurchaseInvoiceForm() {
                     value={manualEntry.rtl}
                     onChange={(e) => setManualEntry({ ...manualEntry, rtl: e.target.value })}
                     placeholder="0.00"
-                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+                    className="rounded-lg border border-border bg-background text-foreground px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground touch-manipulation"
                   />
                   <span className="text-xs text-orange-500 mt-1">MRP or RTL required</span>
                 </div>

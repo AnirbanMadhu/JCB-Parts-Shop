@@ -825,7 +825,7 @@ export default function SalesInvoiceForm() {
                   setPartSuggestions([]);
                 }
               }}
-              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+              className="px-6 py-2.5 min-h-[44px] bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 active:bg-primary/80 transition-colors font-medium touch-manipulation"
             >
               Add
             </button>
@@ -938,7 +938,7 @@ export default function SalesInvoiceForm() {
                     <td className="px-3 py-2 text-right">
                       <button
                         onClick={() => removeLine(i)}
-                        className="rounded-md border border-border bg-background text-destructive px-2 py-1 hover:bg-destructive/10 transition-colors"
+                        className="rounded-md border border-border bg-background text-destructive px-3 py-2 min-h-[44px] hover:bg-destructive/10 active:bg-destructive/20 transition-colors touch-manipulation"
                       >
                         Remove
                       </button>
@@ -1046,21 +1046,21 @@ export default function SalesInvoiceForm() {
 
       {/* Preview modal */}
       {showPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-4xl rounded-2xl bg-card border border-border shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
+          <div className="w-full max-w-4xl rounded-2xl bg-card border border-border shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
-              <h3 className="text-lg font-semibold text-foreground">Preview — {number}</h3>
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border bg-muted/30">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground truncate mr-2">Preview — {number}</h3>
               <button
                 onClick={() => setShowPreview(false)}
-                className="rounded-md border border-border bg-background text-foreground px-3 py-1.5 hover:bg-muted transition-colors text-sm font-medium cursor-pointer"
+                className="rounded-md border border-border bg-background text-foreground px-3 py-2 min-h-[44px] hover:bg-muted active:bg-muted/80 transition-colors text-sm font-medium touch-manipulation flex-shrink-0"
               >
                 Close
               </button>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 overscroll-contain">
               {/* Invoice Details */}
               <div className="grid gap-3 text-sm mb-4">
                 <div className="flex items-center gap-2">
@@ -1178,21 +1178,21 @@ export default function SalesInvoiceForm() {
 
       {/* Manual Entry Modal */}
       {showManualEntry && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-2xl rounded-2xl bg-card border border-border shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-card border border-border shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
-              <h3 className="text-lg font-semibold text-foreground">Add Item Manually</h3>
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border bg-muted/30">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground">Add Item Manually</h3>
               <button
                 onClick={() => setShowManualEntry(false)}
-                className="rounded-md border border-border bg-background text-foreground px-3 py-1.5 hover:bg-muted transition-colors text-sm font-medium cursor-pointer"
+                className="rounded-md border border-border bg-background text-foreground px-3 py-2 min-h-[44px] hover:bg-muted active:bg-muted/80 transition-colors text-sm font-medium touch-manipulation"
               >
                 Cancel
               </button>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 overscroll-contain">
               <div className="grid gap-4 md:grid-cols-2">
                 {/* Part Number */}
                 <div className="flex flex-col">
