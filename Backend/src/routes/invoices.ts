@@ -171,13 +171,17 @@ router.post('/', async (req, res) => {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // Check for duplicate invoice number
+      // Check for duplicate invoice number within the same type
+      // Purchase and Sales invoices can have the same number format independently
       const existingInvoice = await tx.invoice.findFirst({
-        where: { invoiceNumber: body.invoiceNumber }
+        where: { 
+          invoiceNumber: body.invoiceNumber,
+          type: body.type as InvoiceType
+        }
       });
       
       if (existingInvoice) {
-        throw new Error(`Invoice number ${body.invoiceNumber} already exists`);
+        throw new Error(`Invoice number ${body.invoiceNumber} already exists for ${body.type} invoices`);
       }
 
       // Verify supplier/customer exists
@@ -502,6 +506,19 @@ router.put('/:id', async (req, res) => {
     }
 
     const result = await prisma.$transaction(async (tx) => {
+      // Check for duplicate invoice number (excluding current invoice) within the same type
+      const duplicateInvoice = await tx.invoice.findFirst({
+        where: {
+          invoiceNumber: body.invoiceNumber,
+          type: body.type as InvoiceType,
+          id: { not: id }
+        }
+      });
+
+      if (duplicateInvoice) {
+        throw new Error(`Invoice number ${body.invoiceNumber} already exists for ${body.type} invoices`);
+      }
+
       // Delete existing invoice items and their inventory transactions
       await tx.inventoryTransaction.deleteMany({
         where: {
