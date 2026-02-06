@@ -53,11 +53,13 @@ router.get('/next-number', async (req, res) => {
 
     // Use transaction to prevent race conditions
     await prisma.$transaction(async (tx) => {
-      // Get count of ALL invoices of this type in current month/year (resets monthly)
+      // Get count of SUBMITTED invoices only (exclude DRAFT) to determine next sequence number
+      // This ensures drafts don't consume sequence numbers and numbering starts from 01
       if (type === 'SALE') {
         const invoiceCount = await tx.invoice.count({
           where: {
             type: InvoiceType.SALE,
+            status: InvoiceStatus.SUBMITTED, // Only count submitted invoices
             date: {
               gte: startOfMonth,
               lte: endOfMonth
@@ -69,6 +71,7 @@ router.get('/next-number', async (req, res) => {
         const invoiceCount = await tx.invoice.count({
           where: {
             type: InvoiceType.PURCHASE,
+            status: InvoiceStatus.SUBMITTED, // Only count submitted invoices
             date: {
               gte: startOfMonth,
               lte: endOfMonth
