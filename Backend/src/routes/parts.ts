@@ -1,8 +1,12 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { PartCreateBody } from "../types";
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
+
+// Protect all routes with authentication
+router.use(authenticateToken);
 
 // Get all parts (paginated)
 router.get("/", async (req, res) => {
@@ -165,20 +169,17 @@ router.get("/search", async (req, res) => {
   };
 
   try {
-    // Helper function to add stock info to a part
+    // Optimized helper function to add stock info using single query
     const addStockInfo = async (part: any) => {
-      const [incoming, outgoing] = await Promise.all([
-        prisma.inventoryTransaction.aggregate({
-          where: { partId: part.id, direction: "IN" },
-          _sum: { quantity: true },
-        }),
-        prisma.inventoryTransaction.aggregate({
-          where: { partId: part.id, direction: "OUT" },
-          _sum: { quantity: true },
-        }),
-      ]);
-      const inQty = incoming._sum.quantity ?? 0;
-      const outQty = outgoing._sum.quantity ?? 0;
+      const stockResult = await prisma.$queryRaw<Array<{incoming: number, outgoing: number}>>`
+        SELECT 
+          COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0)::INTEGER as incoming,
+          COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0)::INTEGER as outgoing
+        FROM "InventoryTransaction"
+        WHERE "partId" = ${part.id}
+      `;
+      const inQty = stockResult[0]?.incoming ?? 0;
+      const outQty = stockResult[0]?.outgoing ?? 0;
       return { ...part, stock: inQty - outQty };
     };
 
@@ -337,19 +338,16 @@ router.delete("/:id", async (req, res) => {
       return res.status(400).json({ error: "Part is already deleted" });
     }
 
-    // Check if part has any stock
-    const [incoming, outgoing] = await Promise.all([
-      prisma.inventoryTransaction.aggregate({
-        where: { partId: id, direction: 'IN' },
-        _sum: { quantity: true }
-      }),
-      prisma.inventoryTransaction.aggregate({
-        where: { partId: id, direction: 'OUT' },
-        _sum: { quantity: true }
-      })
-    ]);
+    // Check if part has any stock using optimized single query
+    const stockResult = await prisma.$queryRaw<Array<{incoming: number, outgoing: number}>>`
+      SELECT 
+        COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0)::INTEGER as incoming,
+        COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0)::INTEGER as outgoing
+      FROM "InventoryTransaction"
+      WHERE "partId" = ${id}
+    `;
 
-    const stock = (incoming._sum.quantity ?? 0) - (outgoing._sum.quantity ?? 0);
+    const stock = (stockResult[0]?.incoming ?? 0) - (stockResult[0]?.outgoing ?? 0);
     
     // Warn if part has stock
     if (stock > 0) {

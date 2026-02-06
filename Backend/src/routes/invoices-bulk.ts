@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
 import { InvoiceStatus } from '@prisma/client';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
+
+// Protect all routes with authentication
+router.use(authenticateToken);
 
 /**
  * GET /api/invoices/bulk

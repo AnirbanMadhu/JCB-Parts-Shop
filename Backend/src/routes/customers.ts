@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
 import { CustomerCreateBody } from '../types';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
+
+// Protect all routes with authentication
+router.use(authenticateToken);
 
 // Generate next indexId
 async function generateIndexId(): Promise<string> {

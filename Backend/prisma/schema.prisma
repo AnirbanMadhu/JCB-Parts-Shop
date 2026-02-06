@@ -83,6 +83,9 @@ model Part {
 
   invoiceItems          InvoiceItem[]
   inventoryTransactions InventoryTransaction[]
+
+  @@index([isDeleted])
+  @@index([partNumber])
 }
 
 model Supplier {
@@ -100,6 +103,9 @@ model Supplier {
   updatedAt     DateTime  @updatedAt
 
   purchaseInvoices Invoice[] @relation("SupplierInvoices")
+
+  @@index([isDeleted])
+  @@index([name])
 }
 
 model Customer {
@@ -117,6 +123,9 @@ model Customer {
   updatedAt DateTime  @updatedAt
 
   salesInvoices Invoice[] @relation("CustomerInvoices")
+
+  @@index([isDeleted])
+  @@index([name])
 }
 
 enum InvoiceType {
@@ -182,6 +191,15 @@ model Invoice {
   updatedAt DateTime @updatedAt
 
   items InvoiceItem[]
+
+  @@index([invoiceNumber])
+  @@index([type])
+  @@index([status])
+  @@index([date])
+  @@index([supplierId])
+  @@index([customerId])
+  @@index([type, status])
+  @@index([type, date])
 }
 
 model InvoiceItem {
@@ -220,4 +238,7 @@ model InventoryTransaction {
   createdAt     DateTime            @default(now())
 
   @@index([partId])
+  @@index([direction])
+  @@index([partId, direction])
+  @@index([createdAt])
 }

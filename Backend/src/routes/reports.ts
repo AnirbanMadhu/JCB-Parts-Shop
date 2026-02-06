@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
 import { Decimal } from '@prisma/client/runtime/library';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
+
+// Protect all routes with authentication
+router.use(authenticateToken);
 
 // Dashboard statistics
 router.get('/dashboard', async (_req, res) => {

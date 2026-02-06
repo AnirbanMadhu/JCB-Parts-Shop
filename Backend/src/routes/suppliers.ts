@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
 import { SupplierCreateBody } from '../types';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
+
+// Protect all routes with authentication
+router.use(authenticateToken);
 
 // Create a new supplier
 router.post('/', async (req, res) => {
