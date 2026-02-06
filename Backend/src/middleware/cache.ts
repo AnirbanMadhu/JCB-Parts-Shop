@@ -38,8 +38,9 @@ export const cacheMiddleware = (ttl: number = 60) => {
     // Validate TTL
     const safeTtl = Math.max(1, Math.min(ttl, 3600)); // Between 1s and 1 hour
 
-    // Create cache key from URL and query params
-    const cacheKey = `${req.path}:${JSON.stringify(req.query)}`;
+    // Create cache key from full URL path and query params
+    // Use originalUrl to get the complete path including the router mount point
+    const cacheKey = `${req.originalUrl || req.url}:${JSON.stringify(req.query)}`;
     
     // Check if we have a valid cached response
     const cachedEntry = cache.get(cacheKey);

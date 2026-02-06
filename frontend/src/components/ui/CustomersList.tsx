@@ -17,14 +17,14 @@ type Props = {
 export default function CustomersList({ customers }: Props) {
   const router = useRouter();
   const { toasts, removeToast, success, error } = useToast();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
-    customerId: string;
+    customerId: number;
     customerName: string;
-  }>({ isOpen: false, customerId: "", customerName: "" });
+  }>({ isOpen: false, customerId: 0, customerName: "" });
 
   // Keyboard shortcut: Ctrl+F to focus search
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function CustomersList({ customers }: Props) {
 
   const hasRows = filteredCustomers && filteredCustomers.length > 0;
 
-  const handleDeleteClick = (id: string, name: string) => {
+  const handleDeleteClick = (id: number, name: string) => {
     setConfirmDialog({ isOpen: true, customerId: id, customerName: name });
   };
 
@@ -248,9 +248,9 @@ export default function CustomersList({ customers }: Props) {
                     </Link>
                     <button
                       onClick={() =>
-                        handleDeleteClick(customer.id.toString(), customer.name)
+                        handleDeleteClick(customer.id, customer.name)
                       }
-                      disabled={deletingId === customer.id.toString()}
+                      disabled={deletingId === customer.id}
                       className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-all hover:scale-110 disabled:opacity-50 cursor-pointer"
                       title="Delete"
                     >

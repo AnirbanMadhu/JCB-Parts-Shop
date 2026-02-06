@@ -12,11 +12,11 @@ import { useToast } from "@/hooks/useToast";
 type Supplier = {
   id: number;
   name: string;
-  email?: string;
-  phone: string;
-  address?: string;
-  gstin?: string;
-  contactPerson?: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  gstin?: string | null;
+  contactPerson?: string | null;
 };
 
 type Props = {

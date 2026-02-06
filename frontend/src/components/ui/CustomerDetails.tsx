@@ -18,19 +18,19 @@ import {
 } from "lucide-react";
 
 type Customer = {
-  id: string;
-  indexId?: string;
+  id: number;
+  indexId?: string | null;
   name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  gstin?: string;
-  state?: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  gstin?: string | null;
+  state?: string | null;
   createdAt?: string;
 };
 
 type Invoice = {
-  id: string;
+  id: number;
   invoiceNumber: string;
   date: string;
   total: number;
