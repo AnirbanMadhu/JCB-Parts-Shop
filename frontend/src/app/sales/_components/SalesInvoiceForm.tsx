@@ -509,7 +509,17 @@ export default function SalesInvoiceForm() {
     try {
       // Calculate totals
       const subtotal = lines.reduce((s, l) => s + l.qty * (l.price - l.discount), 0);
-      const taxableValue = subtotal;
+      
+      // Apply invoice-level discount to get taxable value
+      let discountAmount = 0;
+      if (discountValue > 0) {
+        if (discountType === "percentage") {
+          discountAmount = (subtotal * discountValue) / 100;
+        } else {
+          discountAmount = discountValue;
+        }
+      }
+      const taxableValue = subtotal - discountAmount;
       
       // Assuming CGST + SGST split (9% each for 18% GST)
       const avgTaxRate = lines.reduce((sum, l) => sum + l.taxRate, 0) / lines.length;
