@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
 import { CustomerCreateBody } from '../types';
+import { cacheMiddleware, clearCachePattern } from '../middleware/cache';
 // import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
@@ -81,6 +82,8 @@ router.post('/', async (req, res) => {
       }
     });
 
+    // Clear customer cache on create
+    clearCachePattern('/api/customers');
     res.status(201).json(customer);
   } catch (e: any) {
     console.error('Customer creation error:', e);
@@ -88,8 +91,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get all customers
-router.get('/', async (req, res) => {
+// Get all customers - Cache for 60 seconds
+router.get('/', cacheMiddleware(60), async (req, res) => {
   const { search } = req.query as { search?: string };
 
   try {
@@ -115,8 +118,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single customer by ID
-router.get('/:id', async (req, res) => {
+// Get single customer by ID - Cache for 60 seconds
+router.get('/:id', cacheMiddleware(60), async (req, res) => {
   const id = Number(req.params.id);
 
   if (isNaN(id)) {
@@ -202,6 +205,9 @@ router.put('/:id', async (req, res) => {
       }
     });
 
+    // Clear customer cache on update
+    clearCachePattern('/api/customers');
+    clearCachePattern('/api/invoices');
     res.json(customer);
   } catch (e: any) {
     console.error('Customer update error:', e);
@@ -248,6 +254,9 @@ router.delete('/:id', async (req, res) => {
       data: { isDeleted: true }
     });
     
+    // Clear customer cache on delete
+    clearCachePattern('/api/customers');
+    clearCachePattern('/api/invoices');
     res.json({ success: true, message: 'Customer deleted successfully', customer: deletedCustomer });
   } catch (e: any) {
     console.error('Customer deletion error:', e);

@@ -14,12 +14,37 @@ router.get('/health', async (_req: Request, res: Response) => {
     uptime: process.uptime(),
     database: 'unknown',
     email: 'unknown',
+    connections: {
+      active: 0,
+      idle: 0,
+    }
   };
 
   try {
     // Check database connection
     await prisma.$queryRaw`SELECT 1`;
     checks.database = 'connected';
+
+    // Get connection pool stats
+    try {
+      const connectionStats: any = await prisma.$queryRaw`
+        SELECT 
+          count(*) FILTER (WHERE state = 'active') as active,
+          count(*) FILTER (WHERE state = 'idle') as idle,
+          count(*) as total
+        FROM pg_stat_activity 
+        WHERE datname = current_database()
+      `;
+      
+      if (connectionStats && connectionStats.length > 0) {
+        checks.connections = {
+          active: Number(connectionStats[0].active || 0),
+          idle: Number(connectionStats[0].idle || 0),
+        };
+      }
+    } catch (statsError) {
+      console.error('Failed to get connection stats:', statsError);
+    }
   } catch (error) {
     checks.database = 'disconnected';
     checks.status = 'degraded';
@@ -43,6 +68,7 @@ router.get('/health', async (_req: Request, res: Response) => {
       status: checks.status,
       timestamp: checks.timestamp,
       database: checks.database,
+      connections: checks.connections,
     });
   }
 

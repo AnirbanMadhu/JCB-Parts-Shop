@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
 import { Decimal } from '@prisma/client/runtime/library';
+import { cacheMiddleware } from '../middleware/cache';
 // import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
@@ -8,8 +9,8 @@ const router = Router();
 // TODO: Re-enable authentication after verifying data access
 // router.use(authenticateToken);
 
-// Dashboard statistics
-router.get('/dashboard', async (_req, res) => {
+// Dashboard statistics - Cache for 30 seconds
+router.get('/dashboard', cacheMiddleware(30), async (_req, res) => {
   try {
     const [totalParts, activeParts, totalSuppliers, activeSuppliers, totalCustomers, activeCustomers] = await Promise.all([
       prisma.part.count(),

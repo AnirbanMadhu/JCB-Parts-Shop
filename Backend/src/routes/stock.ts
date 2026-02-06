@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
+import { cacheMiddleware } from '../middleware/cache';
 // import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
@@ -7,8 +8,8 @@ const router = Router();
 // TODO: Re-enable authentication after verifying data access
 // router.use(authenticateToken);
 
-// Current stock for a single part
-router.get('/:partId', async (req, res) => {
+// Current stock for a single part - Cache for 10 seconds
+router.get('/:partId', cacheMiddleware(10), async (req, res) => {
   const partId = Number(req.params.partId);
 
   // Validate part ID
@@ -59,8 +60,8 @@ router.post('/:partId/adjust', async (req, res) => {
     return res.status(400).json({ error: 'Invalid part ID. Must be a positive number.' });
   }
 
-  if (typeof quantity !== 'number') {
-    return res.status(400).json({ error: 'Quantity must be a number' });
+  if (typeof quantity !== 'number' || isNaN(quantity)) {
+    return res.status(400).json({ error: 'Quantity must be a valid number' });
   }
 
   if (quantity < 0) {
@@ -69,6 +70,10 @@ router.post('/:partId/adjust', async (req, res) => {
 
   if (!Number.isFinite(quantity)) {
     return res.status(400).json({ error: 'Quantity must be a finite number' });
+  }
+
+  if (quantity > 1000000) {
+    return res.status(400).json({ error: 'Quantity too large (max 1,000,000)' });
   }
 
   try {
@@ -109,6 +114,8 @@ router.post('/:partId/adjust', async (req, res) => {
       });
     }
 
+    // Clear stock cache after adjustment
+    clearCachePattern('/api/stock');
     res.json({ 
       success: true, 
       partId, 
@@ -124,67 +131,75 @@ router.post('/:partId/adjust', async (req, res) => {
   }
 });
 
-// Optional: list stock for all parts (for report like your Excel)
-router.get('/', async (req, res) => {
+// Optional: list stock for all parts (for report like your Excel) - Cache for 20 seconds
+router.get('/', cacheMiddleware(20), async (req, res) => {
   try {
     const { onlyPurchased } = req.query;
     
-    // If onlyPurchased filter is enabled, find parts with incoming transactions
+    // OPTIMIZED: Use a single aggregated query instead of N+1 queries
+    // This prevents connection pool exhaustion
+    
+    // Get all transactions with part information in one query
+    const transactions = await prisma.inventoryTransaction.findMany({
+      select: {
+        partId: true,
+        direction: true,
+        quantity: true,
+      },
+    });
+
+    // Create a map of partId -> stock calculations
+    const stockMap = new Map<number, { incoming: number; outgoing: number }>();
+    
+    for (const transaction of transactions) {
+      const current = stockMap.get(transaction.partId) || { incoming: 0, outgoing: 0 };
+      
+      if (transaction.direction === 'IN') {
+        current.incoming += transaction.quantity;
+      } else {
+        current.outgoing += transaction.quantity;
+      }
+      
+      stockMap.set(transaction.partId, current);
+    }
+
+    // Build filter for parts
     let partFilter: any = { isDeleted: false };
     
     if (onlyPurchased === 'true') {
-      // Get all part IDs that have incoming inventory transactions
-      const partsWithPurchases = await prisma.inventoryTransaction.findMany({
-        where: { direction: 'IN' },
-        select: { partId: true },
-        distinct: ['partId']
-      });
+      // Filter to only parts that have incoming transactions
+      const partIdsWithPurchases = Array.from(stockMap.entries())
+        .filter(([_, stock]) => stock.incoming > 0)
+        .map(([partId]) => partId);
       
-      const partIds = partsWithPurchases.map(t => t.partId);
-      if (partIds.length === 0) {
+      if (partIdsWithPurchases.length === 0) {
         return res.json([]);
       }
+      
       partFilter = { 
         isDeleted: false,
-        id: { in: partIds }
+        id: { in: partIdsWithPurchases }
       };
     }
     
+    // Fetch all parts in a single query
     const parts = await prisma.part.findMany({ 
       where: partFilter,
       orderBy: { partNumber: 'asc' } 
     });
 
-    // If no parts, return empty array
-    if (parts.length === 0) {
-      return res.json([]);
-    }
-
-    // Optimized: Calculate stock for all parts in parallel batches
-    const stockPromises = parts.map(async (part) => {
-      const transactions = await prisma.inventoryTransaction.findMany({
-        where: { partId: part.id },
-        select: { direction: true, quantity: true }
-      });
-      
-      const incoming = transactions
-        .filter(t => t.direction === 'IN')
-        .reduce((sum, t) => sum + t.quantity, 0);
-      
-      const outgoing = transactions
-        .filter(t => t.direction === 'OUT')
-        .reduce((sum, t) => sum + t.quantity, 0);
-      
+    // Combine parts with stock data
+    const result = parts.map((part) => {
+      const stockData = stockMap.get(part.id) || { incoming: 0, outgoing: 0 };
       return {
         ...part,
-        stock: incoming - outgoing
+        stock: stockData.incoming - stockData.outgoing
       };
     });
 
-    const result = await Promise.all(stockPromises);
     res.json(result);
   } catch (e) {
-    console.error(e);
+    console.error('Stock list error:', e);
     res.status(500).json({ error: 'Failed to load stock list' });
   }
 });

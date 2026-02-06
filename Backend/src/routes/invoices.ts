@@ -3,6 +3,7 @@ import { prisma } from '../prisma';
 import { InvoiceCreateBody } from '../types';
 import { InvoiceType, InventoryDirection, InvoiceStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { clearCachePattern } from '../middleware/cache';
 // import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
@@ -164,12 +165,21 @@ router.post('/', async (req, res) => {
         }
       }
 
+      // OPTIMIZED: Fetch all parts at once to avoid N+1 query problem
+      const partIds = body.items.map(item => item.partId);
+      const parts = await tx.part.findMany({
+        where: { id: { in: partIds } }
+      });
+      
+      // Create a map for O(1) lookups
+      const partsMap = new Map(parts.map(p => [p.id, p]));
+      
       // calculate totals
       let subtotal = new Decimal(0);
       const itemsData: any[] = [];
 
       for (const item of body.items) {
-        const part = await tx.part.findUnique({ where: { id: item.partId } });
+        const part = partsMap.get(item.partId);
         if (!part) {
           throw new Error(`Part with ID ${item.partId} not found`);
         }
@@ -293,6 +303,11 @@ router.post('/', async (req, res) => {
       return invoice;
     });
 
+    // Clear cache after invoice creation
+    clearCachePattern('/api/invoices');
+    clearCachePattern('/api/stock');
+    clearCachePattern('/api/reports');
+    
     console.log(`[INVOICE CREATE] ✓ Success - Created invoice ID: ${result.id}, Type: ${result.type}`);
     res.status(201).json(result);
   } catch (e: any) {

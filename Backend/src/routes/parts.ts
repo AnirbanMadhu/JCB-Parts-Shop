@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { PartCreateBody } from "../types";
+import { cacheMiddleware, clearCachePattern } from "../middleware/cache";
 // import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
@@ -8,8 +9,8 @@ const router = Router();
 // TODO: Re-enable authentication after verifying data access
 // router.use(authenticateToken);
 
-// Get all parts (paginated)
-router.get("/", async (req, res) => {
+// Get all parts (paginated) - Cache for 30 seconds
+router.get("/", cacheMiddleware(30), async (req, res) => {
   const { page = "1", limit = "50" } = req.query as {
     page?: string;
     limit?: string;
@@ -140,6 +141,9 @@ router.post("/", async (req, res) => {
       },
     });
 
+    // Clear parts and stock cache on upsert
+    clearCachePattern('/api/parts');
+    clearCachePattern('/api/stock');
     res.json(part);
   } catch (e: any) {
     console.error('Part creation error:', e);
@@ -302,6 +306,9 @@ router.put("/:id", async (req, res) => {
       },
     });
 
+    // Clear parts and stock cache on update
+    clearCachePattern('/api/parts');
+    clearCachePattern('/api/stock');
     res.json(part);
   } catch (e: any) {
     console.error(e);
@@ -365,6 +372,9 @@ router.delete("/:id", async (req, res) => {
         where: { id },
         data: { isDeleted: true },
       });
+      // Clear parts and stock cache
+      clearCachePattern('/api/parts');
+      clearCachePattern('/api/stock');
       return res.json({ 
         success: true, 
         message: "Part deleted successfully",
@@ -378,6 +388,9 @@ router.delete("/:id", async (req, res) => {
       data: { isDeleted: true },
     });
     
+    // Clear parts and stock cache
+    clearCachePattern('/api/parts');
+    clearCachePattern('/api/stock');
     res.json({ 
       success: true, 
       message: "Part deleted successfully",

@@ -48,15 +48,17 @@ app.use(cors({
   maxAge: 86400, // 24 hours
 }));
 
-// JSON body parser with size limit
+// JSON body parser with size limit and error handling
 app.use(json({ 
   limit: '10mb',
   verify: (req, res, buf, encoding) => {
     // Validate JSON payload
     try {
-      JSON.parse(buf.toString());
+      if (buf.length > 0) {
+        JSON.parse(buf.toString());
+      }
     } catch (e) {
-      throw new Error('Invalid JSON');
+      throw new Error('Invalid JSON payload');
     }
   }
 }));

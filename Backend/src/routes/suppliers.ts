@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
 import { SupplierCreateBody } from '../types';
+import { cacheMiddleware, clearCachePattern } from '../middleware/cache';
 // import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
@@ -65,6 +66,8 @@ router.post('/', async (req, res) => {
       }
     });
 
+    // Clear supplier cache on create
+    clearCachePattern('/api/suppliers');
     res.status(201).json(supplier);
   } catch (e: any) {
     console.error('Supplier creation error:', e);
@@ -72,8 +75,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get all suppliers
-router.get('/', async (req, res) => {
+// Get all suppliers - Cache for 60 seconds
+router.get('/', cacheMiddleware(60), async (req, res) => {
   const { search } = req.query as { search?: string };
 
   try {
@@ -98,8 +101,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single supplier by ID
-router.get('/:id', async (req, res) => {
+// Get single supplier by ID - Cache for 60 seconds
+router.get('/:id', cacheMiddleware(60), async (req, res) => {
   const id = Number(req.params.id);
 
   if (isNaN(id)) {
@@ -190,6 +193,9 @@ router.put('/:id', async (req, res) => {
       }
     });
 
+    // Clear supplier cache on update
+    clearCachePattern('/api/suppliers');
+    clearCachePattern('/api/invoices');
     res.json(supplier);
   } catch (e: any) {
     console.error('Supplier update error:', e);
@@ -236,6 +242,9 @@ router.delete('/:id', async (req, res) => {
       data: { isDeleted: true }
     });
     
+    // Clear supplier cache on delete
+    clearCachePattern('/api/suppliers');
+    clearCachePattern('/api/invoices');
     res.json({ success: true, message: 'Supplier deleted successfully', supplier: deletedSupplier });
   } catch (e: any) {
     console.error('Supplier deletion error:', e);

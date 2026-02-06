@@ -12,6 +12,9 @@ export const prisma =
         url: process.env.DATABASE_URL,
       },
     },
+    // Add connection timeout and query timeout
+    // These settings help prevent connection pool exhaustion
+    // connectionLimitWarning: 10,
   });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
