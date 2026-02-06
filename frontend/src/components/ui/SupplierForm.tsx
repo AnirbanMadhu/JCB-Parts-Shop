@@ -2,12 +2,14 @@
 
 // components/Common/SupplierForm.tsx
 import { useState } from "react";
-
-
+import { useRouter } from "next/navigation";
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/hooks/useToast";
+import BackButton from "./BackButton";
 
 export default function SupplierForm() {
   const router = useRouter();
-  const toast = useToast();
+  const { toasts, removeToast, success, error } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -28,29 +30,29 @@ export default function SupplierForm() {
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to create supplier');
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to create supplier');
       }
 
-      toast.success('Supplier created successfully');
+      success('Supplier created successfully');
       setTimeout(() => {
         router.push('/common');
         router.refresh();
       }, 500);
-    } catch (error: any) {
-      toast.error('Error creating supplier: ' + error.message);
+    } catch (err: any) {
+      error('Error creating supplier: ' + err.message);
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Toast notifications */}
-      {toast.toasts.map((t) => (
+      {toasts.map((t) => (
         <Toast
           key={t.id}
           message={t.message}
           type={t.type}
-          onClose={() => toast.removeToast(t.id)}
+          onClose={() => removeToast(t.id)}
         />
       ))}
       
