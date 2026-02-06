@@ -26,17 +26,20 @@ router.get('/:partId', async (req, res) => {
       return res.status(404).json({ error: 'Part has been deleted' });
     }
 
-    // Optimized: Use single SQL query instead of two aggregate calls
-    const stockResult = await prisma.$queryRaw<Array<{incoming: bigint, outgoing: bigint}>>`
-      SELECT 
-        COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0) as incoming,
-        COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0) as outgoing
-      FROM "InventoryTransaction"
-      WHERE "partId" = ${partId}
-    `;
+    // Get stock transactions for this part
+    const transactions = await prisma.inventoryTransaction.findMany({
+      where: { partId },
+      select: { direction: true, quantity: true }
+    });
 
-    const inQty = Number(stockResult[0]?.incoming ?? 0);
-    const outQty = Number(stockResult[0]?.outgoing ?? 0);
+    const inQty = transactions
+      .filter(t => t.direction === 'IN')
+      .reduce((sum, t) => sum + t.quantity, 0);
+    
+    const outQty = transactions
+      .filter(t => t.direction === 'OUT')
+      .reduce((sum, t) => sum + t.quantity, 0);
+    
     const stock = inQty - outQty;
 
     res.json({ partId, stock, incoming: inQty, outgoing: outQty });
@@ -78,16 +81,21 @@ router.post('/:partId/adjust', async (req, res) => {
       return res.status(400).json({ error: 'Cannot adjust stock for deleted part' });
     }
 
-    // Get current stock using optimized single query
-    const stockResult = await prisma.$queryRaw<Array<{incoming: bigint, outgoing: bigint}>>`
-      SELECT 
-        COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0) as incoming,
-        COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0) as outgoing
-      FROM "InventoryTransaction"
-      WHERE "partId" = ${partId}
-    `;
+    // Get current stock transactions
+    const transactions = await prisma.inventoryTransaction.findMany({
+      where: { partId },
+      select: { direction: true, quantity: true }
+    });
 
-    const currentStock = Number(stockResult[0]?.incoming ?? 0) - Number(stockResult[0]?.outgoing ?? 0);
+    const inQty = transactions
+      .filter(t => t.direction === 'IN')
+      .reduce((sum, t) => sum + t.quantity, 0);
+    
+    const outQty = transactions
+      .filter(t => t.direction === 'OUT')
+      .reduce((sum, t) => sum + t.quantity, 0);
+
+    const currentStock = inQty - outQty;
     const difference = quantity - currentStock;
 
     if (difference !== 0) {
@@ -152,36 +160,28 @@ router.get('/', async (req, res) => {
       return res.json([]);
     }
 
-    // Optimized: Get all stock calculations in one query
-    const partIds = parts.map(p => p.id);
-    const stockData = await prisma.$queryRaw<Array<{partid: number, incoming: bigint, outgoing: bigint}>>`
-      SELECT 
-        "partId" as partid,
-        COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0) as incoming,
-        COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0) as outgoing
-      FROM "InventoryTransaction"
-      WHERE "partId" = ANY(${partIds})
-      GROUP BY "partId"
-    `;
+    // Optimized: Calculate stock for all parts in parallel batches
+    const stockPromises = parts.map(async (part) => {
+      const transactions = await prisma.inventoryTransaction.findMany({
+        where: { partId: part.id },
+        select: { direction: true, quantity: true }
+      });
+      
+      const incoming = transactions
+        .filter(t => t.direction === 'IN')
+        .reduce((sum, t) => sum + t.quantity, 0);
+      
+      const outgoing = transactions
+        .filter(t => t.direction === 'OUT')
+        .reduce((sum, t) => sum + t.quantity, 0);
+      
+      return {
+        ...part,
+        stock: incoming - outgoing
+      };
+    });
 
-    // Create a map for quick lookup
-    const stockMap = new Map(
-      stockData.map(s => [
-        Number(s.partid), 
-        { 
-          incoming: Number(s.incoming), 
-          outgoing: Number(s.outgoing),
-          stock: Number(s.incoming) - Number(s.outgoing)
-        }
-      ])
-    );
-
-    // Combine parts with stock data
-    const result = parts.map(p => ({
-      ...p,
-      stock: stockMap.get(p.id)?.stock ?? 0
-    }));
-
+    const result = await Promise.all(stockPromises);
     res.json(result);
   } catch (e) {
     console.error(e);
