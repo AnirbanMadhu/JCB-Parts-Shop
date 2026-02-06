@@ -1,7 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from "@/lib/constants";
-
 import Link from "next/link";
 import { Customer } from "@/lib/api";
 import BackButton from "./BackButton";
@@ -67,7 +65,7 @@ export default function CustomersList({ customers }: Props) {
     setDeletingId(customerId);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/customers/${customerId}`, {
+      const res = await fetch(`/api/customers/${customerId}`, {
         method: "DELETE",
       });
 

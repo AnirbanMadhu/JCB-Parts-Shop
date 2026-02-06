@@ -11,7 +11,7 @@ export const metadata = {
 
 async function fetchItems() {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/api/stock`, {
+    const res = await fetch(`${INTERNAL_API_URL}/api/stock?onlyPurchased=true`, {
       cache: "no-store",
     });
     if (!res.ok) return [];

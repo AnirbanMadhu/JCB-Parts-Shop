@@ -1,7 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
-
 // components/Common/SuppliersList.tsx
 
 import Link from "next/link";
@@ -63,7 +61,7 @@ export default function SuppliersList({ suppliers }: Props) {
     const { supplierId, supplierName } = confirmDialog;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/suppliers/${supplierId}`, {
+      const res = await fetch(`/api/suppliers/${supplierId}`, {
         method: 'DELETE',
       });
 

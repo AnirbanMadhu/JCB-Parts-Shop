@@ -1,7 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BackButton from "./BackButton";
@@ -57,7 +55,7 @@ export default function CustomerDetails({ customer, invoices }: Props) {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/customers/${customer.id}`, {
+      const res = await fetch(`/api/customers/${customer.id}`, {
         method: 'DELETE',
       });
 

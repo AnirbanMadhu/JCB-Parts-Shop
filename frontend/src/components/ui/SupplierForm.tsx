@@ -2,11 +2,6 @@
 
 // components/Common/SupplierForm.tsx
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Toast from "@/components/ui/Toast";
-import { useToast } from "@/hooks/useToast";
-import BackButton from "./BackButton";
-import { API_BASE_URL } from '@/lib/constants';
 
 
 
@@ -26,7 +21,7 @@ export default function SupplierForm() {
     e.preventDefault();
     
     try {
-      const res = await fetch(`${API_BASE_URL}/api/suppliers`, {
+      const res = await fetch(`/api/suppliers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

@@ -1,7 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -63,7 +61,7 @@ export default function ItemEditForm({ item }: { item: any }) {
         description: formData.description || null,
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/parts/${item.id}`, {
+      const res = await fetch(`/api/parts/${item.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submitData),

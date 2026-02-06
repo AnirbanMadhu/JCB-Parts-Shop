@@ -1,7 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -47,7 +45,7 @@ export default function CustomerForm() {
 
     setSaving(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/customers`, {
+      const res = await fetch(`/api/customers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

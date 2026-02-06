@@ -54,7 +54,7 @@ export default function EditInvoiceDetails() {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${API_BASE_URL}/api/invoices`, {
+      const response = await fetch(`/api/invoices`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -125,7 +125,7 @@ export default function EditInvoiceDetails() {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${API_BASE_URL}/api/invoices/${selectedInvoice.id}`, {
+      const response = await fetch(`/api/invoices/${selectedInvoice.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

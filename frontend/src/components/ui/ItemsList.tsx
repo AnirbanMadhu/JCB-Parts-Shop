@@ -1,6 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
 import Link from "next/link";
 import { Item } from "@/lib/api";
 import BackButton from "./BackButton";
@@ -71,7 +70,7 @@ export default function ItemsList(props: Props) {
     const { itemId, itemName } = confirmDialog;
     setDeletingId(itemId);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/parts/${itemId}`, {
+      const res = await fetch(`/api/parts/${itemId}`, {
         method: 'DELETE',
       });
 
@@ -98,7 +97,7 @@ export default function ItemsList(props: Props) {
 
     setUpdatingStockId(itemId);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/stock/${itemId}/adjust`, {
+      const res = await fetch(`/api/stock/${itemId}/adjust`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ quantity: newStock }),

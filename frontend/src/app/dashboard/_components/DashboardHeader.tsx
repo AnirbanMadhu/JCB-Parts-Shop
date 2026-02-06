@@ -1,52 +1,76 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
-
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useState, useEffect } from "react";
+import { fetchWithTimeout } from "@/lib/fetch-utils";
 
 export default function DashboardHeader() {
   const router = useRouter();
   const [stockBalance, setStockBalance] = useState<number>(0);
   const [netFlow, setNetFlow] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
+    
     // Fetch stock balance and net flow data
     const fetchData = async () => {
       try {
+        setIsLoading(true);
         
+        // Fetch all data in parallel with timeout (15s)
+        const [salesRes, purchasesRes, stockRes] = await Promise.all([
+          fetchWithTimeout(`/api/invoices?type=SALE`, { 
+            timeout: 15000,
+            signal: controller.signal 
+          }),
+          fetchWithTimeout(`/api/invoices?type=PURCHASE`, { 
+            timeout: 15000,
+            signal: controller.signal 
+          }),
+          fetchWithTimeout(`/api/stock?onlyPurchased=true`, { 
+            timeout: 15000,
+            signal: controller.signal 
+          })
+        ]);
         
-        // Fetch invoices to calculate net flow
-        const salesRes = await fetch(`${API_BASE_URL}/api/invoices?type=SALE`);
-        const purchasesRes = await fetch(`${API_BASE_URL}/api/invoices?type=PURCHASE`);
-        
+        // Process sales and purchases data
         if (salesRes.ok && purchasesRes.ok) {
-          const salesData = await salesRes.json();
-          const purchasesData = await purchasesRes.json();
+          const [salesData, purchasesData] = await Promise.all([
+            salesRes.json(),
+            purchasesRes.json()
+          ]);
           
           const totalSales = salesData.reduce((sum: number, inv: any) => sum + Number(inv.total || 0), 0);
           const totalPurchases = purchasesData.reduce((sum: number, inv: any) => sum + Number(inv.total || 0), 0);
           
-          const flow = totalSales - totalPurchases;
-          setNetFlow(flow);
+          setNetFlow(totalSales - totalPurchases);
         }
 
-        // Fetch stock data for stock balance
-        const stockRes = await fetch(`${API_BASE_URL}/api/stock`);
+        // Process stock data
         if (stockRes.ok) {
           const stockData = await stockRes.json();
           const balance = stockData.reduce((sum: number, item: any) => {
-            return sum + (Number(item.quantity || 0) * Number(item.unitPrice || 0));
+            const stockQty = Number(item.stock || 0);
+            const price = Number(item.mrp || item.rtl || 0);
+            return sum + (stockQty * price);
           }, 0);
           setStockBalance(balance);
         }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          console.error('Error fetching dashboard data:', error);
+        }
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchData();
+    
+    // Cleanup: abort any pending requests
+    return () => controller.abort();
   }, []);
 
   return (

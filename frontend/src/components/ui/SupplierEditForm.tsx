@@ -1,6 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BackButton from "./BackButton";
@@ -41,7 +40,7 @@ export default function SupplierEditForm({ supplier }: Props) {
     e.preventDefault();
     
     try {
-      const res = await fetch(`${API_BASE_URL}/api/suppliers/${supplier.id}`, {
+      const res = await fetch(`/api/suppliers/${supplier.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -62,7 +61,7 @@ export default function SupplierEditForm({ supplier }: Props) {
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/suppliers/${supplier.id}`, {
+      const res = await fetch(`/api/suppliers/${supplier.id}`, {
         method: 'DELETE',
       });
 

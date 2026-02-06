@@ -1,9 +1,9 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { fetchWithTimeout } from "@/lib/fetch-utils";
 import {
   Card,
   CardContent,
@@ -105,11 +105,17 @@ export default function SalesChart() {
   }, [currentMonth]);
 
   const fetchWeeklySalesData = async () => {
+    const controller = new AbortController();
+    
     try {
       setLoading(true);
       
-      const response = await fetch(
-        `${API_BASE_URL}/api/reports/weekly-sales?year=${currentMonth.year}&month=${currentMonth.month}`
+      const response = await fetchWithTimeout(
+        `/api/reports/weekly-sales?year=${currentMonth.year}&month=${currentMonth.month}`,
+        { 
+          timeout: 15000,
+          signal: controller.signal 
+        }
       );
       
       if (!response.ok) {
