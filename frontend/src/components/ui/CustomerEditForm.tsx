@@ -19,7 +19,7 @@ type CustomerFormData = {
 
 export default function CustomerEditForm({ customer }: { customer: any }) {
   const router = useRouter();
-  const toast = useToast();
+  const { toasts, removeToast, success, error } = useToast();
   const [saving, setSaving] = useState(false);
   
   const [formData, setFormData] = useState<CustomerFormData>({
@@ -39,7 +39,7 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      toast.error('Customer name is required');
+      error('Customer name is required');
       return;
     }
 
@@ -52,17 +52,17 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to update customer');
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to update customer');
       }
 
-      toast.success('Customer updated successfully');
+      success('Customer updated successfully');
       setTimeout(() => {
         router.push('/common/customers');
         router.refresh();
       }, 500);
-    } catch (error: any) {
-      toast.error('Error updating customer: ' + error.message);
+    } catch (err: any) {
+      error('Error updating customer: ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -71,12 +71,12 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Toast notifications */}
-      {toast.toasts.map((t) => (
+      {toasts.map((t) => (
         <Toast
           key={t.id}
           message={t.message}
           type={t.type}
-          onClose={() => toast.removeToast(t.id)}
+          onClose={() => removeToast(t.id)}
         />
       ))}
       

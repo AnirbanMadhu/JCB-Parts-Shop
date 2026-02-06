@@ -43,11 +43,13 @@ export type Invoice = {
 
 export type Customer = {
   id: number;
-  indexId?: string;
+  indexId?: string | null;
   name: string;
-  email: string;
-  phone: string;
-  address: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  gstin?: string | null;
+  state?: string | null;
 };
 
 export type Item = {

@@ -16,11 +16,11 @@ import { useToast } from "@/hooks/useToast";
 type Supplier = {
   id: number;
   name: string;
-  email?: string;
-  phone: string;
-  address?: string;
-  gstin?: string;
-  contactPerson?: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  gstin?: string | null;
+  contactPerson?: string | null;
 };
 
 type Props = {
@@ -83,7 +83,7 @@ export default function SuppliersList({ suppliers }: Props) {
     const term = searchTerm.toLowerCase().trim();
     return suppliers.filter(supplier => 
       supplier.name.toLowerCase().includes(term) ||
-      supplier.phone.toLowerCase().includes(term) ||
+      supplier.phone?.toLowerCase().includes(term) ||
       supplier.email?.toLowerCase().includes(term) ||
       supplier.address?.toLowerCase().includes(term) ||
       supplier.gstin?.toLowerCase().includes(term) ||
@@ -188,7 +188,7 @@ export default function SuppliersList({ suppliers }: Props) {
                       )}
                     </Link>
                     <div className="text-sm text-foreground">{supplier.contactPerson || '-'}</div>
-                    <div className="text-sm text-foreground">{supplier.phone}</div>
+                    <div className="text-sm text-foreground">{supplier.phone || '-'}</div>
                     <div className="text-sm text-muted-foreground">{supplier.email || '-'}</div>
                     <div className="text-sm text-muted-foreground font-mono">{supplier.gstin || '-'}</div>
                     <div className="flex items-center justify-center gap-2">

@@ -230,13 +230,13 @@ export default function CustomersList({ customers }: Props) {
                     </Link>
                   </div>
                   <div className="text-sm text-foreground">
-                    {customer.email}
+                    {customer.email || '-'}
                   </div>
                   <div className="text-sm text-foreground">
-                    {customer.phone}
+                    {customer.phone || '-'}
                   </div>
                   <div className="text-sm text-foreground">
-                    {customer.address}
+                    {customer.address || '-'}
                   </div>
                   <div className="flex items-center justify-center gap-2">
                     <Link
