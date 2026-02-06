@@ -27,16 +27,16 @@ router.get('/:partId', async (req, res) => {
     }
 
     // Optimized: Use single SQL query instead of two aggregate calls
-    const stockResult = await prisma.$queryRaw<Array<{incoming: number, outgoing: number}>>`
+    const stockResult = await prisma.$queryRaw<Array<{incoming: bigint, outgoing: bigint}>>`
       SELECT 
-        COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0)::INTEGER as incoming,
-        COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0)::INTEGER as outgoing
+        COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0) as incoming,
+        COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0) as outgoing
       FROM "InventoryTransaction"
       WHERE "partId" = ${partId}
     `;
 
-    const inQty = stockResult[0]?.incoming ?? 0;
-    const outQty = stockResult[0]?.outgoing ?? 0;
+    const inQty = Number(stockResult[0]?.incoming ?? 0);
+    const outQty = Number(stockResult[0]?.outgoing ?? 0);
     const stock = inQty - outQty;
 
     res.json({ partId, stock, incoming: inQty, outgoing: outQty });
@@ -79,15 +79,15 @@ router.post('/:partId/adjust', async (req, res) => {
     }
 
     // Get current stock using optimized single query
-    const stockResult = await prisma.$queryRaw<Array<{incoming: number, outgoing: number}>>`
+    const stockResult = await prisma.$queryRaw<Array<{incoming: bigint, outgoing: bigint}>>`
       SELECT 
-        COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0)::INTEGER as incoming,
-        COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0)::INTEGER as outgoing
+        COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0) as incoming,
+        COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0) as outgoing
       FROM "InventoryTransaction"
       WHERE "partId" = ${partId}
     `;
 
-    const currentStock = (stockResult[0]?.incoming ?? 0) - (stockResult[0]?.outgoing ?? 0);
+    const currentStock = Number(stockResult[0]?.incoming ?? 0) - Number(stockResult[0]?.outgoing ?? 0);
     const difference = quantity - currentStock;
 
     if (difference !== 0) {
@@ -121,71 +121,67 @@ router.get('/', async (req, res) => {
   try {
     const { onlyPurchased } = req.query;
     
-    // Optimized: Use single SQL query with GROUP BY instead of N queries
-    // This reduces database calls from O(2n) to O(1)
-    const stockQuery = onlyPurchased === 'true'
-      ? prisma.$queryRaw`
-          SELECT 
-            p.id,
-            p."partNumber",
-            p."itemName",
-            p.description,
-            p."hsnCode",
-            p."gstPercent",
-            p.unit,
-            p.mrp,
-            p.rtl,
-            p.barcode,
-            p."qrCode",
-            p."isDeleted",
-            p."createdAt",
-            p."updatedAt",
-            COALESCE(SUM(CASE WHEN it.direction = 'IN' THEN it.quantity ELSE 0 END), 0) as incoming,
-            COALESCE(SUM(CASE WHEN it.direction = 'OUT' THEN it.quantity ELSE 0 END), 0) as outgoing,
-            COALESCE(SUM(CASE WHEN it.direction = 'IN' THEN it.quantity ELSE 0 END), 0) -
-            COALESCE(SUM(CASE WHEN it.direction = 'OUT' THEN it.quantity ELSE 0 END), 0) as stock
-          FROM "Part" p
-          INNER JOIN "InventoryTransaction" it ON it."partId" = p.id
-          WHERE p."isDeleted" = false
-            AND EXISTS (
-              SELECT 1 FROM "InventoryTransaction" it2 
-              WHERE it2."partId" = p.id AND it2.direction = 'IN'
-            )
-          GROUP BY p.id, p."partNumber", p."itemName", p.description, p."hsnCode", 
-                   p."gstPercent", p.unit, p.mrp, p.rtl, p.barcode, p."qrCode", 
-                   p."isDeleted", p."createdAt", p."updatedAt"
-          ORDER BY p."partNumber" ASC
-        `
-      : prisma.$queryRaw`
-          SELECT 
-            p.id,
-            p."partNumber",
-            p."itemName",
-            p.description,
-            p."hsnCode",
-            p."gstPercent",
-            p.unit,
-            p.mrp,
-            p.rtl,
-            p.barcode,
-            p."qrCode",
-            p."isDeleted",
-            p."createdAt",
-            p."updatedAt",
-            COALESCE(SUM(CASE WHEN it.direction = 'IN' THEN it.quantity ELSE 0 END), 0) as incoming,
-            COALESCE(SUM(CASE WHEN it.direction = 'OUT' THEN it.quantity ELSE 0 END), 0) as outgoing,
-            COALESCE(SUM(CASE WHEN it.direction = 'IN' THEN it.quantity ELSE 0 END), 0) -
-            COALESCE(SUM(CASE WHEN it.direction = 'OUT' THEN it.quantity ELSE 0 END), 0) as stock
-          FROM "Part" p
-          LEFT JOIN "InventoryTransaction" it ON it."partId" = p.id
-          WHERE p."isDeleted" = false
-          GROUP BY p.id, p."partNumber", p."itemName", p.description, p."hsnCode", 
-                   p."gstPercent", p.unit, p.mrp, p.rtl, p.barcode, p."qrCode", 
-                   p."isDeleted", p."createdAt", p."updatedAt"
-          ORDER BY p."partNumber" ASC
-        `;
+    // If onlyPurchased filter is enabled, find parts with incoming transactions
+    let partFilter: any = { isDeleted: false };
+    
+    if (onlyPurchased === 'true') {
+      // Get all part IDs that have incoming inventory transactions
+      const partsWithPurchases = await prisma.inventoryTransaction.findMany({
+        where: { direction: 'IN' },
+        select: { partId: true },
+        distinct: ['partId']
+      });
+      
+      const partIds = partsWithPurchases.map(t => t.partId);
+      if (partIds.length === 0) {
+        return res.json([]);
+      }
+      partFilter = { 
+        isDeleted: false,
+        id: { in: partIds }
+      };
+    }
+    
+    const parts = await prisma.part.findMany({ 
+      where: partFilter,
+      orderBy: { partNumber: 'asc' } 
+    });
 
-    const result = await stockQuery;
+    // If no parts, return empty array
+    if (parts.length === 0) {
+      return res.json([]);
+    }
+
+    // Optimized: Get all stock calculations in one query
+    const partIds = parts.map(p => p.id);
+    const stockData = await prisma.$queryRaw<Array<{partid: number, incoming: bigint, outgoing: bigint}>>`
+      SELECT 
+        "partId" as partid,
+        COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0) as incoming,
+        COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0) as outgoing
+      FROM "InventoryTransaction"
+      WHERE "partId" = ANY(${partIds})
+      GROUP BY "partId"
+    `;
+
+    // Create a map for quick lookup
+    const stockMap = new Map(
+      stockData.map(s => [
+        Number(s.partid), 
+        { 
+          incoming: Number(s.incoming), 
+          outgoing: Number(s.outgoing),
+          stock: Number(s.incoming) - Number(s.outgoing)
+        }
+      ])
+    );
+
+    // Combine parts with stock data
+    const result = parts.map(p => ({
+      ...p,
+      stock: stockMap.get(p.id)?.stock ?? 0
+    }));
+
     res.json(result);
   } catch (e) {
     console.error(e);

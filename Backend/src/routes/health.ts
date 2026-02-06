@@ -64,4 +64,86 @@ router.get('/live', (_req: Request, res: Response) => {
   res.status(200).json({ alive: true, timestamp: new Date().toISOString() });
 });
 
+// Database data verification endpoint (temporary debug)
+router.get('/data-check', async (_req: Request, res: Response) => {
+  try {
+    const [
+      totalParts,
+      activeParts,
+      totalSuppliers,
+      activeSuppliers,
+      totalCustomers,
+      activeCustomers,
+      totalInvoices,
+      invoicesByType,
+      totalTransactions
+    ] = await Promise.all([
+      prisma.part.count(),
+      prisma.part.count({ where: { isDeleted: false } }),
+      prisma.supplier.count(),
+      prisma.supplier.count({ where: { isDeleted: false } }),
+      prisma.customer.count(),
+      prisma.customer.count({ where: { isDeleted: false } }),
+      prisma.invoice.count(),
+      prisma.invoice.groupBy({
+        by: ['type'],
+        _count: true
+      }),
+      prisma.inventoryTransaction.count()
+    ]);
+
+    const sampleParts = await prisma.part.findMany({
+      take: 3,
+      orderBy: { id: 'asc' }
+    });
+
+    const sampleSuppliers = await prisma.supplier.findMany({
+      take: 3,
+      orderBy: { id: 'asc' }
+    });
+
+    const sampleInvoices = await prisma.invoice.findMany({
+      take: 3,
+      orderBy: { id: 'desc' },
+      select: {
+        id: true,
+        invoiceNumber: true,
+        type: true,
+        date: true,
+        total: true
+      }
+    });
+
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      counts: {
+        parts: { total: totalParts, active: activeParts, deleted: totalParts - activeParts },
+        suppliers: { total: totalSuppliers, active: activeSuppliers, deleted: totalSuppliers - activeSuppliers },
+        customers: { total: totalCustomers, active: activeCustomers, deleted: totalCustomers - activeCustomers },
+        invoices: { 
+          total: totalInvoices,
+          byType: invoicesByType.reduce((acc, item) => ({ ...acc, [item.type]: item._count }), {})
+        },
+        inventoryTransactions: totalTransactions
+      },
+      samples: {
+        parts: sampleParts,
+        suppliers: sampleSuppliers,
+        invoices: sampleInvoices
+      },
+      message: totalParts === 0 ? 'WARNING: No parts found in database!' : 
+               totalInvoices === 0 ? 'WARNING: No invoices found in database!' :
+               'Data exists in database'
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      error: error.message,
+      message: 'Failed to check database data'
+    });
+  }
+});
+
 export default router;

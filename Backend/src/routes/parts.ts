@@ -171,15 +171,15 @@ router.get("/search", async (req, res) => {
   try {
     // Optimized helper function to add stock info using single query
     const addStockInfo = async (part: any) => {
-      const stockResult = await prisma.$queryRaw<Array<{incoming: number, outgoing: number}>>`
+      const stockResult = await prisma.$queryRaw<Array<{incoming: bigint, outgoing: bigint}>>`
         SELECT 
-          COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0)::INTEGER as incoming,
-          COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0)::INTEGER as outgoing
+          COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0) as incoming,
+          COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0) as outgoing
         FROM "InventoryTransaction"
         WHERE "partId" = ${part.id}
       `;
-      const inQty = stockResult[0]?.incoming ?? 0;
-      const outQty = stockResult[0]?.outgoing ?? 0;
+      const inQty = Number(stockResult[0]?.incoming ?? 0);
+      const outQty = Number(stockResult[0]?.outgoing ?? 0);
       return { ...part, stock: inQty - outQty };
     };
 
@@ -339,15 +339,15 @@ router.delete("/:id", async (req, res) => {
     }
 
     // Check if part has any stock using optimized single query
-    const stockResult = await prisma.$queryRaw<Array<{incoming: number, outgoing: number}>>`
+    const stockResult = await prisma.$queryRaw<Array<{incoming: bigint, outgoing: bigint}>>`
       SELECT 
-        COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0)::INTEGER as incoming,
-        COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0)::INTEGER as outgoing
+        COALESCE(SUM(CASE WHEN direction = 'IN' THEN quantity ELSE 0 END), 0) as incoming,
+        COALESCE(SUM(CASE WHEN direction = 'OUT' THEN quantity ELSE 0 END), 0) as outgoing
       FROM "InventoryTransaction"
       WHERE "partId" = ${id}
     `;
 
-    const stock = (stockResult[0]?.incoming ?? 0) - (stockResult[0]?.outgoing ?? 0);
+    const stock = Number(stockResult[0]?.incoming ?? 0) - Number(stockResult[0]?.outgoing ?? 0);
     
     // Warn if part has stock
     if (stock > 0) {
