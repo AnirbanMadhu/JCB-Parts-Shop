@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
-import { cacheMiddleware } from '../middleware/cache';
+import { cacheMiddleware, clearCachePattern } from '../middleware/cache';
 // import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
