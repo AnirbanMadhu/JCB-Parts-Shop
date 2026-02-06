@@ -17,11 +17,6 @@ router.get('/dashboard', async (_req, res) => {
     ]);
 
     const [purchaseInvoices, salesInvoices] = await Promise.all([
-      lowStockParts
-    ] = await Promise.all([
-      prisma.part.count(),
-      prisma.supplier.count(),
-      prisma.customer.count(),
       prisma.invoice.aggregate({
         where: { type: 'PURCHASE', status: { not: 'CANCELLED' } },
         _sum: { total: true },
