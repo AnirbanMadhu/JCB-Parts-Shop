@@ -89,7 +89,7 @@ export default function CustomersList({ customers }: Props) {
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
         onClose={() =>
-          setConfirmDialog({ isOpen: false, customerId: "", customerName: "" })
+          setConfirmDialog({ isOpen: false, customerId: 0, customerName: "" })
         }
         onConfirm={handleDeleteConfirm}
         title="Delete Customer"
