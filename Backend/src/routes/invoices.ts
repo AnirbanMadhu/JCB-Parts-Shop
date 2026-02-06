@@ -53,32 +53,58 @@ router.get('/next-number', async (req, res) => {
 
     // Use transaction to prevent race conditions
     await prisma.$transaction(async (tx) => {
-      // Get count of SUBMITTED invoices only (exclude DRAFT) to determine next sequence number
-      // This ensures drafts don't consume sequence numbers and numbering starts from 01
-      if (type === 'SALE') {
-        const invoiceCount = await tx.invoice.count({
-          where: {
-            type: InvoiceType.SALE,
-            status: InvoiceStatus.SUBMITTED, // Only count submitted invoices
-            date: {
-              gte: startOfMonth,
-              lte: endOfMonth
-            }
+      // Get all invoices of this type in current month to find the highest sequence number
+      // Pattern: JCB/##/MONTH/YY-YY (e.g., JCB/01/FEB/25-26, JCB/02/FEB/25-26)
+      const invoiceNumberPattern = `JCB/%/${month}/${year}-${nextYear}`;
+      
+      const existingInvoices = await tx.invoice.findMany({
+        where: {
+          type: type === 'SALE' ? InvoiceType.SALE : InvoiceType.PURCHASE,
+          invoiceNumber: {
+            startsWith: `JCB/`,
+            contains: `/${month}/${year}-${nextYear}`
+          },
+          date: {
+            gte: startOfMonth,
+            lte: endOfMonth
           }
-        });
-        sequenceNumber = invoiceCount + 1;
-      } else if (type === 'PURCHASE') {
-        const invoiceCount = await tx.invoice.count({
-          where: {
-            type: InvoiceType.PURCHASE,
-            status: InvoiceStatus.SUBMITTED, // Only count submitted invoices
-            date: {
-              gte: startOfMonth,
-              lte: endOfMonth
-            }
+        },
+        select: {
+          invoiceNumber: true
+        },
+        orderBy: {
+          invoiceNumber: 'asc'
+        }
+      });
+
+      // Extract sequence numbers from existing invoice numbers
+      const existingSequenceNumbers = existingInvoices
+        .map(inv => {
+          // Parse invoice number format: JCB/##/MONTH/YY-YY
+          const match = inv.invoiceNumber.match(/^JCB\/(\d+)\//);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+        .filter(num => num > 0)
+        .sort((a, b) => a - b);
+
+      // Find the first available sequence number (fill gaps) or use max + 1
+      if (existingSequenceNumbers.length === 0) {
+        sequenceNumber = 1;
+      } else {
+        // Check for gaps in sequence
+        let foundGap = false;
+        for (let i = 1; i <= existingSequenceNumbers.length; i++) {
+          if (!existingSequenceNumbers.includes(i)) {
+            sequenceNumber = i;
+            foundGap = true;
+            break;
           }
-        });
-        sequenceNumber = invoiceCount + 1;
+        }
+        
+        // If no gaps, use next number after highest
+        if (!foundGap) {
+          sequenceNumber = Math.max(...existingSequenceNumbers) + 1;
+        }
       }
     });
 
