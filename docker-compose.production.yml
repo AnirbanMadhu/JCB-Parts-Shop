@@ -14,11 +14,11 @@ services:
       - "-c"
       - "max_connections=200"
       - "-c"
-      - "shared_buffers=256MB"
+      - "shared_buffers=512MB"
       - "-c"
-      - "effective_cache_size=1GB"
+      - "effective_cache_size=2GB"
       - "-c"
-      - "maintenance_work_mem=64MB"
+      - "maintenance_work_mem=128MB"
       - "-c"
       - "checkpoint_completion_target=0.9"
       - "-c"
@@ -30,11 +30,15 @@ services:
       - "-c"
       - "effective_io_concurrency=200"
       - "-c"
-      - "work_mem=4MB"
+      - "work_mem=8MB"
       - "-c"
       - "min_wal_size=1GB"
       - "-c"
       - "max_wal_size=4GB"
+      - "-c"
+      - "idle_in_transaction_session_timeout=300000"
+      - "-c"
+      - "statement_timeout=30000"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./Backend/backups:/backups
@@ -64,9 +68,12 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      # Increased connection pool: connection_limit=100, pool_timeout=60s, connection_timeout=10s
-      # Higher limits prevent pool exhaustion under load
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public&connection_limit=100&pool_timeout=60&connect_timeout=10
+      # Optimized connection pool settings to prevent 504 timeouts:
+      # - connection_limit=80: Maximum connections per Prisma instance (below PostgreSQL max_connections=200)
+      # - pool_timeout=30: Maximum time (seconds) to wait for connection from pool
+      # - connect_timeout=15: Maximum time (seconds) to establish new connection  
+      # - statement_cache_size=100: Prepared statement cache size for better performance
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public&connection_limit=80&pool_timeout=30&connect_timeout=15&statement_cache_size=100
       PORT: ${BACKEND_PORT:-4001}
       JWT_SECRET: ${JWT_SECRET}
       FRONTEND_URL: ${FRONTEND_URL}

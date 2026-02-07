@@ -1,9 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../prisma';
+import { withQueryTimeout } from '../middleware/timeout';
 
 const router = Router();
 
-// Comprehensive health check endpoint
+// Comprehensive health check endpoint with timeout protection
 router.get('/health', async (_req: Request, res: Response) => {
   const checks = {
     status: 'ok',
@@ -21,20 +22,26 @@ router.get('/health', async (_req: Request, res: Response) => {
   };
 
   try {
-    // Check database connection
-    await prisma.$queryRaw`SELECT 1`;
+    // Check database connection with timeout (5 seconds)
+    await withQueryTimeout(
+      () => prisma.$queryRaw`SELECT 1`,
+      5000
+    );
     checks.database = 'connected';
 
-    // Get connection pool stats
+    // Get connection pool stats with timeout
     try {
-      const connectionStats: any = await prisma.$queryRaw`
-        SELECT 
-          count(*) FILTER (WHERE state = 'active') as active,
-          count(*) FILTER (WHERE state = 'idle') as idle,
-          count(*) as total
-        FROM pg_stat_activity 
-        WHERE datname = current_database()
-      `;
+      const connectionStats: any = await withQueryTimeout(
+        () => prisma.$queryRaw`
+          SELECT 
+            count(*) FILTER (WHERE state = 'active') as active,
+            count(*) FILTER (WHERE state = 'idle') as idle,
+            count(*) as total
+          FROM pg_stat_activity 
+          WHERE datname = current_database()
+        `,
+        3000
+      );
       
       if (connectionStats && connectionStats.length > 0) {
         checks.connections = {
@@ -45,7 +52,8 @@ router.get('/health', async (_req: Request, res: Response) => {
     } catch (statsError) {
       console.error('Failed to get connection stats:', statsError);
     }
-  } catch (error) {
+  } catch (error: any) {
+    console.error('[Health Check] Database check failed:', error.message);
     checks.database = 'disconnected';
     checks.status = 'degraded';
   }
@@ -75,13 +83,17 @@ router.get('/health', async (_req: Request, res: Response) => {
   res.status(statusCode).json(checks);
 });
 
-// Readiness check (for Kubernetes/Docker health checks)
+// Readiness check (for Kubernetes/Docker health checks) with timeout
 router.get('/ready', async (_req: Request, res: Response) => {
   try {
-    await prisma.$queryRaw`SELECT 1`;
+    await withQueryTimeout(
+      () => prisma.$queryRaw`SELECT 1`,
+      5000
+    );
     res.status(200).json({ ready: true });
-  } catch (error) {
-    res.status(503).json({ ready: false });
+  } catch (error: any) {
+    console.error('[Readiness Check] Failed:', error.message);
+    res.status(503).json({ ready: false, error: 'Database unavailable' });
   }
 });
 

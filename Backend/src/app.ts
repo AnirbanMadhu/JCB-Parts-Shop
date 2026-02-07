@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { json } from 'express';
+import { requestTimeout } from './middleware/timeout';
 import partsRouter from './routes/parts';
 import invoicesRouter from './routes/invoices';
 import invoicesBulkRouter from './routes/invoices-bulk';
@@ -15,6 +16,9 @@ const app = express();
 
 // Trust proxy - important for getting correct client IP behind reverse proxy
 app.set('trust proxy', 1);
+
+// Request timeout middleware - prevent hanging requests
+app.use(requestTimeout(30000)); // 30 seconds timeout
 
 // Middleware
 const allowedOrigins = process.env.NODE_ENV === 'production'

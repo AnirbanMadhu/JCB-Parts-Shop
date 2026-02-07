@@ -351,7 +351,85 @@ docker stats
 docker exec jcb_postgres_prod pg_dump -U username dbname > backup.sql
 ```
 
-## 📞 Support
+## � Troubleshooting
+
+### 504 Gateway Timeout Error
+
+If you're experiencing 504 Gateway Timeout errors, this is typically caused by database connection pool exhaustion or slow queries. The application now includes comprehensive fixes:
+
+**Automatic Fixes Applied:**
+1. ✅ Enhanced Prisma connection pool management with auto-reconnect
+2. ✅ Request timeout middleware (30-second timeout)
+3. ✅ Query timeout wrapper for database operations
+4. ✅ PostgreSQL statement timeout (30 seconds)
+5. ✅ Connection health monitoring every 30 seconds
+6. ✅ Optimized connection pool parameters
+
+**To apply these fixes:**
+
+```bash
+# 1. Stop running containers
+docker-compose -f docker-compose.production.yml down
+
+# 2. Rebuild with updated configuration
+docker-compose -f docker-compose.production.yml up -d --build
+
+# 3. Monitor logs for successful startup
+docker-compose -f docker-compose.production.yml logs -f backend
+
+# 4. Verify health endpoint
+curl http://localhost:4001/api/health
+```
+
+**Connection Pool Configuration:**
+- Production: 80 connections max (PostgreSQL max_connections=200)
+- Development: 50 connections max (PostgreSQL max_connections=150)
+- Pool timeout: 30 seconds
+- Connect timeout: 15 seconds
+- Statement cache: 100 prepared statements
+
+**Database Connection Monitoring:**
+```bash
+# Check active database connections
+docker exec jcb_postgres_prod psql -U yourusername -d yourdbname -c "SELECT count(*) FROM pg_stat_activity WHERE datname = current_database();"
+
+# View connection details
+curl http://localhost:4001/api/health | jq '.connections'
+```
+
+### Other Common Issues
+
+**Backend won't start:**
+```bash
+# Check logs
+docker logs jcb_backend_prod
+
+# Verify environment variables
+docker exec jcb_backend_prod env | grep DATABASE_URL
+
+# Test database connectivity
+docker exec jcb_postgres_prod pg_isready -U yourusername
+```
+
+**Database migration errors:**
+```bash
+# Reset and reapply migrations (development only!)
+docker-compose exec backend npx prisma migrate reset --force
+
+# Deploy pending migrations (production)
+docker-compose exec backend npx prisma migrate deploy
+```
+
+**Out of memory errors:**
+```bash
+# Increase Docker memory limits in docker-compose.yml
+deploy:
+  resources:
+    limits:
+      memory: 2G
+```
+
+## �📞 Support
 
 For support, please open an issue in the GitHub repository or contact the maintainers.
 
