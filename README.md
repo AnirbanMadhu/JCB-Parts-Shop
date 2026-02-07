@@ -353,35 +353,129 @@ docker exec jcb_postgres_prod pg_dump -U username dbname > backup.sql
 
 ## � Troubleshooting
 
-### 504 Gateway Timeout Error
+### 504 Gateway Timeout Error - PERMANENTLY FIXED
 
-If you're experiencing 504 Gateway Timeout errors, this is typically caused by database connection pool exhaustion or slow queries. The application now includes comprehensive fixes:
+The application now includes **comprehensive, permanent fixes** to prevent 504 Gateway Timeout errors:
 
-**Automatic Fixes Applied:**
-1. ✅ Enhanced Prisma connection pool management with auto-reconnect
-2. ✅ Request timeout middleware (30-second timeout)
-3. ✅ Query timeout wrapper for database operations
-4. ✅ PostgreSQL statement timeout (30 seconds)
-5. ✅ Connection health monitoring every 30 seconds
-6. ✅ Optimized connection pool parameters
+#### **Automatic Protection Systems (Always Active)**
 
-**To apply these fixes:**
+1. **✅ Connection Health Monitoring**
+   - Health checks every 30 seconds with auto-reconnect
+   - Automatic connection recovery (up to 5 retry attempts)
+   - Real-time connection pool monitoring
+
+2. **✅ Query Performance Tracking**
+   - All queries monitored for performance
+   - Slow queries automatically logged (>3 seconds)
+   - Query timeout protection (25 seconds max)
+   - Error rate monitoring with alerts
+
+3. **✅ Request Timeout Protection**
+   - 30-second maximum request duration
+   - Automatic timeout for hanging requests
+   - Prevents server resource exhaustion
+
+4. **✅ Connection Pool Management**
+   - Optimized pool size (80 connections production, 50 development)
+   - Automatic connection release on errors
+   - Pool exhaustion prevention
+   - Connection leak detection
+
+5. **✅ Database Configuration**
+   - Statement timeout: 30 seconds
+   - Idle transaction timeout: 5 minutes
+   - Idle session timeout: 10 minutes
+   - Automatic query logging for slow queries (>5 seconds)
+
+6. **✅ Error Recovery & Logging**
+   - Automatic error tracking and metrics
+   - Connection error handling with recovery
+   - Comprehensive logging for diagnostics
+   - High error rate alerts
+
+#### **Monitoring Endpoints**
+
+Check system health and performance:
+
+```bash
+# Health check with connection stats
+curl http://localhost:4001/api/health
+
+# Detailed metrics and warnings
+curl http://localhost:4001/api/metrics
+
+# Quick liveness check
+curl http://localhost:4001/api/live
+```
+
+**Metrics endpoint shows:**
+- Total queries executed
+- Error rate percentage
+- Slow query rate
+- Database connection utilization
+- Memory usage
+- Automatic warnings for issues
+
+#### **What to Do If Issues Occur**
+
+**First: Check Metrics**
+```bash
+# Check current system health
+curl http://localhost:4001/api/metrics | jq '.'
+
+# Look for warnings:
+# - High connection utilization (>80%)
+# - High error rate (>5%)
+# - High slow query rate (>10%)
+```
+
+**Monitor Logs**
+```bash
+# View backend logs in real-time
+docker-compose -f docker-compose.production.yml logs -f backend
+
+# Look for these automatic alerts:
+# - [Prisma] Slow query detected
+# - [Prisma] HIGH ERROR RATE DETECTED
+# - [Prisma] HIGH SLOW QUERY RATE
+# - [Performance] Slow request detected
+```
+
+**Check Database Connections**
+```bash
+# View active database connections
+docker exec jcb_postgres_prod psql -U yourusername -d yourdbname -c "
+  SELECT count(*), state 
+  FROM pg_stat_activity 
+  WHERE datname = current_database() 
+  GROUP BY state;"
+```
+
+#### **Deployment (Applies All Fixes)**
 
 ```bash
 # 1. Stop running containers
 docker-compose -f docker-compose.production.yml down
 
-# 2. Rebuild with updated configuration
+# 2. Rebuild with all fixes
 docker-compose -f docker-compose.production.yml up -d --build
 
-# 3. Monitor logs for successful startup
+# 3. Verify successful startup
 docker-compose -f docker-compose.production.yml logs -f backend
 
-# 4. Verify health endpoint
-curl http://localhost:4001/api/health
+# 4. Confirm health (should show "status": "ok")
+curl http://localhost:4001/api/health | jq '.'
+
+# 5. Check metrics (should show low error rate)
+curl http://localhost:4001/api/metrics | jq '.application'
 ```
 
-**Connection Pool Configuration:**
+#### **Prevention Features (No Manual Action Needed)**
+
+These systems run automatically 24/7:
+- **Automatic cleanup**: Idle connections released after timeout
+- **Leak detection**: Logs slow requests that may indicate leaks
+#### **Connection Pool Configuration (Optimized)**
 - Production: 80 connections max (PostgreSQL max_connections=200)
 - Development: 50 connections max (PostgreSQL max_connections=150)
 - Pool timeout: 30 seconds

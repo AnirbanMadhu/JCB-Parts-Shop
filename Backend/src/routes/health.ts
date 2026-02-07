@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { prisma } from '../prisma';
+import { prisma, getConnectionMetrics } from '../prisma';
 import { withQueryTimeout } from '../middleware/timeout';
 
 const router = Router();
@@ -70,17 +70,31 @@ router.get('/health', async (_req: Request, res: Response) => {
 
   const statusCode = checks.status === 'ok' ? 200 : 503;
   
-  // Only send detailed info in non-production
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(statusCode).json({
-      status: checks.status,
-      timestamp: checks.timestamp,
-      database: checks.database,
-      connections: checks.connections,
-    });
+  // Add connection metrics
+  const metrics = getConnectionMetrics();
+  const response: any = {
+    status: checks.status,
+    timestamp: checks.timestamp,
+    database: checks.database,
+    connections: checks.connections,
+  };
+  
+  // Include metrics in response
+  if (process.env.NODE_ENV !== 'production') {
+    response.uptime = checks.uptime;
+    response.environment = checks.environment;
+    response.version = checks.version;
+    response.email = checks.email;
+    response.metrics = metrics;
+  } else {
+    // Even in production, show critical metrics
+    response.metrics = {
+      totalQueries: metrics?.queries || 0,
+      errorRate: metrics && metrics.queries > 0 ? ((metrics.errors / metrics.queries) * 100).toFixed(2) + '%' : '0%'
+    };
   }
 
-  res.status(statusCode).json(checks);
+  res.status(statusCode).json(response);
 });
 
 // Readiness check (for Kubernetes/Docker health checks) with timeout
@@ -100,6 +114,69 @@ router.get('/ready', async (_req: Request, res: Response) => {
 // Liveness check (for Kubernetes/Docker liveness probes)
 router.get('/live', (_req: Request, res: Response) => {
   res.status(200).json({ alive: true, timestamp: new Date().toISOString() });
+});
+
+// Monitoring endpoint - detailed metrics for troubleshooting
+router.get('/metrics', async (_req: Request, res: Response) => {
+  try {
+    const metrics = getConnectionMetrics();
+    
+    // Get database statistics with timeout
+    let dbStats = null;
+    try {
+      const stats: any = await withQueryTimeout(
+        () => prisma.$queryRaw`
+          SELECT 
+            (SELECT count(*) FROM pg_stat_activity WHERE datname = current_database()) as total_connections,
+            (SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND state = 'active') as active_connections,
+            (SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND state = 'idle') as idle_connections,
+            (SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND state = 'idle in transaction') as idle_in_transaction,
+            pg_database_size(current_database()) as database_size,
+            (SELECT setting::int FROM pg_settings WHERE name = 'max_connections') as max_connections
+        `,
+        5000
+      );
+      
+      if (stats && stats.length > 0) {
+        dbStats = {
+          totalConnections: Number(stats[0].total_connections),
+          activeConnections: Number(stats[0].active_connections),
+          idleConnections: Number(stats[0].idle_connections),
+          idleInTransaction: Number(stats[0].idle_in_transaction),
+          databaseSize: Number(stats[0].database_size),
+          maxConnections: Number(stats[0].max_connections),
+          utilizationPercent: ((Number(stats[0].total_connections) / Number(stats[0].max_connections)) * 100).toFixed(2)
+        };
+      }
+    } catch (error: any) {
+      console.error('[Metrics] Failed to get database stats:', error.message);
+    }
+    
+    res.json({
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      application: {
+        totalQueries: metrics?.queries || 0,
+        totalErrors: metrics?.errors || 0,
+        slowQueries: metrics?.slowQueries || 0,
+        errorRate: metrics && metrics.queries > 0 ? ((metrics.errors / metrics.queries) * 100).toFixed(2) + '%' : '0%',
+        slowQueryRate: metrics && metrics.queries > 0 ? ((metrics.slowQueries / metrics.queries) * 100).toFixed(2) + '%' : '0%',
+        lastHealthCheck: metrics?.lastHealthCheck
+      },
+      database: dbStats,
+      warnings: [
+        ...(dbStats && Number(dbStats.utilizationPercent) > 80 ? [`High connection utilization: ${dbStats.utilizationPercent}%`] : []),
+        ...(metrics && metrics.queries > 20 && (metrics.errors / metrics.queries) > 0.05 ? ['High error rate detected'] : []),
+        ...(metrics && metrics.queries > 50 && (metrics.slowQueries / metrics.queries) > 0.1 ? ['High slow query rate detected'] : [])
+      ]
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      error: 'Failed to retrieve metrics',
+      message: error.message
+    });
+  }
 });
 
 // Database data verification endpoint (temporary debug)

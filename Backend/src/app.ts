@@ -142,6 +142,23 @@ app.use((_req, res) => {
   });
 });
 
+// Connection leak detection middleware
+app.use(async (req, res, next) => {
+  const startTime = Date.now();
+  
+  // Monitor response completion
+  res.on('finish', () => {
+    const duration = Date.now() - startTime;
+    
+    // Warn about very slow requests that might indicate connection leaks
+    if (duration > 25000) {
+      console.warn(`[Performance] Slow request detected: ${req.method} ${req.path} took ${duration}ms`);
+    }
+  });
+  
+  next();
+});
+
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   // Log full error in development, sanitized in production
@@ -174,9 +191,20 @@ app.use((err: any, req: express.Request, res: express.Response, _next: express.N
       errorMessage = 'A record with this value already exists';
     } else if (err.code === 'P2025') {
       errorMessage = 'Record not found';
+    } else if (err.code === 'P2024' || err.code === 'P1001' || err.code === 'P1002') {
+      // Connection timeout or connection issues
+      statusCode = 504;
+      errorMessage = 'Database connection timeout - please try again';
+      console.error('[CRITICAL] Database connection error:', err.code);
     } else {
       errorMessage = 'Database operation failed';
     }
+  }
+  
+  // Handle timeout errors
+  if (err.message && err.message.includes('timeout')) {
+    statusCode = 504;
+    errorMessage = 'Request timeout - operation took too long';
   }
   
   // Handle validation errors

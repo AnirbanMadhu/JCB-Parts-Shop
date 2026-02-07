@@ -74,6 +74,12 @@ services:
       - jcb_network
     command: >
       sh -c "npx prisma migrate deploy && node dist/index.js"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${PORT:-4001}/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     security_opt:
       - no-new-privileges:true
     read_only: false
