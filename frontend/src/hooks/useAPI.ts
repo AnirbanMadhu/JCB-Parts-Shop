@@ -72,7 +72,10 @@ export function useInvoices(type?: 'PURCHASE' | 'SALE') {
   const url = type ? `/api/invoices?type=${type}` : '/api/invoices';
   return useSWR<Invoice[]>(url, fetcher, {
     revalidateOnFocus: true,
-    refreshInterval: 10000, // Refresh every 10 seconds
+    refreshInterval: 0, // No auto-polling; revalidates on focus/mutation only
+    dedupingInterval: 5000,
+    refreshWhenHidden: false,
+    refreshWhenOffline: false,
   });
 }
 

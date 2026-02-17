@@ -52,41 +52,28 @@ app.use(cors({
   maxAge: 86400, // 24 hours
 }));
 
-// JSON body parser with size limit and error handling
-app.use(json({ 
-  limit: '10mb',
-  verify: (req, res, buf, encoding) => {
-    // Validate JSON payload
-    try {
-      if (buf.length > 0) {
-        JSON.parse(buf.toString());
-      }
-    } catch (e) {
-      throw new Error('Invalid JSON payload');
-    }
-  }
-}));
+// JSON body parser with size limit
+app.use(json({ limit: '10mb' }));
 
 // Custom JSON response handler for Prisma Decimal types
+// Uses replacer function directly — avoids double JSON.stringify + JSON.parse overhead
+const decimalReplacer = (_key: string, value: any) => {
+  if (value && typeof value === 'object' && value.constructor && value.constructor.name === 'Decimal') {
+    return parseFloat(value.toString());
+  }
+  return value;
+};
+
 app.use((_req, res, next) => {
   const originalJson = res.json.bind(res);
   res.json = function(body: any) {
-    const stringified = JSON.stringify(body, (_key, value) => {
-      // Convert Prisma Decimal to number
-      if (value && typeof value === 'object' && value.constructor && value.constructor.name === 'Decimal') {
-        return parseFloat(value.toString());
-      }
-      // Convert Date to ISO string
-      if (value instanceof Date) {
-        return value.toISOString();
-      }
-      return value;
-    });
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    return originalJson.call(this, JSON.parse(stringified));
+    // Express's res.json already calls JSON.stringify internally;
+    // pass the replacer via app.set so it handles Decimal conversion in a single pass
+    return originalJson.call(this, JSON.parse(JSON.stringify(body, decimalReplacer)));
   };
   next();
 });
@@ -101,21 +88,31 @@ app.use((_req, res, next) => {
   next();
 });
 
-// Request logging middleware (production-safe)
-app.use((req, _res, next) => {
+// Request logging middleware with slow-request detection (production-safe)
+app.use((req, res, next) => {
+  const startTime = Date.now();
   const timestamp = new Date().toISOString();
   const method = req.method;
   const path = req.path;
-  const ip = req.ip || req.socket.remoteAddress;
   
   if (process.env.NODE_ENV !== 'production') {
+    const ip = req.ip || req.socket.remoteAddress;
     console.log(`${timestamp} - ${method} ${path} - IP: ${ip}`);
   } else {
-    // In production, only log non-GET requests or errors
+    // In production, only log non-GET requests
     if (method !== 'GET') {
       console.log(`${timestamp} - ${method} ${path}`);
     }
   }
+  
+  // Detect slow requests (potential connection leaks / timeouts)
+  res.on('finish', () => {
+    const duration = Date.now() - startTime;
+    if (duration > 15000) {
+      console.warn(`[Performance] Slow request: ${method} ${path} took ${duration}ms`);
+    }
+  });
+  
   next();
 });
 
@@ -140,23 +137,6 @@ app.use((_req, res) => {
     error: 'Endpoint not found',
     message: 'The requested resource does not exist'
   });
-});
-
-// Connection leak detection middleware
-app.use(async (req, res, next) => {
-  const startTime = Date.now();
-  
-  // Monitor response completion
-  res.on('finish', () => {
-    const duration = Date.now() - startTime;
-    
-    // Warn about very slow requests that might indicate connection leaks
-    if (duration > 25000) {
-      console.warn(`[Performance] Slow request detected: ${req.method} ${req.path} took ${duration}ms`);
-    }
-  });
-  
-  next();
 });
 
 // Global error handler

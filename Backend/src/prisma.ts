@@ -20,15 +20,32 @@ if (!globalForPrisma.connectionMetrics) {
   };
 }
 
-// Enhanced Prisma Configuration with robust connection pool management and query monitoring
+// Reset counters periodically to prevent unbounded growth over months
+const METRICS_RESET_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
+const metricsResetTimer = setInterval(() => {
+  if (globalForPrisma.connectionMetrics) {
+    const m = globalForPrisma.connectionMetrics;
+    if (m.queries > 100000) {
+      console.log(`[Prisma] Resetting metrics counters (queries: ${m.queries}, errors: ${m.errors})`);
+      m.queries = 0;
+      m.errors = 0;
+      m.slowQueries = 0;
+    }
+  }
+}, METRICS_RESET_INTERVAL);
+metricsResetTimer.unref(); // Don't prevent process exit
+
+// Enhanced Prisma Configuration with robust connection pool management
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: [
-      { emit: 'event', level: 'query' },
-      { emit: 'event', level: 'error' },
-      { emit: 'event', level: 'warn' }
-    ],
+    log: process.env.NODE_ENV === 'production'
+      ? ['error', 'warn']  // Minimal logging in production (no query event listeners)
+      : [
+          { emit: 'event', level: 'query' },
+          { emit: 'event', level: 'error' },
+          { emit: 'event', level: 'warn' }
+        ],
     datasources: {
       db: {
         url: process.env.DATABASE_URL,
@@ -38,11 +55,11 @@ export const prisma =
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-// Query performance monitoring - detect slow queries before they cause timeouts
+// Query performance monitoring - only attach event listeners in development
+// In production, event-level logging is disabled to prevent memory overhead
 const SLOW_QUERY_THRESHOLD = 3000; // 3 seconds
 
-// Type-safe event listeners
-if (typeof (prisma as any).$on === 'function') {
+if (process.env.NODE_ENV !== 'production' && typeof (prisma as any).$on === 'function') {
   (prisma as any).$on('query', (e: any) => {
     globalForPrisma.connectionMetrics!.queries++;
     
@@ -71,7 +88,7 @@ export const getConnectionMetrics = () => globalForPrisma.connectionMetrics;
 
 // Connection health monitoring with auto-reconnect
 let connectionAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 5;
+const MAX_RECONNECT_ATTEMPTS = 10;
 const RECONNECT_INTERVAL = 5000; // 5 seconds
 
 const ensureConnection = async (): Promise<boolean> => {
@@ -89,7 +106,7 @@ const ensureConnection = async (): Promise<boolean> => {
       console.log(`[Prisma] Attempting to reconnect in ${RECONNECT_INTERVAL / 1000}s...`);
       
       try {
-        await prisma.$disconnect();
+        // Only $connect — don't $disconnect first as it kills active queries
         await new Promise(resolve => setTimeout(resolve, RECONNECT_INTERVAL));
         await prisma.$connect();
         console.log('[Prisma] Reconnection successful');
@@ -101,43 +118,23 @@ const ensureConnection = async (): Promise<boolean> => {
       }
     }
     
-    console.error('[Prisma] Max reconnection attempts reached. Manual intervention required.');
+    // Reset attempts after max reached so future health checks can retry
+    connectionAttempts = 0;
+    console.error('[Prisma] Max reconnection attempts reached. Will retry on next health check cycle.');
     return false;
   }
 };
 
-// Periodic connection health check and cleanup (every 30 seconds)
+// Periodic connection health check (every 5 minutes)
+const HEALTH_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const healthCheckInterval = setInterval(async () => {
-  await ensureConnection();
-  
-  // Log metrics every 5 minutes
-  const metrics = globalForPrisma.connectionMetrics!;
-  if (metrics.queries > 0 && metrics.queries % 100 === 0) {
-    console.log('[Prisma] Connection metrics:', {
-      totalQueries: metrics.queries,
-      errors: metrics.errors,
-      slowQueries: metrics.slowQueries,
-      errorRate: ((metrics.errors / metrics.queries) * 100).toFixed(2) + '%',
-      lastCheck: metrics.lastHealthCheck
-    });
+  try {
+    await ensureConnection();
+  } catch (err) {
+    // Swallow - ensureConnection already logs errors
   }
-  
-  // Alert if error rate is too high
-  if (metrics.errors > 0 && metrics.queries > 20) {
-    const errorRate = (metrics.errors / metrics.queries) * 100;
-    if (errorRate > 5) {
-      console.error(`[Prisma] HIGH ERROR RATE DETECTED: ${errorRate.toFixed(2)}% - Consider investigating database issues`);
-    }
-  }
-  
-  // Alert if too many slow queries
-  if (metrics.slowQueries > 10 && metrics.queries > 50) {
-    const slowRate = (metrics.slowQueries / metrics.queries) * 100;
-    if (slowRate > 10) {
-      console.warn(`[Prisma] HIGH SLOW QUERY RATE: ${slowRate.toFixed(2)}% - Consider optimizing queries or adding indexes`);
-    }
-  }
-}, 30000);
+}, HEALTH_CHECK_INTERVAL);
+healthCheckInterval.unref(); // Don't prevent process exit
 
 // Initial connection with retry mechanism
 const initializeConnection = async () => {
@@ -159,12 +156,19 @@ const initializeConnection = async () => {
 // Initialize connection on startup
 initializeConnection();
 
+// Track if shutdown is already in progress to prevent re-entry
+let isShuttingDown = false;
+
 // Graceful shutdown - disconnect Prisma on process termination
-const shutdown = async () => {
-  console.log('[Prisma] Shutting down gracefully...');
+const shutdown = async (signal: string, exitCode: number = 0) => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
   
-  // Clear health check interval
+  console.log(`[Prisma] Shutting down gracefully (signal: ${signal})...`);
+  
+  // Clear intervals
   clearInterval(healthCheckInterval);
+  clearInterval(metricsResetTimer);
   
   // Log final metrics
   const metrics = globalForPrisma.connectionMetrics!;
@@ -181,22 +185,29 @@ const shutdown = async () => {
   } catch (error: any) {
     console.error('[Prisma] Error during shutdown:', error.message);
   }
-  process.exit(0);
+  
+  // Force exit after 5s if still hanging
+  const forceExitTimer = setTimeout(() => {
+    console.error('[Prisma] Forced exit after timeout');
+    process.exit(exitCode);
+  }, 5000);
+  forceExitTimer.unref();
+  
+  process.exit(exitCode);
 };
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
-process.on('beforeExit', async () => {
-  console.log('[Prisma] Process ending, disconnecting...');
-  await prisma.$disconnect();
-});
+process.on('SIGINT', () => shutdown('SIGINT', 0));
+process.on('SIGTERM', () => shutdown('SIGTERM', 0));
 
-// Handle uncaught exceptions and promise rejections
-process.on('uncaughtException', async (error) => {
+// Handle uncaught exceptions - exit with error code so Docker restarts the container
+process.on('uncaughtException', (error) => {
   console.error('[FATAL] Uncaught Exception:', error);
-  await shutdown();
+  // Synchronous exit — async shutdown is unreliable after uncaughtException
+  process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[FATAL] Unhandled Promise Rejection at:', promise, 'reason:', reason);
+  // Exit so Docker restarts in a clean state
+  process.exit(1);
 });

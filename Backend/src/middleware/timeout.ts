@@ -39,11 +39,12 @@ export const withQueryTimeout = async <T>(
   queryFn: () => Promise<T>,
   timeoutMs: number = 25000
 ): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout>;
   return Promise.race([
-    queryFn(),
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error('Query timeout: Operation took too long to complete')), timeoutMs)
-    ),
+    queryFn().finally(() => clearTimeout(timer)),
+    new Promise<T>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('Query timeout: Operation took too long to complete')), timeoutMs);
+    }),
   ]);
 };
 

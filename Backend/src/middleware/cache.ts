@@ -8,16 +8,26 @@ interface CacheEntry {
 }
 
 const cache = new Map<string, CacheEntry>();
+const MAX_CACHE_SIZE = 500; // Prevent unbounded memory growth
 
 // Cleanup old cache entries every 5 minutes
-setInterval(() => {
+const cacheCleanupTimer = setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of cache.entries()) {
     if (now - entry.timestamp > entry.ttl) {
       cache.delete(key);
     }
   }
+  // Evict oldest entries if still over limit
+  if (cache.size > MAX_CACHE_SIZE) {
+    const entries = [...cache.entries()].sort((a, b) => a[1].timestamp - b[1].timestamp);
+    const toRemove = entries.slice(0, cache.size - MAX_CACHE_SIZE);
+    for (const [key] of toRemove) {
+      cache.delete(key);
+    }
+  }
 }, 5 * 60 * 1000);
+cacheCleanupTimer.unref(); // Don't prevent process exit
 
 /**
  * Cache middleware for GET requests
@@ -62,8 +72,8 @@ export const cacheMiddleware = (ttl: number = 60) => {
 
     // Override json method to cache the response
     res.json = function(data: any) {
-      // Only cache successful responses
-      if (res.statusCode >= 200 && res.statusCode < 300) {
+      // Only cache successful responses and respect max size
+      if (res.statusCode >= 200 && res.statusCode < 300 && cache.size < MAX_CACHE_SIZE) {
         try {
           cache.set(cacheKey, {
             data,

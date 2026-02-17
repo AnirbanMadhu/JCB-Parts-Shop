@@ -8,18 +8,16 @@ if (typeof window !== 'undefined') {
     input: RequestInfo | URL,
     init?: RequestInit
   ): Promise<Response> {
+    // If caller already provided a signal, don't add our own timeout —
+    // let the caller manage abort lifecycle (prevents signal leaks)
+    if (init?.signal) {
+      return originalFetch(input, init);
+    }
+    
     // Default timeout: 30 seconds
     const timeout = 30000;
-    
-    // Create AbortController for timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
-    
-    // Merge signals if one was already provided
-    const signal = init?.signal;
-    if (signal) {
-      signal.addEventListener('abort', () => controller.abort());
-    }
     
     return originalFetch(input, {
       ...init,
@@ -33,7 +31,6 @@ if (typeof window !== 'undefined') {
         clearTimeout(timeoutId);
         
         if (error.name === 'AbortError') {
-          console.error('Request timeout:', input);
           throw new Error('Request timeout after 30 seconds');
         }
         

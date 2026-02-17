@@ -12,17 +12,17 @@ services:
     command:
       - "postgres"
       - "-c"
-      - "max_connections=200"
+      - "max_connections=100"
       - "-c"
-      - "shared_buffers=512MB"
+      - "shared_buffers=256MB"
       - "-c"
-      - "effective_cache_size=2GB"
+      - "effective_cache_size=1GB"
       - "-c"
-      - "maintenance_work_mem=128MB"
+      - "maintenance_work_mem=64MB"
       - "-c"
       - "checkpoint_completion_target=0.9"
       - "-c"
-      - "wal_buffers=16MB"
+      - "wal_buffers=8MB"
       - "-c"
       - "default_statistics_target=100"
       - "-c"
@@ -30,25 +30,42 @@ services:
       - "-c"
       - "effective_io_concurrency=200"
       - "-c"
-      - "work_mem=8MB"
+      - "work_mem=4MB"
       - "-c"
-      - "min_wal_size=1GB"
+      - "min_wal_size=256MB"
       - "-c"
-      - "max_wal_size=4GB"
+      - "max_wal_size=1GB"
       - "-c"
-      - "idle_in_transaction_session_timeout=300000"
+      - "idle_in_transaction_session_timeout=60000"
       - "-c"
       - "statement_timeout=30000"
       - "-c"
       - "log_min_duration_statement=5000"
+      - "-c"
+      - "tcp_keepalives_idle=60"
+      - "-c"
+      - "tcp_keepalives_interval=10"
+      - "-c"
+      - "tcp_keepalives_count=6"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./Backend/backups:/backups
     networks:
       - jcb_network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
+      interval: 30s
       timeout: 5s
       retries: 5
     security_opt:
@@ -75,7 +92,7 @@ services:
       # - pool_timeout=30: Maximum time (seconds) to wait for connection from pool
       # - connect_timeout=15: Maximum time (seconds) to establish new connection  
       # - statement_cache_size=100: Prepared statement cache size for better performance
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public&connection_limit=80&pool_timeout=30&connect_timeout=15&statement_cache_size=100
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public&connection_limit=20&pool_timeout=30&connect_timeout=15&statement_cache_size=100
       PORT: ${BACKEND_PORT:-4001}
       JWT_SECRET: ${JWT_SECRET}
       FRONTEND_URL: ${FRONTEND_URL}
@@ -91,7 +108,18 @@ services:
     networks:
       - jcb_network
     command: >
-      sh -c "npx prisma migrate deploy && node dist/index.js"
+      sh -c "npx prisma migrate deploy && node --max-old-space-size=512 dist/index.js"
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     security_opt:
       - no-new-privileges:true
     healthcheck:
@@ -130,6 +158,17 @@ services:
       - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
     networks:
       - jcb_network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     security_opt:
       - no-new-privileges:true
     healthcheck:
