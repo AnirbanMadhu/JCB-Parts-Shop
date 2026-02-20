@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { json } from 'express';
 import { requestTimeout } from './middleware/timeout';
 import partsRouter from './routes/parts';
@@ -16,6 +18,32 @@ const app = express();
 
 // Trust proxy - important for getting correct client IP behind reverse proxy
 app.set('trust proxy', 1);
+
+// Helmet - security headers (replaces manual security headers below)
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled for API-only backend
+  crossOriginEmbedderPolicy: false,
+}));
+
+// Global rate limiter - max 100 requests per minute per IP
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+  skip: (req) => req.path === '/api/health' || req.path === '/api/live',
+});
+app.use(globalLimiter);
+
+// Strict rate limiter for auth endpoints - max 10 attempts per 15 min per IP
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts, please try again after 15 minutes.' },
+});
 
 // Request timeout middleware - prevent hanging requests
 app.use(requestTimeout(30000)); // 30 seconds timeout
@@ -78,12 +106,8 @@ app.use((_req, res, next) => {
   next();
 });
 
-// Security headers middleware
+// Security headers middleware (additional headers beyond helmet)
 app.use((_req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   res.removeHeader('X-Powered-By');
   next();
 });
@@ -120,8 +144,8 @@ app.use((req, res, next) => {
 import healthRouter from './routes/health';
 app.use('/api', healthRouter);
 
-// API Routes
-app.use('/api/auth', authRouter);
+// API Routes - auth routes get stricter rate limiting
+app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/parts', partsRouter);
 app.use('/api/invoices/bulk', invoicesBulkRouter);
