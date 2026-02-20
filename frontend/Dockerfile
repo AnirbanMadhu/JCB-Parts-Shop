@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install ALL dependencies (including devDependencies for build)
 COPY package*.json ./
-RUN npm ci && npm cache clean --force
+RUN npm ci
 
 # Builder stage
 FROM node:20-alpine AS builder
@@ -30,16 +30,14 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 
 # Copy necessary files
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package*.json ./
 
 # Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+RUN mkdir .next && chown nextjs:nodejs .next
 
 # Copy build artifacts with correct permissions
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./

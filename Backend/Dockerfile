@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install ALL dependencies (including devDependencies for build)
 COPY package*.json tsconfig.json ./
-RUN npm ci && npm cache clean --force
+RUN npm ci
 
 # Copy prisma schema and generate client
 COPY prisma ./prisma
