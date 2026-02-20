@@ -1,7 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import { json } from 'express';
 import { requestTimeout } from './middleware/timeout';
 import partsRouter from './routes/parts';
@@ -19,69 +17,8 @@ const app = express();
 // Trust proxy - important for getting correct client IP behind reverse proxy
 app.set('trust proxy', 1);
 
-// Helmet - security headers (replaces manual security headers below)
-app.use(helmet({
-  contentSecurityPolicy: false, // Disabled for API-only backend
-  crossOriginEmbedderPolicy: false,
-}));
-
-// Global rate limiter - max 60 requests per minute per IP
-const globalLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later.' },
-  skip: (req) => req.path === '/api/health' || req.path === '/api/live',
-});
-app.use(globalLimiter);
-
-// Strict rate limiter for auth endpoints - max 5 attempts per 15 min per IP
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many login attempts, please try again after 15 minutes.' },
-});
-
 // Request timeout middleware - prevent hanging requests
 app.use(requestTimeout(30000)); // 30 seconds timeout
-
-// Block suspicious requests (scanners, bots, path traversal)
-app.use((req, res, next) => {
-  // Block path traversal attempts
-  if (req.path.includes('..') || req.path.includes('%2e%2e') || req.path.includes('%252e')) {
-    console.warn(`[SECURITY] Path traversal attempt blocked: ${req.ip} - ${req.path}`);
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-
-  // Block common scanner/exploit paths
-  const blockedPaths = [
-    '/wp-admin', '/wp-login', '/wp-content', '/wordpress',
-    '/.env', '/.git', '/.htaccess', '/config.php',
-    '/phpmyadmin', '/pma', '/admin/config',
-    '/shell', '/cmd', '/eval', '/exec',
-    '/cgi-bin', '/scripts', '/.well-known/security.txt',
-    '/actuator', '/console', '/manager',
-    '/solr', '/struts', '/jenkins',
-  ];
-  const lowerPath = req.path.toLowerCase();
-  if (blockedPaths.some(blocked => lowerPath.startsWith(blocked))) {
-    return res.status(404).end();
-  }
-
-  // Block requests with suspicious user agents (in production)
-  if (process.env.NODE_ENV === 'production') {
-    const ua = (req.headers['user-agent'] || '').toLowerCase();
-    const suspiciousUAs = ['sqlmap', 'nikto', 'nmap', 'masscan', 'zgrab', 'gobuster', 'dirbuster', 'wpscan', 'nessus', 'openvas', 'nuclei', 'httpx'];
-    if (suspiciousUAs.some(s => ua.includes(s))) {
-      return res.status(403).end();
-    }
-  }
-
-  next();
-});
 
 // Middleware
 const allowedOrigins = process.env.NODE_ENV === 'production'
@@ -99,19 +36,8 @@ if (allowedOrigins.length === 0) {
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin for internal health checks (Docker, load balancers)
-    // and in development (Postman, mobile apps, etc.)
-    if (!origin) {
-      if (process.env.NODE_ENV === 'production') {
-        // In production, no-origin requests are only allowed through to
-        // health/live endpoints (handled by skip logic below).
-        // For all other paths, we still allow no-origin here because
-        // the CORS origin callback runs before route matching.
-        // Direct API protection is enforced separately.
-        return callback(null, true);
-      }
-      return callback(null, true);
-    }
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
     
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -152,8 +78,12 @@ app.use((_req, res, next) => {
   next();
 });
 
-// Security headers middleware (additional headers beyond helmet)
+// Security headers middleware
 app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   res.removeHeader('X-Powered-By');
   next();
 });
@@ -186,24 +116,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoints (before origin enforcement so Docker/LB checks work)
+// Health check endpoints
 import healthRouter from './routes/health';
 app.use('/api', healthRouter);
 
-// In production, block direct API access (no Origin header) for non-health endpoints
-// This prevents bots/scripts from calling the API directly while allowing
-// Docker health checks and load balancer probes on /api/health and /api/live
-if (process.env.NODE_ENV === 'production') {
-  app.use('/api', (req, res, next) => {
-    if (!req.headers.origin) {
-      return res.status(403).json({ error: 'Origin header required' });
-    }
-    next();
-  });
-}
-
-// API Routes - auth routes get stricter rate limiting
-app.use('/api/auth', authLimiter, authRouter);
+// API Routes
+app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/parts', partsRouter);
 app.use('/api/invoices/bulk', invoicesBulkRouter);

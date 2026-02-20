@@ -103,15 +103,12 @@ services:
       SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM: ${SMTP_FROM}
       EMAIL_SERVICE: ${EMAIL_SERVICE:-gmail}
-    # Don't expose backend port directly to the internet
-    # Frontend proxies API requests internally via Docker network
-    # Only uncomment if you need direct API access (NOT recommended)
-    # ports:
-    #   - "${BACKEND_PORT:-4001}:${BACKEND_PORT:-4001}"
+    ports:
+      - "${BACKEND_PORT:-4001}:${BACKEND_PORT:-4001}"
     networks:
       - jcb_network
     command: >
-      sh -c "echo 'Running database migrations...' && npx prisma migrate deploy --schema=./prisma/schema.prisma && echo 'Migrations complete. Starting server...' && node --max-old-space-size=512 dist/index.js"
+      sh -c "npx prisma migrate deploy && node --max-old-space-size=512 dist/index.js"
     deploy:
       resources:
         limits:
@@ -131,10 +128,10 @@ services:
           "CMD-SHELL",
           "wget --no-verbose --tries=1 --spider http://127.0.0.1:${BACKEND_PORT:-4001}/api/health || exit 1",
         ]
-      interval: 15s
+      interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 120s
+      retries: 3
+      start_period: 40s
 
   # Frontend (Next.js)
   frontend:
@@ -157,9 +154,8 @@ services:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
       # Internal backend URL for server-side API calls
       INTERNAL_API_URL: http://backend:${BACKEND_PORT:-4001}
-    # Port is intentionally NOT exposed externally — nginx handles all inbound traffic
-    # ports:
-    #   - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+    ports:
+      - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
     networks:
       - jcb_network
     deploy:
@@ -188,59 +184,23 @@ services:
 
   # Optional: Nginx Reverse Proxy (recommended for production)
   # Uncomment this section to use Nginx as reverse proxy
-  nginx:
-    image: nginx:alpine
-    container_name: jcb_nginx_prod
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
-    depends_on:
-      frontend:
-        condition: service_healthy
-      backend:
-        condition: service_healthy
-    networks:
-      - jcb_network
-    security_opt:
-      - no-new-privileges:true
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-    # Reload nginx every 12 hours to pick up renewed certificates
-    command: >
-      sh -c "while :; do sleep 12h & wait $${!}; nginx -s reload; done & nginx -g 'daemon off;'"
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:80 || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
-  # Certbot — automatic SSL certificate renewal
-  certbot:
-    image: certbot/certbot
-    container_name: jcb_certbot_prod
-    restart: unless-stopped
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    networks:
-      - jcb_network
-    # Renew certificates every 12 hours (certbot skips if not due yet)
-    entrypoint: >
-      sh -c "trap exit TERM;
-             while :; do
-               certbot renew --webroot -w /var/www/certbot --quiet;
-               sleep 12h & wait $${!};
-             done"
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: jcb_nginx_prod
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - frontend
+  #     - backend
+  #   networks:
+  #     - jcb_network
+  #   security_opt:
+  #     - no-new-privileges:true
 
 networks:
   jcb_network:
