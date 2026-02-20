@@ -12,47 +12,41 @@ services:
     command:
       - "postgres"
       - "-c"
-      - "max_connections=50"
+      - "max_connections=100"
       - "-c"
-      - "shared_buffers=128MB"
+      - "shared_buffers=256MB"
       - "-c"
-      - "effective_cache_size=512MB"
+      - "effective_cache_size=1GB"
       - "-c"
-      - "maintenance_work_mem=32MB"
+      - "maintenance_work_mem=64MB"
       - "-c"
       - "checkpoint_completion_target=0.9"
       - "-c"
-      - "wal_buffers=4MB"
+      - "wal_buffers=8MB"
       - "-c"
       - "default_statistics_target=100"
       - "-c"
       - "random_page_cost=1.1"
       - "-c"
-      - "effective_io_concurrency=100"
+      - "effective_io_concurrency=200"
       - "-c"
-      - "work_mem=2MB"
+      - "work_mem=4MB"
       - "-c"
-      - "min_wal_size=64MB"
+      - "min_wal_size=256MB"
       - "-c"
-      - "max_wal_size=256MB"
+      - "max_wal_size=1GB"
       - "-c"
-      - "idle_in_transaction_session_timeout=30000"
+      - "idle_in_transaction_session_timeout=60000"
       - "-c"
-      - "statement_timeout=15000"
+      - "statement_timeout=30000"
       - "-c"
-      - "log_min_duration_statement=3000"
+      - "log_min_duration_statement=5000"
       - "-c"
       - "tcp_keepalives_idle=60"
       - "-c"
       - "tcp_keepalives_interval=10"
       - "-c"
       - "tcp_keepalives_count=6"
-      - "-c"
-      - "max_worker_processes=2"
-      - "-c"
-      - "max_parallel_workers_per_gather=1"
-      - "-c"
-      - "max_parallel_workers=2"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./Backend/backups:/backups
@@ -61,21 +55,19 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 384M
+          memory: 512M
         reservations:
-          cpus: '0.15'
-          memory: 128M
+          memory: 256M
     logging:
       driver: json-file
       options:
-        max-size: "5m"
-        max-file: "2"
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 60s
+      interval: 30s
       timeout: 5s
-      retries: 3
+      retries: 5
     security_opt:
       - no-new-privileges:true
     # Don't expose port 5432 to host in production for security
@@ -95,12 +87,12 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      # Optimized connection pool for 2-core VPS:
-      # - connection_limit=10: Low pool to stay within PostgreSQL max_connections=50
-      # - pool_timeout=20: Wait time for a free connection
-      # - connect_timeout=10: Time to establish new connection
-      # - statement_cache_size=50: Prepared statement cache
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public&connection_limit=10&pool_timeout=20&connect_timeout=10&statement_cache_size=50
+      # Optimized connection pool settings to prevent 504 timeouts:
+      # - connection_limit=80: Maximum connections per Prisma instance (below PostgreSQL max_connections=200)
+      # - pool_timeout=30: Maximum time (seconds) to wait for connection from pool
+      # - connect_timeout=15: Maximum time (seconds) to establish new connection  
+      # - statement_cache_size=100: Prepared statement cache size for better performance
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public&connection_limit=20&pool_timeout=30&connect_timeout=15&statement_cache_size=100
       PORT: ${BACKEND_PORT:-4001}
       JWT_SECRET: ${JWT_SECRET}
       FRONTEND_URL: ${FRONTEND_URL}
@@ -111,29 +103,26 @@ services:
       SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM: ${SMTP_FROM}
       EMAIL_SERVICE: ${EMAIL_SERVICE:-gmail}
-    # Don't expose backend port publicly - frontend connects via internal Docker network
-    # Uncomment only for debugging:
+    # Don't expose backend port directly to the internet
+    # Frontend proxies API requests internally via Docker network
+    # Only uncomment if you need direct API access (NOT recommended)
     # ports:
     #   - "${BACKEND_PORT:-4001}:${BACKEND_PORT:-4001}"
-    expose:
-      - "${BACKEND_PORT:-4001}"
     networks:
       - jcb_network
     command: >
-      sh -c "npx prisma migrate deploy && node --max-old-space-size=256 dist/index.js"
+      sh -c "npx prisma migrate deploy && node --max-old-space-size=512 dist/index.js"
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 512M
+          memory: 768M
         reservations:
-          cpus: '0.10'
-          memory: 128M
+          memory: 256M
     logging:
       driver: json-file
       options:
-        max-size: "5m"
-        max-file: "3"
+        max-size: "10m"
+        max-file: "5"
     security_opt:
       - no-new-privileges:true
     healthcheck:
@@ -142,7 +131,7 @@ services:
           "CMD-SHELL",
           "wget --no-verbose --tries=1 --spider http://127.0.0.1:${BACKEND_PORT:-4001}/api/health || exit 1",
         ]
-      interval: 60s
+      interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
@@ -175,16 +164,14 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 384M
+          memory: 512M
         reservations:
-          cpus: '0.10'
           memory: 128M
     logging:
       driver: json-file
       options:
-        max-size: "5m"
-        max-file: "2"
+        max-size: "10m"
+        max-file: "3"
     security_opt:
       - no-new-privileges:true
     healthcheck:
@@ -193,7 +180,7 @@ services:
           "CMD-SHELL",
           "wget --no-verbose --tries=1 --spider http://127.0.0.1:${FRONTEND_PORT:-3000} || exit 1",
         ]
-      interval: 60s
+      interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s

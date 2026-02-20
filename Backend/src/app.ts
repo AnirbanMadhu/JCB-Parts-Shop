@@ -25,10 +25,10 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-// Global rate limiter - max 100 requests per minute per IP
+// Global rate limiter - max 60 requests per minute per IP
 const globalLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 100,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' },
@@ -36,10 +36,10 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// Strict rate limiter for auth endpoints - max 10 attempts per 15 min per IP
+// Strict rate limiter for auth endpoints - max 5 attempts per 15 min per IP
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,
+  max: 5,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many login attempts, please try again after 15 minutes.' },
@@ -47,6 +47,41 @@ const authLimiter = rateLimit({
 
 // Request timeout middleware - prevent hanging requests
 app.use(requestTimeout(30000)); // 30 seconds timeout
+
+// Block suspicious requests (scanners, bots, path traversal)
+app.use((req, res, next) => {
+  // Block path traversal attempts
+  if (req.path.includes('..') || req.path.includes('%2e%2e') || req.path.includes('%252e')) {
+    console.warn(`[SECURITY] Path traversal attempt blocked: ${req.ip} - ${req.path}`);
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  // Block common scanner/exploit paths
+  const blockedPaths = [
+    '/wp-admin', '/wp-login', '/wp-content', '/wordpress',
+    '/.env', '/.git', '/.htaccess', '/config.php',
+    '/phpmyadmin', '/pma', '/admin/config',
+    '/shell', '/cmd', '/eval', '/exec',
+    '/cgi-bin', '/scripts', '/.well-known/security.txt',
+    '/actuator', '/console', '/manager',
+    '/solr', '/struts', '/jenkins',
+  ];
+  const lowerPath = req.path.toLowerCase();
+  if (blockedPaths.some(blocked => lowerPath.startsWith(blocked))) {
+    return res.status(404).end();
+  }
+
+  // Block requests with suspicious user agents (in production)
+  if (process.env.NODE_ENV === 'production') {
+    const ua = (req.headers['user-agent'] || '').toLowerCase();
+    const suspiciousUAs = ['sqlmap', 'nikto', 'nmap', 'masscan', 'zgrab', 'gobuster', 'dirbuster', 'wpscan', 'nessus', 'openvas', 'nuclei', 'httpx'];
+    if (suspiciousUAs.some(s => ua.includes(s))) {
+      return res.status(403).end();
+    }
+  }
+
+  next();
+});
 
 // Middleware
 const allowedOrigins = process.env.NODE_ENV === 'production'
@@ -64,8 +99,14 @@ if (allowedOrigins.length === 0) {
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
+    // In production, block requests with no origin (prevents direct API access by bots/scripts)
+    // Allow no-origin only in development (for Postman, mobile apps, etc.)
+    if (!origin) {
+      if (process.env.NODE_ENV === 'production') {
+        return callback(new Error('Origin header required'));
+      }
+      return callback(null, true);
+    }
     
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
