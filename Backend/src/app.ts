@@ -99,11 +99,16 @@ if (allowedOrigins.length === 0) {
 
 app.use(cors({
   origin: (origin, callback) => {
-    // In production, block requests with no origin (prevents direct API access by bots/scripts)
-    // Allow no-origin only in development (for Postman, mobile apps, etc.)
+    // Allow requests with no origin for internal health checks (Docker, load balancers)
+    // and in development (Postman, mobile apps, etc.)
     if (!origin) {
       if (process.env.NODE_ENV === 'production') {
-        return callback(new Error('Origin header required'));
+        // In production, no-origin requests are only allowed through to
+        // health/live endpoints (handled by skip logic below).
+        // For all other paths, we still allow no-origin here because
+        // the CORS origin callback runs before route matching.
+        // Direct API protection is enforced separately.
+        return callback(null, true);
       }
       return callback(null, true);
     }
@@ -181,9 +186,21 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoints
+// Health check endpoints (before origin enforcement so Docker/LB checks work)
 import healthRouter from './routes/health';
 app.use('/api', healthRouter);
+
+// In production, block direct API access (no Origin header) for non-health endpoints
+// This prevents bots/scripts from calling the API directly while allowing
+// Docker health checks and load balancer probes on /api/health and /api/live
+if (process.env.NODE_ENV === 'production') {
+  app.use('/api', (req, res, next) => {
+    if (!req.headers.origin) {
+      return res.status(403).json({ error: 'Origin header required' });
+    }
+    next();
+  });
+}
 
 // API Routes - auth routes get stricter rate limiting
 app.use('/api/auth', authLimiter, authRouter);
