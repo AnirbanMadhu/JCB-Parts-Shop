@@ -53,28 +53,61 @@ app.use(cors({
 }));
 
 // JSON body parser with size limit
-app.use(json({ limit: '10mb' }));
+// 1mb is sufficient for a parts shop API - prevents large payload CPU spikes
+app.use(json({ limit: '1mb' }));
 
-// Custom JSON response handler for Prisma Decimal types
-// Uses replacer function directly — avoids double JSON.stringify + JSON.parse overhead
+// Prisma Decimal → number replacer applied at the Express app level.
+// app.set('json replacer') is called inside Express's own JSON.stringify():
+// one single serialization pass per response (no extra JSON.parse overhead).
 const decimalReplacer = (_key: string, value: any) => {
-  if (value && typeof value === 'object' && value.constructor && value.constructor.name === 'Decimal') {
+  if (value !== null && typeof value === 'object' && value.constructor?.name === 'Decimal') {
     return parseFloat(value.toString());
   }
   return value;
 };
+app.set('json replacer', decimalReplacer);
 
+// Cache-control headers — separate from body serialization
 app.use((_req, res, next) => {
-  const originalJson = res.json.bind(res);
-  res.json = function(body: any) {
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    // Express's res.json already calls JSON.stringify internally;
-    // pass the replacer via app.set so it handles Decimal conversion in a single pass
-    return originalJson.call(this, JSON.parse(JSON.stringify(body, decimalReplacer)));
-  };
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
+// ---------------------------------------------------------------------------
+// Lightweight in-memory rate limiter (no new files, no external packages)
+// Prevents request storms from causing CPU saturation
+// ---------------------------------------------------------------------------
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute window
+const RATE_LIMIT_MAX = 300; // max requests per IP per minute
+
+// Clean up expired entries every 2 minutes to prevent map from growing unbounded
+const rateLimitCleanup = setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitMap.entries()) {
+    if (now > entry.resetAt) rateLimitMap.delete(key);
+  }
+}, 2 * 60 * 1000);
+rateLimitCleanup.unref(); // Don't prevent process exit
+
+app.use((req, res, next) => {
+  const ip = (req.ip || req.socket.remoteAddress || 'unknown').replace(/^::ffff:/, '');
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return next();
+  }
+  entry.count++;
+  if (entry.count > RATE_LIMIT_MAX) {
+    res.setHeader('Retry-After', String(Math.ceil((entry.resetAt - now) / 1000)));
+    return res.status(429).json({
+      error: 'Too Many Requests',
+      message: 'Rate limit exceeded. Please slow down and try again later.',
+    });
+  }
   next();
 });
 

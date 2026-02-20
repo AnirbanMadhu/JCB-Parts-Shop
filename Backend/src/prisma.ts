@@ -53,7 +53,8 @@ export const prisma =
     },
   });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// Store singleton in global for all environments — prevents multiple clients on any code path
+globalForPrisma.prisma = prisma;
 
 // Query performance monitoring - only attach event listeners in development
 // In production, event-level logging is disabled to prevent memory overhead
@@ -136,20 +137,30 @@ const healthCheckInterval = setInterval(async () => {
 }, HEALTH_CHECK_INTERVAL);
 healthCheckInterval.unref(); // Don't prevent process exit
 
-// Initial connection with retry mechanism
+// Initial connection with bounded retry — prevents unbounded timer accumulation
+const MAX_INIT_RETRIES = 5;
+let initRetryCount = 0;
+
 const initializeConnection = async () => {
   try {
     await prisma.$connect();
     const isConnected = await ensureConnection();
     if (isConnected) {
       console.log('[Prisma] Database connection initialized successfully');
+      initRetryCount = 0; // reset on success
     } else {
       console.error('[Prisma] Failed to establish initial database connection');
     }
   } catch (error: any) {
     console.error('[Prisma] Database initialization error:', error.message);
-    // Retry connection
-    setTimeout(initializeConnection, RECONNECT_INTERVAL);
+    if (initRetryCount < MAX_INIT_RETRIES) {
+      initRetryCount++;
+      console.log(`[Prisma] Retrying initial connection (${initRetryCount}/${MAX_INIT_RETRIES}) in ${RECONNECT_INTERVAL / 1000}s...`);
+      setTimeout(initializeConnection, RECONNECT_INTERVAL);
+    } else {
+      console.error('[Prisma] Max init retries reached. Prisma will reconnect lazily on next request.');
+      // Do NOT recurse further — Prisma reconnects automatically on the next query
+    }
   }
 };
 

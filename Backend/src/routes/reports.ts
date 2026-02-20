@@ -76,8 +76,8 @@ router.get('/dashboard', cacheMiddleware(30), async (_req, res) => {
   }
 });
 
-// Weekly purchase data for current month
-router.get('/weekly-purchases', async (req, res) => {
+// Weekly purchase data for current month - cache 60s (report data changes infrequently)
+router.get('/weekly-purchases', cacheMiddleware(60), async (req, res) => {
   try {
     const { year, month } = req.query;
     const now = new Date();
@@ -196,8 +196,8 @@ router.get('/weekly-purchases', async (req, res) => {
   }
 });
 
-// Weekly sales data for current month
-router.get('/weekly-sales', async (req, res) => {
+// Weekly sales data for current month - cache 60s
+router.get('/weekly-sales', cacheMiddleware(60), async (req, res) => {
   try {
     const { year, month } = req.query;
     const now = new Date();
@@ -298,8 +298,8 @@ router.get('/weekly-sales', async (req, res) => {
   }
 });
 
-// Monthly cashflow data (rolling 12 months with running balance)
-router.get('/cashflow', async (req, res) => {
+// Monthly cashflow data (rolling 12 months with running balance) - cache 120s
+router.get('/cashflow', cacheMiddleware(120), async (req, res) => {
   try {
     const { year, month } = req.query;
     const now = new Date();
@@ -386,8 +386,8 @@ router.get('/cashflow', async (req, res) => {
   }
 });
 
-// Monthly sales/purchase report
-router.get('/monthly', async (req, res) => {
+// Monthly sales/purchase report - cache 120s
+router.get('/monthly', cacheMiddleware(120), async (req, res) => {
   const { year = new Date().getFullYear().toString(), type } = req.query as {
     year?: string;
     type?: 'PURCHASE' | 'SALE';
@@ -441,8 +441,8 @@ router.get('/monthly', async (req, res) => {
   }
 });
 
-// Top selling parts
-router.get('/top-parts', async (req, res) => {
+// Top selling parts - cache 120s
+router.get('/top-parts', cacheMiddleware(120), async (req, res) => {
   const { limit = '10', type = 'SALE' } = req.query as {
     limit?: string;
     type?: 'PURCHASE' | 'SALE';
@@ -472,8 +472,8 @@ router.get('/top-parts', async (req, res) => {
   }
 });
 
-// Profit/Loss calculation (sales - purchases)
-router.get('/profit-loss', async (req, res) => {
+// Profit/Loss calculation - cache 60s
+router.get('/profit-loss', cacheMiddleware(60), async (req, res) => {
   const { startDate, endDate } = req.query as {
     startDate?: string;
     endDate?: string;
@@ -527,8 +527,8 @@ router.get('/profit-loss', async (req, res) => {
   }
 });
 
-// Balance Sheet (Assets, Liabilities, Equity)
-router.get('/balance-sheet', async (req, res) => {
+// Balance Sheet (Assets, Liabilities, Equity) - cache 120s (heaviest query in the app)
+router.get('/balance-sheet', cacheMiddleware(120), async (req, res) => {
   const { asOfDate } = req.query as {
     asOfDate?: string;
   };

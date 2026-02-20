@@ -75,16 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(data.error || 'Login failed');
       }
 
-      console.log('Auth Response - Full data:', data);
-      console.log('Auth Response - User object:', data.user);
-      console.log('Auth Response - mustChangePassword:', data.user?.mustChangePassword);
-
       setUser(data.user);
       setToken(data.token);
       localStorage.setItem('auth_token', data.token);
       localStorage.setItem('auth_user', JSON.stringify(data.user));
-      
-      console.log('Stored in localStorage - auth_user:', JSON.stringify(data.user));
       
       // Set cookie for middleware (7 days expiry)
       document.cookie = `auth_token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;

@@ -1,12 +1,15 @@
 import nodemailer from 'nodemailer';
+import type { Transporter } from 'nodemailer';
 
-// Create reusable transporter object using the default SMTP transport
-const createTransporter = () => {
-  // For development, you can use a test account from ethereal.email
-  // In production, configure with real SMTP credentials
-  
+// Singleton transporter — created once and reused for all email sends.
+// Re-creating a transport per call incurs DNS resolution + socket setup overhead.
+let _transporter: Transporter | null = null;
+
+const getTransporter = (): Transporter => {
+  if (_transporter) return _transporter;
+
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    return nodemailer.createTransport({
+    _transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
@@ -14,15 +17,21 @@ const createTransporter = () => {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      // Pool connections so they are reused across multiple sends
+      pool: true,
+      maxConnections: 5,
+      maxMessages: Infinity,
+    });
+  } else {
+    // Fallback for environments without SMTP config
+    _transporter = nodemailer.createTransport({
+      streamTransport: true,
+      newline: 'unix',
+      buffer: true,
     });
   }
 
-  // For development without SMTP config, log to console
-  return nodemailer.createTransport({
-    streamTransport: true,
-    newline: 'unix',
-    buffer: true
-  });
+  return _transporter;
 };
 
 export const sendPasswordResetEmail = async (
@@ -30,7 +39,7 @@ export const sendPasswordResetEmail = async (
   resetToken: string,
   name: string
 ): Promise<void> => {
-  const transporter = createTransporter();
+  const transporter = getTransporter();
   
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
@@ -137,7 +146,7 @@ export const sendInvitationEmail = async (
   name: string,
   inviterName: string
 ): Promise<void> => {
-  const transporter = createTransporter();
+  const transporter = getTransporter();
   
   const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`;
 
@@ -321,7 +330,7 @@ export const sendPasswordChangeOTP = async (
   otp: string,
   name: string
 ): Promise<void> => {
-  const transporter = createTransporter();
+  const transporter = getTransporter();
 
   const mailOptions = {
     from: process.env.SMTP_FROM || '"JCB Parts Shop" <noreply@jcbparts.com>',
