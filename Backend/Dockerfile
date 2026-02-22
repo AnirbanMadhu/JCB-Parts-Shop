@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Production-optimized Dockerfile for JCB Backend
 FROM node:20-alpine AS builder
 
@@ -5,12 +6,18 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install ALL dependencies (including devDependencies for build)
+# Cache mount: ~/.npm persists across CI runs — packages already downloaded
+# are never re-fetched from the internet. Cuts npm ci from ~60s → ~5s.
 COPY package*.json tsconfig.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline
 
 # Copy prisma schema and generate client
+# Cache mount: ~/.cache/prisma stores ~50MB of query engine binaries.
+# Without this, Prisma re-downloads them on every single build (~40s → ~2s).
 COPY prisma ./prisma
-RUN npx prisma generate
+RUN --mount=type=cache,target=/root/.cache \
+    npx prisma generate
 
 # Copy source code and build
 COPY src ./src

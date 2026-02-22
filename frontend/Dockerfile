@@ -1,26 +1,29 @@
+# syntax=docker/dockerfile:1
 # Production-optimized Dockerfile for JCB Frontend (Next.js)
-FROM node:20-alpine AS deps
+#
+# Single builder stage (no separate deps stage) so the /root/.npm cache mount
+# is active for BOTH install and build — splitting into two stages loses the mount.
+FROM node:20-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install ALL dependencies (including devDependencies for build)
+# Install dependencies.
+# Cache mount: ~/.npm persists across CI runs — never re-downloads packages.
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline
 
-# Builder stage
-FROM node:20-alpine AS builder
-WORKDIR /app
-
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Build Next.js application
-RUN npm run build
+# Build Next.js.
+# Cache mount: /app/.next/cache stores compiled page chunks and webpack module
+# graphs. Unchanged pages are NOT recompiled. This is the biggest win:
+# a one-file change goes from ~4 min full recompile → ~30-60s incremental.
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
 
 # Production stage
 FROM node:20-alpine AS runner

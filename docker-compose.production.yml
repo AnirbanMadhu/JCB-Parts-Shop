@@ -85,6 +85,7 @@ services:
       dockerfile: Dockerfile
     container_name: jcb_backend_prod
     restart: unless-stopped
+    stop_grace_period: 30s  # Give Node.js time to finish in-flight requests and close Prisma pool
     init: true  # Use tini as PID 1 to properly reap zombie child processes
     depends_on:
       postgres:
@@ -148,6 +149,7 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
     container_name: jcb_frontend_prod
     restart: unless-stopped
+    stop_grace_period: 20s  # Allow Next.js to drain in-flight SSR requests before exit
     init: true  # Use tini as PID 1 to properly reap zombie child processes
     depends_on:
       backend:

@@ -1,7 +1,9 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import http from 'http';
 import app from './app';
+import { prisma } from './prisma';
 
 // Validate critical environment variables
 if (!process.env.DATABASE_URL) {
@@ -22,7 +24,70 @@ if (isNaN(port) || port < 1 || port > 65535) {
   process.exit(1);
 }
 
-app.listen(port, '0.0.0.0', () => {
+const server = http.createServer(app);
+
+// ---------------------------------------------------------------------------
+// Graceful shutdown — called on SIGTERM (Docker stop) and SIGINT (Ctrl+C)
+// Sequence: stop accepting new connections → drain existing → close Prisma → exit
+// Without this, Docker kills the process hard after the stop_grace_period,
+// leaving PostgreSQL connections open and potentially spawning zombie processes.
+// ---------------------------------------------------------------------------
+let isShuttingDown = false;
+
+async function gracefulShutdown(signal: string): Promise<void> {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
+  console.log(`\n[Shutdown] Received ${signal}. Starting graceful shutdown...`);
+
+  // 1. Stop the HTTP server from accepting new connections.
+  //    Existing keep-alive connections are forcibly destroyed after 5 s.
+  const forceCloseTimer = setTimeout(() => {
+    console.warn('[Shutdown] Forcing close of lingering connections');
+    server.closeAllConnections?.(); // Node ≥ 18.02
+  }, 5000);
+  forceCloseTimer.unref();
+
+  await new Promise<void>((resolve) => {
+    server.close((err) => {
+      if (err) console.error('[Shutdown] HTTP server close error:', err.message);
+      else console.log('[Shutdown] HTTP server closed');
+      clearTimeout(forceCloseTimer);
+      resolve();
+    });
+  });
+
+  // 2. Disconnect Prisma — flushes the connection pool back to PostgreSQL.
+  //    This is the most important step: without it every restart leaks a slot
+  //    from postgres max_connections (100) and eventually new connections fail.
+  try {
+    await prisma.$disconnect();
+    console.log('[Shutdown] Prisma disconnected');
+  } catch (err: any) {
+    console.error('[Shutdown] Prisma disconnect error:', err.message);
+  }
+
+  console.log(`[Shutdown] Graceful shutdown complete`);
+  process.exit(0);
+}
+
+// Register signal handlers
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
+
+// Catch unhandled rejections so they don't silently kill the process
+process.on('unhandledRejection', (reason: unknown) => {
+  console.error('[Process] Unhandled promise rejection:', reason);
+  // Don't exit — let the request finish / timeout normally
+});
+
+process.on('uncaughtException', (err: Error) => {
+  console.error('[Process] Uncaught exception:', err.message, err.stack);
+  // Attempt graceful shutdown; if it hangs Docker will SIGKILL after grace period
+  gracefulShutdown('uncaughtException').catch(() => process.exit(1));
+});
+
+server.listen(port, '0.0.0.0', () => {
   console.log(`🚀 JCB Parts Shop Backend`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 Server running on port ${port}`);
