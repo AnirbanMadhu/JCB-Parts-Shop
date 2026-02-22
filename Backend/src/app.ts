@@ -76,6 +76,33 @@ app.use((_req, res, next) => {
 });
 
 // ---------------------------------------------------------------------------
+// Malicious probe / exploit scanner blocker
+// Immediately drops requests targeting PHP files, WordPress, common CVE paths,
+// and other non-Node attack vectors — before any heavy processing occurs.
+// ---------------------------------------------------------------------------
+const BLOCKED_PATH_PATTERNS = [
+  /\.php(\?.*)?$/i,          // Any .php file (PHPUnit RCE, shells, etc.)
+  /wp-admin|wp-login|wp-content|wp-includes/i,  // WordPress scans
+  /xmlrpc\.php/i,            // WordPress XML-RPC exploits
+  /\.env(\.|$)/i,            // .env file theft attempts
+  /\/etc\/passwd/i,          // LFI attempts
+  /\/proc\/self/i,           // Linux proc traversal
+  /\.\.\//,                  // Path traversal
+  /admin\/config/i,          // Generic admin config probes
+  /phpmyadmin/i,             // phpMyAdmin scans
+  /boaform|cgi-bin/i,        // Router/CGI exploits
+];
+
+app.use((req, res, next) => {
+  const path = req.path;
+  if (BLOCKED_PATH_PATTERNS.some((pattern) => pattern.test(path))) {
+    console.warn(`[SECURITY] Blocked malicious probe: ${req.method} ${path} from ${(req.ip || '').replace(/^::ffff:/, '')}`);
+    return res.status(404).end();
+  }
+  next();
+});
+
+// ---------------------------------------------------------------------------
 // Lightweight in-memory rate limiter (no new files, no external packages)
 // Prevents request storms from causing CPU saturation
 // ---------------------------------------------------------------------------
