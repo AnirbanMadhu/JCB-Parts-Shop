@@ -3,7 +3,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: jcb_postgres_prod
-    restart: unless-stopped
+    restart: always
     init: true  # Use tini as PID 1 to properly reap zombie child processes
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -84,7 +84,7 @@ services:
       context: ./Backend
       dockerfile: Dockerfile
     container_name: jcb_backend_prod
-    restart: unless-stopped
+    restart: always
     stop_grace_period: 30s  # Give Node.js time to finish in-flight requests and close Prisma pool
     init: true  # Use tini as PID 1 to properly reap zombie child processes
     depends_on:
@@ -113,7 +113,16 @@ services:
     networks:
       - jcb_network
     command: >
-      sh -c "npx prisma migrate deploy && node --max-old-space-size=512 dist/index.js"
+      sh -c "
+        i=0;
+        until npx prisma migrate deploy; do
+          i=$$((i+1));
+          if [ $$i -ge 5 ]; then echo '[Startup] Migration failed after 5 attempts. Exiting.'; exit 1; fi;
+          echo \"[Startup] Migration attempt $$i failed, retrying in 5s...\";
+          sleep 5;
+        done &&
+        exec node --max-old-space-size=512 --unhandled-rejections=warn dist/index.js
+      "
     deploy:
       resources:
         limits:
@@ -133,12 +142,12 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget --no-verbose --tries=1 --spider http://127.0.0.1:${BACKEND_PORT:-4001}/api/health || exit 1",
+          "wget --no-verbose --tries=1 --spider http://127.0.0.1:${BACKEND_PORT:-4001}/api/ready || exit 1",
         ]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
   # Frontend (Next.js)
   frontend:
@@ -148,7 +157,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
     container_name: jcb_frontend_prod
-    restart: unless-stopped
+    restart: always
     stop_grace_period: 20s  # Allow Next.js to drain in-flight SSR requests before exit
     init: true  # Use tini as PID 1 to properly reap zombie child processes
     depends_on:
@@ -190,8 +199,8 @@ services:
         ]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
   # Optional: Nginx Reverse Proxy (recommended for production)
   # Uncomment this section to use Nginx as reverse proxy

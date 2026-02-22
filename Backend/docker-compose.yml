@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:16-alpine
     container_name: jcb_postgres
-    restart: unless-stopped
+    restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -46,7 +46,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: jcb_backend
-    restart: unless-stopped
+    restart: always
     depends_on:
       db:
         condition: service_healthy
@@ -73,13 +73,22 @@ services:
     networks:
       - jcb_network
     command: >
-      sh -c "npx prisma migrate deploy && node dist/index.js"
+      sh -c "
+        i=0;
+        until npx prisma migrate deploy; do
+          i=$$((i+1));
+          if [ $$i -ge 5 ]; then echo '[Startup] Migration failed after 5 attempts. Exiting.'; exit 1; fi;
+          echo \"[Startup] Migration attempt $$i failed, retrying in 5s...\";
+          sleep 5;
+        done &&
+        exec node --unhandled-rejections=warn dist/index.js
+      "
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${PORT:-4001}/api/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${PORT:-4001}/api/ready || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
     security_opt:
       - no-new-privileges:true
     read_only: false

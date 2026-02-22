@@ -10,7 +10,7 @@ WORKDIR /app
 # are never re-fetched from the internet. Cuts npm ci from ~60s → ~5s.
 COPY package*.json tsconfig.json ./
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --prefer-offline
+    npm ci --prefer-offline --no-audit --no-fund
 
 # Copy prisma schema and generate client
 # Cache mount: ~/.cache/prisma stores ~50MB of query engine binaries.
@@ -22,6 +22,9 @@ RUN --mount=type=cache,target=/root/.cache \
 # Copy source code and build
 COPY src ./src
 RUN npm run build
+
+# Prune dev dependencies so only production deps are copied forward
+RUN npm prune --production
 
 # Production stage
 FROM node:20-alpine
@@ -43,9 +46,11 @@ USER nodejs
 # Expose port
 EXPOSE 4001
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:4001/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+# Health check — uses /api/ready (DB-only ping) instead of /api/health.
+# /api/health returns 503 when SMTP is not configured, which would wrongly
+# mark the container unhealthy and block the frontend from ever starting.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+  CMD node -e "require('http').get('http://localhost:4001/api/ready', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Start application (migrations run in docker-compose command)
 CMD ["node", "dist/index.js"]

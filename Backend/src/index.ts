@@ -77,13 +77,21 @@ process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
 
 // Catch unhandled rejections so they don't silently kill the process
 process.on('unhandledRejection', (reason: unknown) => {
-  console.error('[Process] Unhandled promise rejection:', reason);
-  // Don't exit — let the request finish / timeout normally
+  // Log but do NOT exit — an unhandled rejection in one request must not
+  // bring down the entire server. The request will timeout via the timeout
+  // middleware and the client will receive a 504. Docker keeps the process alive.
+  console.error('[Process] Unhandled promise rejection (non-fatal):', reason);
 });
 
 process.on('uncaughtException', (err: Error) => {
   console.error('[Process] Uncaught exception:', err.message, err.stack);
-  // Attempt graceful shutdown; if it hangs Docker will SIGKILL after grace period
+  // Hard-kill safety net: if graceful shutdown hangs for any reason, force-exit
+  // so Docker's restart policy can bring the process back in a clean state.
+  const hardKill = setTimeout(() => {
+    console.error('[Process] Graceful shutdown timed out after uncaughtException — force exiting');
+    process.exit(1);
+  }, 10000);
+  hardKill.unref();
   gracefulShutdown('uncaughtException').catch(() => process.exit(1));
 });
 

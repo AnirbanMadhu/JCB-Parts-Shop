@@ -207,18 +207,7 @@ const shutdown = async (signal: string, exitCode: number = 0) => {
   process.exit(exitCode);
 };
 
-process.on('SIGINT', () => shutdown('SIGINT', 0));
-process.on('SIGTERM', () => shutdown('SIGTERM', 0));
-
-// Handle uncaught exceptions - exit with error code so Docker restarts the container
-process.on('uncaughtException', (error) => {
-  console.error('[FATAL] Uncaught Exception:', error);
-  // Synchronous exit — async shutdown is unreliable after uncaughtException
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('[FATAL] Unhandled Promise Rejection at:', promise, 'reason:', reason);
-  // Exit so Docker restarts in a clean state
-  process.exit(1);
-});
+// NOTE: SIGINT, SIGTERM, uncaughtException and unhandledRejection handlers are
+// registered in src/index.ts (the process entry point) to avoid duplicate handlers.
+// Multiple handlers for the same event all fire, which causes prisma.$disconnect()
+// to be called twice and process.exit() to race. Keep signal handling in one place.
