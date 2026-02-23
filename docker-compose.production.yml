@@ -138,6 +138,8 @@ services:
         max-file: "5"
     security_opt:
       - no-new-privileges:true
+    labels:
+      - "autoheal=true"  # Allow autoheal service to restart this container when unhealthy
     healthcheck:
       test:
         [
@@ -146,7 +148,7 @@ services:
         ]
       interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 3
       start_period: 60s
 
   # Frontend (Next.js)
@@ -167,6 +169,8 @@ services:
       NODE_ENV: production
       PORT: ${FRONTEND_PORT:-3000}
       HOSTNAME: "0.0.0.0"
+      # Limit Node.js heap to stay within the 512M container limit and prevent OOM hangs
+      NODE_OPTIONS: "--max-old-space-size=384"
       # In production, if NEXT_PUBLIC_API_URL is empty, frontend will use same-origin
       # This means API calls go to the same domain, and we need to proxy them to backend
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
@@ -191,6 +195,8 @@ services:
         max-file: "3"
     security_opt:
       - no-new-privileges:true
+    labels:
+      - "autoheal=true"  # Allow autoheal service to restart this container when unhealthy
     healthcheck:
       test:
         [
@@ -199,8 +205,23 @@ services:
         ]
       interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 3
       start_period: 60s
+
+  # Autoheal: automatically restarts containers that become unhealthy
+  # (Docker's restart: always only handles containers that exit, not unhealthy ones)
+  autoheal:
+    image: willfarrell/autoheal:latest
+    container_name: jcb_autoheal_prod
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: autoheal
+      AUTOHEAL_INTERVAL: 30
+      AUTOHEAL_START_PERIOD: 120
+    networks:
+      - jcb_network
 
   # Optional: Nginx Reverse Proxy (recommended for production)
   # Uncomment this section to use Nginx as reverse proxy
