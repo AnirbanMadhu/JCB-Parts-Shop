@@ -206,7 +206,7 @@ router.get('/weekly-sales', cacheMiddleware(60), async (req, res) => {
 
     // Get first and last day of the month
     const firstDay = new Date(currentYear, currentMonth - 1, 1);
-    const lastDay = new Date(currentYear, currentMonth, 0);
+    const lastDay = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
 
     // Get all sales invoices for the month
     const salesInvoices = await prisma.invoice.findMany({
