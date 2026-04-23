@@ -14,22 +14,13 @@ export const getAuthHeaders = (): HeadersInit => {
 };
 
 export const authFetch = async (endpoint: string, options: RequestInit = {}) => {
-  const response = await fetch(`/api${endpoint}`, {
+  const response = await fetch(endpoint, {
     ...options,
     headers: {
-      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
       ...options.headers,
     },
   });
-
-  if (response.status === 401 || response.status === 403) {
-    // Unauthorized or forbidden - redirect to login
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-      window.location.href = '/login';
-    }
-  }
 
   return response;
 };

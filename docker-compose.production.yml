@@ -138,8 +138,6 @@ services:
         max-file: "5"
     security_opt:
       - no-new-privileges:true
-    labels:
-      - "autoheal=true"  # Allow autoheal service to restart this container when unhealthy
     healthcheck:
       test:
         [
@@ -195,8 +193,6 @@ services:
         max-file: "3"
     security_opt:
       - no-new-privileges:true
-    labels:
-      - "autoheal=true"  # Allow autoheal service to restart this container when unhealthy
     healthcheck:
       test:
         [
@@ -207,21 +203,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-
-  # Autoheal: automatically restarts containers that become unhealthy
-  # (Docker's restart: always only handles containers that exit, not unhealthy ones)
-  autoheal:
-    image: willfarrell/autoheal:latest
-    container_name: jcb_autoheal_prod
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      AUTOHEAL_CONTAINER_LABEL: autoheal
-      AUTOHEAL_INTERVAL: 30
-      AUTOHEAL_START_PERIOD: 120
-    networks:
-      - jcb_network
 
   # Optional: Nginx Reverse Proxy (recommended for production)
   # Uncomment this section to use Nginx as reverse proxy

@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function RouteGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const currentPathname = pathname ?? '/';
   const { isAuthenticated, isLoading, user } = useAuth();
 
   // Public routes that don't require authentication
@@ -24,10 +25,10 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
   ];
 
   const isPublicRoute = publicRoutes.some(route => 
-    pathname === route || pathname.startsWith('/reset-password')
+    currentPathname === route || currentPathname.startsWith('/reset-password')
   );
 
-  const isAuthAccessibleRoute = authAccessibleRoutes.some(route => pathname === route);
+  const isAuthAccessibleRoute = authAccessibleRoutes.some(route => currentPathname === route);
 
   useEffect(() => {
     if (isLoading) return;
@@ -43,14 +44,14 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
     // If user is authenticated, check if they must change password
     if (authenticated && user) {
       // If user must change password and not already on change-password page
-      if (user.mustChangePassword === true && pathname !== '/change-password') {
+      if (user.mustChangePassword === true && currentPathname !== '/change-password') {
         console.log('[RouteGuard] User must change password, redirecting...');
         router.push('/change-password');
         return;
       }
 
       // If user doesn't need to change password and trying to access login/register
-      if (!user.mustChangePassword && (pathname === '/login' || pathname === '/register')) {
+      if (!user.mustChangePassword && (currentPathname === '/login' || currentPathname === '/register')) {
         router.push('/dashboard');
         return;
       }
@@ -76,12 +77,12 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
   }
 
   // If authenticated and must change password, only allow change-password page
-  if (authenticated && user?.mustChangePassword === true && pathname !== '/change-password') {
+  if (authenticated && user?.mustChangePassword === true && currentPathname !== '/change-password') {
     return null;
   }
 
   // Don't render login/register if already authenticated (unless they must change password)
-  if (authenticated && !user?.mustChangePassword && (pathname === '/login' || pathname === '/register')) {
+  if (authenticated && !user?.mustChangePassword && (currentPathname === '/login' || currentPathname === '/register')) {
     return null;
   }
 

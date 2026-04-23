@@ -10,10 +10,11 @@ import RouteGuard from "@/components/RouteGuard";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const currentPathname = pathname ?? '/';
   
   // Pages that don't need the sidebar
   const publicPages = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/change-password', '/change-password-otp'];
-  const isPublicPage = publicPages.includes(pathname) || pathname.startsWith('/reset-password');
+  const isPublicPage = publicPages.includes(currentPathname) || currentPathname.startsWith('/reset-password');
 
   if (isPublicPage) {
     return (

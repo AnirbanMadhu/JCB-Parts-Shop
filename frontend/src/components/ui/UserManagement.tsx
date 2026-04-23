@@ -38,7 +38,7 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await authFetch('/users');
+      const response = await authFetch('/api/users');
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users);
@@ -71,7 +71,7 @@ export default function UserManagement() {
         });
       }, 200);
 
-      const response = await authFetch('/users/invite', {
+      const response = await authFetch('/api/users/invite', {
         method: 'POST',
         body: JSON.stringify(inviteData),
       });
@@ -98,7 +98,7 @@ export default function UserManagement() {
 
   const handleToggleActive = async (userId: number, currentStatus: boolean) => {
     try {
-      const response = await authFetch(`/users/${userId}`, {
+      const response = await authFetch(`/api/users/${userId}`, {
         method: 'PUT',
         body: JSON.stringify({ isActive: !currentStatus }),
       });
@@ -118,7 +118,7 @@ export default function UserManagement() {
   const confirmDelete = async () => {
     const { userId, userName } = confirmDialog;
     try {
-      const response = await authFetch(`/users/${userId}`, {
+      const response = await authFetch(`/api/users/${userId}`, {
         method: 'DELETE',
       });
 

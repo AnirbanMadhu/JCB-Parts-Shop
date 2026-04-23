@@ -21,7 +21,7 @@ export const fetcher = async (url: string) => {
   
   let response: Response;
   try {
-    response = await fetch(`/api${url}`, { headers });
+    response = await fetch(url, { headers });
   } catch (networkError: any) {
     // Network errors (offline, DNS failure, timeout) — don't throw, return empty
     // SWR will retry automatically based on errorRetryCount
@@ -64,7 +64,7 @@ export const mutationFetcher = async (url: string, { arg }: { arg: { method: str
   
   let response: Response;
   try {
-    response = await fetch(`/api${url}`, {
+    response = await fetch(url, {
       method: arg.method,
       headers,
       body: arg.body ? JSON.stringify(arg.body) : undefined,

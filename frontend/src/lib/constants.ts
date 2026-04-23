@@ -4,10 +4,9 @@ export const APP_NAME = "S.P.TRADERS AND BUILDERS";
 export const APP_DESCRIPTION = "JCB Parts Shop Management System";
 
 // API Configuration
-export const API_BASE_URL = "";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-export const INTERNAL_API_URL =
-  process.env.INTERNAL_API_URL || "http://jcb_backend_prod:4001";
+export const INTERNAL_API_URL = process.env.INTERNAL_API_URL || "";
 
 // Pagination
 export const DEFAULT_PAGE_SIZE = 20;
