@@ -1,5 +1,4 @@
 import BalanceSheetReport from "@/app/reports/_components/BalanceSheetReport";
-import { API_BASE_URL } from '@/lib/constants';
 
 
 
@@ -26,7 +25,7 @@ export default async function BalanceSheetPage({
   if (params.asOfDate) queryParams.set('asOfDate', params.asOfDate);
   
   const queryString = queryParams.toString();
-  const url = `${API_BASE_URL}/api/reports/balance-sheet${queryString ? `?${queryString}` : ''}`;
+  const url = `/api/reports/balance-sheet${queryString ? `?${queryString}` : ''}`;
   
   let reportData = {
     asOfDate: params.asOfDate || new Date().toISOString().split('T')[0],

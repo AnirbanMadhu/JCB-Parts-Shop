@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthContextType } from '@/types/auth';
-import { API_BASE_URL } from '@/lib/constants';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -10,6 +9,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const persistAuth = (authUser: User, authToken: string) => {
+    setUser(authUser);
+    setToken(authToken);
+    localStorage.setItem('auth_token', authToken);
+    localStorage.setItem('auth_user', JSON.stringify(authUser));
+
+    // Set cookie for middleware (7 days expiry)
+    document.cookie = `auth_token=${authToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+  };
 
   // Load user and token from localStorage on mount
   useEffect(() => {
@@ -26,9 +35,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const verifyToken = async (authToken: string) => {
+  const verifyToken = async (authToken: string): Promise<User | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      const response = await fetch(`/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
         },
@@ -38,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Token is invalid, clear auth state
         logout();
       } else {
-        const data = await response.json();
+        const data: { user: User } = await response.json();
         // Preserve mustChangePassword flag from existing user data
         const existingUserData = localStorage.getItem('auth_user');
         let updatedUser = data.user;
@@ -52,16 +61,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setUser(updatedUser);
         localStorage.setItem('auth_user', JSON.stringify(updatedUser));
+        return updatedUser;
       }
     } catch (error) {
       console.error('Token verification failed:', error);
       logout();
     }
+
+    return null;
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const response = await fetch(`/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,21 +81,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const data: { user: User; token: string; error?: string } = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || 'Login failed');
       }
 
-      setUser(data.user);
-      setToken(data.token);
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
-      
-      // Set cookie for middleware (7 days expiry)
-      document.cookie = `auth_token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-      
-      // Return user data so caller can check mustChangePassword
+      persistAuth(data.user, data.token);
+
       return data.user;
     } catch (error) {
       console.error('Login error:', error);
@@ -91,9 +96,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (email: string, password: string, name: string): Promise<User> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      const response = await fetch(`/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,19 +106,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password, name }),
       });
 
-      const data = await response.json();
+      const data: { user: User; token: string; error?: string } = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || 'Registration failed');
       }
 
-      setUser(data.user);
-      setToken(data.token);
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
-      
-      // Set cookie for middleware (7 days expiry)
-      document.cookie = `auth_token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      persistAuth(data.user, data.token);
+
+      return data.user;
     } catch (error) {
       console.error('Registration error:', error);
       throw error;

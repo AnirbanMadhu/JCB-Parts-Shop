@@ -1,7 +1,6 @@
 // Server-side authentication utilities
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { API_BASE_URL } from '@/lib/constants';
 
 export interface User {
   id: number;
@@ -35,7 +34,7 @@ export async function getServerAuth(): Promise<AuthResult> {
     }
 
     // Verify token with backend
-    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+    const response = await fetch(`/api/auth/me`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },

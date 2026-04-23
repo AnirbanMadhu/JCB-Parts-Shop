@@ -1,12 +1,11 @@
 import ItemEditForm from "@/components/ui/ItemEditForm";
-import { INTERNAL_API_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 async function getItem(id: string) {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/api/parts/${id}`, {
+    const res = await fetch(`/api/parts/${id}`, {
       cache: "no-store",
       next: { revalidate: 0 },
     });

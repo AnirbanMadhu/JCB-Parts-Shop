@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { User, Mail, Lock, Shield, Sparkles, CheckCircle2 } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/constants';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -21,7 +20,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     // Check if system is already initialized
-    fetch(`${API_BASE_URL}/api/auth/status`)
+    fetch(`/api/auth/status`)
       .then(res => res.json())
       .then(data => {
         setSystemStatus(data);

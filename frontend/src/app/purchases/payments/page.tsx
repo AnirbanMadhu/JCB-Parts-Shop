@@ -1,5 +1,4 @@
 import PurchasePaymentsList from "@/app/purchases/_components/PurchasePaymentsList";
-import { INTERNAL_API_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +9,7 @@ export const metadata = {
 
 async function fetchPurchaseInvoices() {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/api/invoices?type=PURCHASE`, {
+    const res = await fetch(`/api/invoices?type=PURCHASE`, {
       cache: "no-store",
     });
     if (!res.ok) return [];

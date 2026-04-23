@@ -1,11 +1,10 @@
 import CustomerDetails from "@/components/ui/CustomerDetails";
-import { INTERNAL_API_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
 async function getCustomer(id: string) {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/api/customers/${id}`, {
+    const res = await fetch(`/api/customers/${id}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -18,12 +17,9 @@ async function getCustomer(id: string) {
 
 async function getCustomerInvoices(customerId: string) {
   try {
-    const res = await fetch(
-      `${INTERNAL_API_URL}/api/invoices?type=SALE&customerId=${customerId}`,
-      {
-        cache: "no-store",
-      }
-    );
+    const res = await fetch(`/api/invoices?type=SALE&customerId=${customerId}`, {
+      cache: "no-store",
+    });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {

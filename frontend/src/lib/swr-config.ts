@@ -4,7 +4,6 @@
  */
 
 import { SWRConfiguration } from 'swr';
-import { API_BASE_URL } from '@/lib/constants';
 
 /**
  * Custom fetcher with authentication, error handling, and auto-logout on 401
@@ -22,7 +21,7 @@ export const fetcher = async (url: string) => {
   
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${url}`, { headers });
+    response = await fetch(`/api${url}`, { headers });
   } catch (networkError: any) {
     // Network errors (offline, DNS failure, timeout) — don't throw, return empty
     // SWR will retry automatically based on errorRetryCount
@@ -65,7 +64,7 @@ export const mutationFetcher = async (url: string, { arg }: { arg: { method: str
   
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${url}`, {
+    response = await fetch(`/api${url}`, {
       method: arg.method,
       headers,
       body: arg.body ? JSON.stringify(arg.body) : undefined,

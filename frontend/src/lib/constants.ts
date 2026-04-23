@@ -4,15 +4,10 @@ export const APP_NAME = "S.P.TRADERS AND BUILDERS";
 export const APP_DESCRIPTION = "JCB Parts Shop Management System";
 
 // API Configuration
-// NEXT_PUBLIC_API_URL: Used by client-side (browser) code
-// INTERNAL_API_URL: Used by server-side (SSR) code inside Docker - communicates with backend container
-// In Docker: frontend container can reach backend via container name "backend"
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
+export const API_BASE_URL = "";
 
-// For server-side requests (SSR), use internal Docker network URL
-// This allows the frontend container to reach the backend container directly
-export const INTERNAL_API_URL = process.env.INTERNAL_API_URL || API_BASE_URL;
+export const INTERNAL_API_URL =
+  process.env.INTERNAL_API_URL || "http://jcb_backend_prod:4001";
 
 // Pagination
 export const DEFAULT_PAGE_SIZE = 20;

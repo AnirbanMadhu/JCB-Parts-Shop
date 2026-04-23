@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import BackButton from "@/components/ui/BackButton";
 import { Package, Tag, Hash, IndianRupee, Layers } from "lucide-react";
-import { INTERNAL_API_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +13,7 @@ type Props = {
 
 async function fetchItem(id: string) {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/api/parts/${id}`, {
+    const res = await fetch(`/api/parts/${id}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -27,7 +26,7 @@ async function fetchItem(id: string) {
 
 async function fetchItemStock(id: string) {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/api/stock/${id}`, {
+    const res = await fetch(`/api/stock/${id}`, {
       cache: "no-store",
     });
     if (!res.ok) return { stock: 0 };

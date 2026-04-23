@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { API_BASE_URL } from '@/lib/constants';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -18,7 +17,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Check system status
-    fetch(`${API_BASE_URL}/api/auth/status`)
+    fetch(`/api/auth/status`)
       .then(res => res.json())
       .then(data => {
         setSystemStatus(data);

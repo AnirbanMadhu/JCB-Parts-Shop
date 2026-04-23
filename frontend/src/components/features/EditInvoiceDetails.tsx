@@ -1,6 +1,5 @@
 'use client';
 
-import { API_BASE_URL } from '@/lib/constants';
 
 import { useState } from 'react';
 import { FileEdit, Search, Calendar, FileText, Truck, Package } from 'lucide-react';

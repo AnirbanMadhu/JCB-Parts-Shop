@@ -1,6 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
 
 import { useEffect, useMemo, useState } from "react";
 import ScannerInput from "./ScannerInput";
@@ -38,14 +37,14 @@ async function fetchProductByCode(code: string) {
   }
 
   try {
-    let url = `${API_BASE_URL}/api/parts/search?barcode=${encodeURIComponent(searchCode)}`;
+    let url = `/api/parts/search?barcode=${encodeURIComponent(searchCode)}`;
     let res = await fetch(url, { cache: "no-store" });
     
     if (res.ok) {
       return await res.json();
     }
     
-    url = `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(searchCode)}`;
+    url = `/api/parts/search?q=${encodeURIComponent(searchCode)}`;
     res = await fetch(url, { cache: "no-store" });
     
     if (res.ok) {
@@ -183,7 +182,7 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
         sgstPercent
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/invoices/${invoice.id}`, {
+      const res = await fetch(`/api/invoices/${invoice.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(invoiceData)
@@ -207,7 +206,7 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
   useEffect(() => {
     async function loadSuppliers() {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/suppliers`, { cache: "no-store" });
+        const res = await fetch(`/api/suppliers`, { cache: "no-store" });
         if (res.ok) {
           const data = await res.json();
           setAllSuppliers(data);
@@ -230,7 +229,7 @@ export default function PurchaseInvoiceEditForm({ invoice }: { invoice: any }) {
       setIsSearching(true);
       try {
         const res = await fetch(
-          `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(partSearchQuery)}`,
+          `/api/parts/search?q=${encodeURIComponent(partSearchQuery)}`,
           { cache: "no-store" }
         );
         if (res.ok) {

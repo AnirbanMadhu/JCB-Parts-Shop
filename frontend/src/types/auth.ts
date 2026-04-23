@@ -13,7 +13,7 @@ export interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<User>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<User>;
   logout: () => void;
   updateUser: (updatedUser: Partial<User>) => void;
   isAdmin: () => boolean;

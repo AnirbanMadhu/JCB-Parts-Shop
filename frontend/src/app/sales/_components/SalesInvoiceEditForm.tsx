@@ -1,6 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -40,14 +39,14 @@ async function fetchProductByCode(code: string) {
   }
 
   try {
-    let url = `${API_BASE_URL}/api/parts/search?barcode=${encodeURIComponent(searchCode)}`;
+    let url = `/api/parts/search?barcode=${encodeURIComponent(searchCode)}`;
     let res = await fetch(url, { cache: "no-store" });
     
     if (res.ok) {
       return await res.json();
     }
     
-    url = `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(searchCode)}`;
+    url = `/api/parts/search?q=${encodeURIComponent(searchCode)}`;
     res = await fetch(url, { cache: "no-store" });
     
     if (res.ok) {
@@ -134,7 +133,7 @@ export default function SalesInvoiceEditForm({ invoice }: { invoice: any }) {
       const p = await fetchProductByCode(code);
       
       // Fetch stock for this part
-      const stockRes = await fetch(`${API_BASE_URL}/api/stock/${p.id}`, { cache: "no-store" });
+      const stockRes = await fetch(`/api/stock/${p.id}`, { cache: "no-store" });
       const stockInfo = stockRes.ok ? await stockRes.json() : { stock: 0 };
       const availableStock = stockInfo.stock || 0;
       
@@ -227,7 +226,7 @@ export default function SalesInvoiceEditForm({ invoice }: { invoice: any }) {
         allowEditSubmitted: settings.sales.allowEditSubmitted
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/invoices/${invoice.id}`, {
+      const res = await fetch(`/api/invoices/${invoice.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(invoiceData)
@@ -254,7 +253,7 @@ export default function SalesInvoiceEditForm({ invoice }: { invoice: any }) {
   useEffect(() => {
     async function loadCustomers() {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/customers`, { cache: "no-store" });
+        const res = await fetch(`/api/customers`, { cache: "no-store" });
         if (res.ok) {
           const data = await res.json();
           setAllCustomers(data);
@@ -271,7 +270,7 @@ export default function SalesInvoiceEditForm({ invoice }: { invoice: any }) {
     async function loadStockData() {
       try {
         const stockPromises = lines.map(async (line) => {
-          const res = await fetch(`${API_BASE_URL}/api/stock/${line.partId}`, { cache: "no-store" });
+          const res = await fetch(`/api/stock/${line.partId}`, { cache: "no-store" });
           if (res.ok) {
             const data = await res.json();
             return { partId: line.partId, stock: data.stock || 0 };
@@ -313,7 +312,7 @@ export default function SalesInvoiceEditForm({ invoice }: { invoice: any }) {
       setIsSearching(true);
       try {
         const res = await fetch(
-          `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(partSearchQuery)}`,
+          `/api/parts/search?q=${encodeURIComponent(partSearchQuery)}`,
           { cache: "no-store" }
         );
         if (res.ok) {

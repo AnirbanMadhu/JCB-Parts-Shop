@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { API_BASE_URL } from '@/lib/constants';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -78,14 +77,13 @@ export default function ChangePasswordPage() {
       
       
       console.log('Changing password...');
-      console.log('API URL:', API_BASE_URL);
       console.log('Is mandatory:', isMandatory);
       console.log('Request body:', { 
         hasCurrentPassword: !!currentPassword, 
         hasNewPassword: !!newPassword 
       });
 
-      const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+      const response = await fetch(`/api/auth/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

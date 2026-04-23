@@ -1,7 +1,6 @@
 "use client";
 
 // components/Sales/SalesPaymentsList.tsx
-import { API_BASE_URL } from '@/lib/constants';
 import Link from "next/link";
 import BackButton from "@/components/ui/BackButton";
 import PaymentStatusModal from "./PaymentStatusModal";
@@ -116,7 +115,7 @@ export default function SalesPaymentsList({ payments }: Props) {
 
   const handleSavePayment = async (paymentData: any) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/invoices/${selectedInvoice?.id}`, {
+      const res = await fetch(`/api/invoices/${selectedInvoice?.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentData),

@@ -1,6 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
 
 // components/Sales/SalesInvoiceForm.tsx
 
@@ -43,13 +42,13 @@ async function fetchProductByCode(code: string) {
   // Search by barcode first, then by part number
   try {
     // Try barcode search
-    let res = await fetch(`${API_BASE_URL}/api/parts/search?barcode=${encodeURIComponent(searchCode)}`, { cache: "no-store" });
+    let res = await fetch(`/api/parts/search?barcode=${encodeURIComponent(searchCode)}`, { cache: "no-store" });
     if (res.ok) {
       return await res.json();
     }
     
     // Try part number search
-    res = await fetch(`${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(searchCode)}`, { cache: "no-store" });
+    res = await fetch(`/api/parts/search?q=${encodeURIComponent(searchCode)}`, { cache: "no-store" });
     if (res.ok) {
       const parts = await res.json();
       if (parts.length > 0) {
@@ -85,7 +84,7 @@ export default function SalesInvoiceForm() {
       if (customer?.id) {
         try {
           const res = await fetch(
-            `${API_BASE_URL}/api/invoices/next-number?type=SALE&customerId=${customer.id}`
+            `/api/invoices/next-number?type=SALE&customerId=${customer.id}`
           );
           if (res.ok) {
             const data = await res.json();
@@ -208,7 +207,7 @@ export default function SalesInvoiceForm() {
       const p = await fetchProductByCode(code);
       
       // Check current stock
-      const stockRes = await fetch(`${API_BASE_URL}/api/stock/${p.id}`, { cache: "no-store" });
+      const stockRes = await fetch(`/api/stock/${p.id}`, { cache: "no-store" });
       if (!stockRes.ok) {
         toastError(`✗ Unable to check stock for ${p.itemName}`);
         return;
@@ -374,7 +373,7 @@ export default function SalesInvoiceForm() {
     try {
       // Check if part already exists in database
       const checkRes = await fetch(
-        `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(upperPartNumber)}`,
+        `/api/parts/search?q=${encodeURIComponent(upperPartNumber)}`,
         { cache: "no-store" }
       );
 
@@ -385,7 +384,7 @@ export default function SalesInvoiceForm() {
       }
 
       // Create or update the part in the database
-      const res = await fetch(`${API_BASE_URL}/api/parts`, {
+      const res = await fetch(`/api/parts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -409,7 +408,7 @@ export default function SalesInvoiceForm() {
       const part = await res.json();
 
       // Check stock for the newly created part
-      const stockRes = await fetch(`${API_BASE_URL}/api/stock/${part.id}`, { cache: "no-store" });
+      const stockRes = await fetch(`/api/stock/${part.id}`, { cache: "no-store" });
       let availableStock = 0;
       if (stockRes.ok) {
         const stockData = await stockRes.json();
@@ -545,7 +544,7 @@ export default function SalesInvoiceForm() {
         sgstPercent
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/invoices`, {
+      const res = await fetch(`/api/invoices`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(invoiceData)
@@ -581,7 +580,7 @@ export default function SalesInvoiceForm() {
   useEffect(() => {
     async function loadCustomers() {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/customers`, { cache: "no-store" });
+        const res = await fetch(`/api/customers`, { cache: "no-store" });
         if (res.ok) {
           const data = await res.json();
           setAllCustomers(data);
@@ -606,7 +605,7 @@ export default function SalesInvoiceForm() {
       
       try {
         const res = await fetch(
-          `${API_BASE_URL}/api/parts/search?q=${encodeURIComponent(partSearchQuery)}`,
+          `/api/parts/search?q=${encodeURIComponent(partSearchQuery)}`,
           { cache: "no-store" }
         );
         if (res.ok) {

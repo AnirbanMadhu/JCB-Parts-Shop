@@ -1,5 +1,4 @@
 import SuppliersList from "@/components/ui/SuppliersList";
-import { INTERNAL_API_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +9,7 @@ export const metadata = {
 
 async function fetchSuppliers() {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/api/suppliers`, {
+    const res = await fetch(`/api/suppliers`, {
       cache: "no-store",
     });
     if (!res.ok) return [];

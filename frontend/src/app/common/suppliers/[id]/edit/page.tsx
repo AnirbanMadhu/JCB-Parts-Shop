@@ -1,6 +1,5 @@
 import SupplierEditForm from "@/components/ui/SupplierEditForm";
 import { notFound } from "next/navigation";
-import { INTERNAL_API_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +11,7 @@ type Props = {
 
 async function fetchSupplier(id: string) {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/api/suppliers/${id}`, {
+    const res = await fetch(`/api/suppliers/${id}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;

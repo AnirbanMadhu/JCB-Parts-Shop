@@ -1,5 +1,3 @@
-import { API_BASE_URL } from '@/lib/constants';
-
 export const getAuthToken = (): string | null => {
   if (typeof window !== 'undefined') {
     return localStorage.getItem('auth_token');
@@ -16,7 +14,7 @@ export const getAuthHeaders = (): HeadersInit => {
 };
 
 export const authFetch = async (endpoint: string, options: RequestInit = {}) => {
-  const response = await fetch(`${API_BASE_URL}/api${endpoint}`, {
+  const response = await fetch(`/api${endpoint}`, {
     ...options,
     headers: {
       ...getAuthHeaders(),

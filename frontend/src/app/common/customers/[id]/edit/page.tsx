@@ -1,11 +1,10 @@
 import CustomerEditForm from "@/components/ui/CustomerEditForm";
-import { INTERNAL_API_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
 async function getCustomer(id: string) {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/api/customers/${id}`, {
+    const res = await fetch(`/api/customers/${id}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;

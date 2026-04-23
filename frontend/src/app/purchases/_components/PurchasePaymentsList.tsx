@@ -1,6 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
 
 // components/Purchases/PurchasePaymentsList.tsx
 
@@ -116,7 +115,7 @@ export default function PurchasePaymentsList({ payments }: Props) {
 
   const handleSavePayment = async (paymentData: any) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/invoices/${selectedInvoice?.id}`, {
+      const res = await fetch(`/api/invoices/${selectedInvoice?.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentData),

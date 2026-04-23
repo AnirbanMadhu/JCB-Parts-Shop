@@ -1,6 +1,5 @@
 "use client";
 
-import { API_BASE_URL } from '@/lib/constants';
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -34,7 +33,7 @@ export default function ProfilePage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/request-password-change-otp`, {
+      const response = await fetch(`/api/auth/request-password-change-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -85,7 +84,7 @@ export default function ProfilePage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/change-password-with-otp`, {
+      const response = await fetch(`/api/auth/change-password-with-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

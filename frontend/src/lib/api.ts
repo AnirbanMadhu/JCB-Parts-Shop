@@ -1,6 +1,5 @@
 // lib/api.ts - Server and Client-side API utilities
 import { cookies } from "next/headers";
-import { INTERNAL_API_URL } from "@/lib/constants";
 
 // Helper to get auth headers for server-side requests
 async function getAuthHeaders(): Promise<HeadersInit> {
@@ -80,7 +79,7 @@ export type Payment = {
 export async function fetchPurchaseInvoices(): Promise<Invoice[]> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${INTERNAL_API_URL}/api/invoices?type=PURCHASE`, {
+    const res = await fetch(`/api/invoices?type=PURCHASE`, {
       headers,
       cache: "no-store", // Always fetch fresh data
       next: { revalidate: 0 },
@@ -96,7 +95,7 @@ export async function fetchPurchaseInvoices(): Promise<Invoice[]> {
 export async function fetchSalesInvoices(): Promise<Invoice[]> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${INTERNAL_API_URL}/api/invoices?type=SALE`, {
+    const res = await fetch(`/api/invoices?type=SALE`, {
       headers,
       cache: "no-store",
       next: { revalidate: 0 },
@@ -112,7 +111,7 @@ export async function fetchSalesInvoices(): Promise<Invoice[]> {
 export async function fetchCustomers(): Promise<Customer[]> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${INTERNAL_API_URL}/api/customers`, {
+    const res = await fetch(`/api/customers`, {
       headers,
       cache: "no-store",
       next: { revalidate: 0 },
@@ -130,7 +129,7 @@ export async function fetchItems(
 ): Promise<Item[]> {
   try {
     const headers = await getAuthHeaders();
-    const url = `${INTERNAL_API_URL}/api/stock${
+    const url = `/api/stock${
       onlyPurchased ? "?onlyPurchased=true" : ""
     }`;
     const res = await fetch(url, {
@@ -149,7 +148,7 @@ export async function fetchItems(
 export async function fetchPurchasePayments(): Promise<Payment[]> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${INTERNAL_API_URL}/api/payments?type=PURCHASE`, {
+    const res = await fetch(`/api/payments?type=PURCHASE`, {
       headers,
       cache: "no-store",
       next: { revalidate: 0 },
@@ -165,7 +164,7 @@ export async function fetchPurchasePayments(): Promise<Payment[]> {
 export async function fetchSalesPayments(): Promise<Payment[]> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${INTERNAL_API_URL}/api/payments?type=SALE`, {
+    const res = await fetch(`/api/payments?type=SALE`, {
       headers,
       cache: "no-store",
       next: { revalidate: 0 },

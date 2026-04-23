@@ -1,5 +1,4 @@
 import ProfitAndLossReport from "@/app/reports/_components/ProfitAndLossReport";
-import { API_BASE_URL } from '@/lib/constants';
 
 
 
@@ -28,7 +27,7 @@ export default async function ProfitAndLossPage({
   if (params.endDate) queryParams.set('endDate', params.endDate);
   
   const queryString = queryParams.toString();
-  const url = `${API_BASE_URL}/api/reports/profit-loss${queryString ? `?${queryString}` : ''}`;
+  const url = `/api/reports/profit-loss${queryString ? `?${queryString}` : ''}`;
   
   let reportData = {
     totalPurchases: 0,

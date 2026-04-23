@@ -6,7 +6,6 @@ import { useSettings } from '@/hooks/useSettings';
 import { useToast } from '@/hooks/useToast';
 import InvoicePrint from "@/components/ui/InvoicePrint";
 import { motion } from 'framer-motion';
-import { API_BASE_URL } from '@/lib/constants';
 
 type Props = {
   params: Promise<{
@@ -33,7 +32,7 @@ export default function SalesInvoiceDetailPage({ params }: Props) {
 
     async function fetchInvoice() {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/invoices/${invoiceId}`, {
+        const res = await fetch(`/api/invoices/${invoiceId}`, {
           cache: 'no-store',
         });
         if (!res.ok) {

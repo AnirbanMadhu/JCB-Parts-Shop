@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import SalesInvoiceEditForm from "@/app/sales/_components/SalesInvoiceEditForm";
 import { useSettings } from '@/hooks/useSettings';
-import { API_BASE_URL } from '@/lib/constants';
 
 export default function EditSalesInvoicePage({ 
   params 
@@ -27,7 +26,7 @@ export default function EditSalesInvoicePage({
 
     async function fetchInvoice() {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/invoices/${invoiceId}`, {
+        const res = await fetch(`/api/invoices/${invoiceId}`, {
           cache: 'no-store',
         });
         if (!res.ok) {

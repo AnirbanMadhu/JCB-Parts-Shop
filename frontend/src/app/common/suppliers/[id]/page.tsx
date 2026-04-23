@@ -1,6 +1,5 @@
 import SupplierDetails from "@/components/ui/SupplierDetails";
 import { notFound } from "next/navigation";
-import { INTERNAL_API_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +11,7 @@ type Props = {
 
 async function fetchSupplier(id: string) {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/api/suppliers/${id}`, {
+    const res = await fetch(`/api/suppliers/${id}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -25,12 +24,9 @@ async function fetchSupplier(id: string) {
 
 async function fetchSupplierInvoices(id: string) {
   try {
-    const res = await fetch(
-      `${INTERNAL_API_URL}/api/invoices?type=PURCHASE&supplierId=${id}`,
-      {
-        cache: "no-store",
-      }
-    );
+    const res = await fetch(`/api/invoices?type=PURCHASE&supplierId=${id}`, {
+      cache: "no-store",
+    });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
