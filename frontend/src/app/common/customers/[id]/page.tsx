@@ -1,32 +1,7 @@
 import CustomerDetails from "@/components/ui/CustomerDetails";
+import { fetchCustomerById, fetchCustomerInvoices } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
-
-async function getCustomer(id: string) {
-  try {
-    const res = await fetch(`/api/customers/${id}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    console.error("Failed to fetch customer:", error);
-    return null;
-  }
-}
-
-async function getCustomerInvoices(customerId: string) {
-  try {
-    const res = await fetch(`/api/invoices?type=SALE&customerId=${customerId}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch (error) {
-    console.error("Failed to fetch customer invoices:", error);
-    return [];
-  }
-}
 
 export default async function CustomerDetailsPage({
   params,
@@ -35,8 +10,8 @@ export default async function CustomerDetailsPage({
 }) {
   const { id } = await params;
   const [customer, invoices] = await Promise.all([
-    getCustomer(id),
-    getCustomerInvoices(id),
+    fetchCustomerById(id),
+    fetchCustomerInvoices(id),
   ]);
 
   if (!customer) {

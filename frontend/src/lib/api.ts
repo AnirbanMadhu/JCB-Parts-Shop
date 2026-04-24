@@ -124,6 +124,38 @@ export async function fetchCustomers(): Promise<Customer[]> {
   }
 }
 
+export async function fetchCustomerById(id: string): Promise<Customer | null> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/customers/${id}`, {
+      headers,
+      cache: "no-store",
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error("Failed to fetch customer:", error);
+    return null;
+  }
+}
+
+export async function fetchCustomerInvoices(customerId: string): Promise<Invoice[]> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/invoices?type=SALE&customerId=${customerId}`, {
+      headers,
+      cache: "no-store",
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (error) {
+    console.error("Failed to fetch customer invoices:", error);
+    return [];
+  }
+}
+
 export async function fetchSuppliers(): Promise<any[]> {
   try {
     const headers = await getAuthHeaders();
@@ -136,6 +168,38 @@ export async function fetchSuppliers(): Promise<any[]> {
     return await res.json();
   } catch (error) {
     console.error("Failed to fetch suppliers:", error);
+    return [];
+  }
+}
+
+export async function fetchSupplierById(id: string): Promise<any | null> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/suppliers/${id}`, {
+      headers,
+      cache: "no-store",
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error("Failed to fetch supplier:", error);
+    return null;
+  }
+}
+
+export async function fetchSupplierInvoices(id: string): Promise<Invoice[]> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/invoices?type=PURCHASE&supplierId=${id}`, {
+      headers,
+      cache: "no-store",
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (error) {
+    console.error("Failed to fetch supplier invoices:", error);
     return [];
   }
 }
@@ -158,6 +222,38 @@ export async function fetchItems(
   } catch (error) {
     console.error("Failed to fetch items:", error);
     return [];
+  }
+}
+
+export async function fetchItemById(id: string): Promise<Item | null> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/parts/${id}`, {
+      headers,
+      cache: "no-store",
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error("Failed to fetch item:", error);
+    return null;
+  }
+}
+
+export async function fetchItemStock(id: string): Promise<{ stock: number }> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/stock/${id}`, {
+      headers,
+      cache: "no-store",
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) return { stock: 0 };
+    return await res.json();
+  } catch (error) {
+    console.error("Failed to fetch item stock:", error);
+    return { stock: 0 };
   }
 }
 
@@ -190,6 +286,22 @@ export async function fetchSalesPayments(): Promise<Payment[]> {
   } catch (error) {
     console.error("Failed to fetch sales payments:", error);
     return [];
+  }
+}
+
+export async function fetchInvoiceById(id: string): Promise<any | null> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/invoices/${id}`, {
+      headers,
+      cache: "no-store",
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error("Failed to fetch invoice:", error);
+    return null;
   }
 }
 

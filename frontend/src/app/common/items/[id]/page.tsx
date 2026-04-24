@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import BackButton from "@/components/ui/BackButton";
 import { Package, Tag, Hash, IndianRupee, Layers } from "lucide-react";
+import { fetchItemById, fetchItemStock } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -11,35 +12,9 @@ type Props = {
   }>;
 };
 
-async function fetchItem(id: string) {
-  try {
-    const res = await fetch(`/api/parts/${id}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    console.error("Failed to fetch item:", error);
-    return null;
-  }
-}
-
-async function fetchItemStock(id: string) {
-  try {
-    const res = await fetch(`/api/stock/${id}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return { stock: 0 };
-    return await res.json();
-  } catch (error) {
-    console.error("Failed to fetch item stock:", error);
-    return { stock: 0 };
-  }
-}
-
 export default async function ItemDetailPage({ params }: Props) {
   const { id } = await params;
-  const item = await fetchItem(id);
+  const item = await fetchItemById(id);
 
   if (!item) {
     notFound();

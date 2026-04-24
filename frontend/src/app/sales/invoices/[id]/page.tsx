@@ -6,6 +6,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useToast } from '@/hooks/useToast';
 import InvoicePrint from "@/components/ui/InvoicePrint";
 import { motion } from 'framer-motion';
+import { getAuthHeaders } from '@/lib/auth';
 
 type Props = {
   params: Promise<{
@@ -34,6 +35,7 @@ export default function SalesInvoiceDetailPage({ params }: Props) {
       try {
         const res = await fetch(`/api/invoices/${invoiceId}`, {
           cache: 'no-store',
+          headers: getAuthHeaders(),
         });
         if (!res.ok) {
           setLoading(false);
