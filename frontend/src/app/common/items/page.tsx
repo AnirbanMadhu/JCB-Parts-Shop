@@ -14,7 +14,7 @@ export default function ItemsPage() {
   useEffect(() => {
     const loadItems = async () => {
       try {
-        const response = await authFetch('/api/stock');
+        const response = await authFetch('/api/stock?onlyPurchased=true');
         const data = response.ok ? await response.json() : [];
         setItems(data);
       } finally {

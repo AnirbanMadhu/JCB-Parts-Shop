@@ -135,32 +135,29 @@ router.post('/:partId/adjust', async (req, res) => {
 router.get('/', cacheMiddleware(20), async (req, res) => {
   try {
     const { onlyPurchased } = req.query;
-    
-    // OPTIMIZED: Use a single aggregated query instead of N+1 queries
-    // This prevents connection pool exhaustion
-    
-    // Get all transactions with part information in one query
-    const transactions = await prisma.inventoryTransaction.findMany({
-      select: {
-        partId: true,
-        direction: true,
+
+    // Aggregate stock at DB level to avoid loading all raw transactions in memory
+    const transactionSummary = await prisma.inventoryTransaction.groupBy({
+      by: ['partId', 'direction'],
+      _sum: {
         quantity: true,
       },
     });
 
     // Create a map of partId -> stock calculations
     const stockMap = new Map<number, { incoming: number; outgoing: number }>();
-    
-    for (const transaction of transactions) {
-      const current = stockMap.get(transaction.partId) || { incoming: 0, outgoing: 0 };
-      
-      if (transaction.direction === 'IN') {
-        current.incoming += transaction.quantity;
+
+    for (const row of transactionSummary) {
+      const current = stockMap.get(row.partId) || { incoming: 0, outgoing: 0 };
+      const qty = row._sum.quantity || 0;
+
+      if (row.direction === 'IN') {
+        current.incoming += qty;
       } else {
-        current.outgoing += transaction.quantity;
+        current.outgoing += qty;
       }
-      
-      stockMap.set(transaction.partId, current);
+
+      stockMap.set(row.partId, current);
     }
 
     // Build filter for parts
@@ -182,9 +179,24 @@ router.get('/', cacheMiddleware(20), async (req, res) => {
       };
     }
     
-    // Fetch all parts in a single query
+    // Fetch relevant parts in a single query
     const parts = await prisma.part.findMany({ 
       where: partFilter,
+      select: {
+        id: true,
+        partNumber: true,
+        itemName: true,
+        description: true,
+        hsnCode: true,
+        gstPercent: true,
+        unit: true,
+        mrp: true,
+        rtl: true,
+        barcode: true,
+        qrCode: true,
+        createdAt: true,
+        updatedAt: true,
+      },
       orderBy: { partNumber: 'asc' } 
     });
 
