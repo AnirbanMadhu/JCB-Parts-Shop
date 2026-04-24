@@ -3,6 +3,12 @@ import type { NextRequest } from 'next/server';
 
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const isApiRoute = pathname === '/api' || pathname.startsWith('/api/');
+
+  // API routes must bypass page auth redirects and return API responses.
+  if (isApiRoute) {
+    return NextResponse.next();
+  }
   
   // Public routes that don't require authentication
   const publicRoutes = [
@@ -43,6 +49,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public files (public folder)
      */
-    '/((?!_next/static|_next/image|favicon.ico|icon.svg|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|icon.svg|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$).*)',
   ],
 };
