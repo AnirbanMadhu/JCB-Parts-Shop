@@ -1,15 +1,24 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import PurchasePaymentsList from "@/app/purchases/_components/PurchasePaymentsList";
-import { fetchPurchaseInvoices } from "@/lib/api";
+import { authFetch } from "@/lib/auth";
+import type { Invoice } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Purchase Payments",
-  description: "Manage purchase payments",
-};
+export default function PurchasePaymentsPage() {
+  const [payments, setPayments] = useState<Invoice[]>([]);
 
-export default async function PurchasePaymentsPage() {
-  const payments = await fetchPurchaseInvoices();
+  useEffect(() => {
+    const loadPayments = async () => {
+      const response = await authFetch('/api/invoices?type=PURCHASE');
+      const data = response.ok ? await response.json() : [];
+      setPayments(data);
+    };
+
+    loadPayments();
+  }, []);
 
   return <PurchasePaymentsList payments={payments} />;
 }

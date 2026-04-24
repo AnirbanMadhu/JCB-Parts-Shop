@@ -1,5 +1,7 @@
 // Utility functions for reliable fetch operations with timeout and error handling
 
+import { getAuthHeaders } from '@/lib/auth';
+
 export interface FetchWithTimeoutOptions extends RequestInit {
   timeout?: number;
 }
@@ -20,8 +22,13 @@ export async function fetchWithTimeout(
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
+    const authHeaders = getAuthHeaders();
     const response = await fetch(url, {
       ...fetchOptions,
+      headers: {
+        ...authHeaders,
+        ...(fetchOptions.headers || {}),
+      },
       signal: controller.signal,
     });
     clearTimeout(timeoutId);

@@ -1,18 +1,42 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import CustomerDetails from "@/components/ui/CustomerDetails";
-import { fetchCustomerById, fetchCustomerInvoices } from "@/lib/api";
+import { authFetch } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export default async function CustomerDetailsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const [customer, invoices] = await Promise.all([
-    fetchCustomerById(id),
-    fetchCustomerInvoices(id),
-  ]);
+export default function CustomerDetailsPage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+  const [customer, setCustomer] = useState<any | null>(null);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const loadData = async () => {
+      try {
+        const [customerRes, invoicesRes] = await Promise.all([
+          authFetch(`/api/customers/${id}`),
+          authFetch(`/api/invoices?type=SALE&customerId=${id}`),
+        ]);
+
+        setCustomer(customerRes.ok ? await customerRes.json() : null);
+        setInvoices(invoicesRes.ok ? await invoicesRes.json() : []);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [id]);
+
+  if (loading) {
+    return <div className="p-6 text-muted-foreground">Loading customer...</div>;
+  }
 
   if (!customer) {
     return (

@@ -1,15 +1,24 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import SalesPaymentsList from "@/app/sales/_components/SalesPaymentsList";
-import { fetchSalesInvoices } from "@/lib/api";
+import { authFetch } from "@/lib/auth";
+import type { Invoice } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Sales Payments",
-  description: "View all sales transactions and payments",
-};
+export default function SalesPaymentsPage() {
+  const [payments, setPayments] = useState<Invoice[]>([]);
 
-export default async function SalesPaymentsPage() {
-  const payments = await fetchSalesInvoices();
+  useEffect(() => {
+    const loadPayments = async () => {
+      const response = await authFetch('/api/invoices?type=SALE');
+      const data = response.ok ? await response.json() : [];
+      setPayments(data);
+    };
+
+    loadPayments();
+  }, []);
 
   return <SalesPaymentsList payments={payments} />;
 }

@@ -1,27 +1,61 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import BackButton from "@/components/ui/BackButton";
 import { Package, Tag, Hash, IndianRupee, Layers } from "lucide-react";
-import { fetchItemById, fetchItemStock } from "@/lib/api";
+import { authFetch } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-type Props = {
-  params: Promise<{
-    id: string;
-  }>;
-};
+export default function ItemDetailPage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+  const [item, setItem] = useState<any | null>(null);
+  const [stock, setStock] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-export default async function ItemDetailPage({ params }: Props) {
-  const { id } = await params;
-  const item = await fetchItemById(id);
+  useEffect(() => {
+    if (!id) return;
 
-  if (!item) {
-    notFound();
+    const loadData = async () => {
+      try {
+        const [itemRes, stockRes] = await Promise.all([
+          authFetch(`/api/parts/${id}`),
+          authFetch(`/api/stock/${id}`),
+        ]);
+
+        setItem(itemRes.ok ? await itemRes.json() : null);
+
+        if (stockRes.ok) {
+          const stockData = await stockRes.json();
+          setStock(stockData.stock || 0);
+        } else {
+          setStock(0);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [id]);
+
+  if (loading) {
+    return <div className="p-6 text-muted-foreground">Loading item...</div>;
   }
 
-  const stockData = await fetchItemStock(id);
-  const stock = stockData.stock || 0;
+  if (!item) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <h1 className="text-xl font-semibold text-red-600">Item not found</h1>
+          <p className="mt-2 text-gray-600">The item you're looking for doesn't exist.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

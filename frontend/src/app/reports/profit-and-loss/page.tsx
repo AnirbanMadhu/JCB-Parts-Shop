@@ -1,27 +1,47 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ProfitAndLossReport from "@/app/reports/_components/ProfitAndLossReport";
-import { fetchProfitAndLoss } from "@/lib/api";
+import { authFetch } from "@/lib/auth";
 
 
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
-  title: "Profit and Loss",
-  description: "View profit and loss report",
-};
+export default function ProfitAndLossPage() {
+  const searchParams = useSearchParams();
+  const startDate = searchParams?.get('startDate') || undefined;
+  const endDate = searchParams?.get('endDate') || undefined;
+  const [reportData, setReportData] = useState<any>({
+    totalPurchases: 0,
+    totalSales: 0,
+    profitLoss: 0,
+    profitMargin: '0%',
+    startDate,
+    endDate,
+  });
 
-type SearchParams = {
-  startDate?: string;
-  endDate?: string;
-};
+  useEffect(() => {
+    const loadReport = async () => {
+      const query = new URLSearchParams();
+      if (startDate) query.set('startDate', startDate);
+      if (endDate) query.set('endDate', endDate);
 
-export default async function ProfitAndLossPage({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParams>;
-}) {
-  const params = await searchParams;
-  const reportData = await fetchProfitAndLoss(params.startDate, params.endDate);
-  
+      const response = await authFetch(`/api/reports/profit-loss${query.toString() ? `?${query.toString()}` : ''}`);
+      const data = response.ok ? await response.json() : {
+        totalPurchases: 0,
+        totalSales: 0,
+        profitLoss: 0,
+        profitMargin: '0%',
+        startDate,
+        endDate,
+      };
+      setReportData(data);
+    };
+
+    loadReport();
+  }, [startDate, endDate]);
+
   return <ProfitAndLossReport data={reportData} />;
 }

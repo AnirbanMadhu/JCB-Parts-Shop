@@ -28,6 +28,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
+      if (!document.cookie.includes('auth_token=')) {
+        document.cookie = `auth_token=${storedToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      }
       
       // Verify token is still valid
       verifyToken(storedToken);
