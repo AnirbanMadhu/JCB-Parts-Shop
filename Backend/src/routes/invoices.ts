@@ -4,12 +4,12 @@ import { InvoiceCreateBody } from '../types';
 import { InvoiceType, InventoryDirection, InvoiceStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { clearCachePattern } from '../middleware/cache';
-// import { authenticateToken } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
-// TODO: Re-enable authentication after verifying data access
-// router.use(authenticateToken);
+// Authentication required for all routes
+router.use(authenticateToken);
 
 // Generate next invoice number for customer/supplier
 router.get('/next-number', async (req, res) => {

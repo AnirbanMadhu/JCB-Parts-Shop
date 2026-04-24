@@ -17,7 +17,7 @@ export const authFetch = async (endpoint: string, options: RequestInit = {}) => 
   const response = await fetch(endpoint, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
       ...options.headers,
     },
   });

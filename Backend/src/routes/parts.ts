@@ -2,12 +2,12 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { PartCreateBody } from "../types";
 import { cacheMiddleware, clearCachePattern } from "../middleware/cache";
-// import { authenticateToken } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
-// TODO: Re-enable authentication after verifying data access
-// router.use(authenticateToken);
+// Authentication required for all routes
+router.use(authenticateToken);
 
 // Get all parts (paginated) - Cache for 30 seconds
 router.get("/", cacheMiddleware(30), async (req, res) => {
