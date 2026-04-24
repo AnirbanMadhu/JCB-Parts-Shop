@@ -1,4 +1,5 @@
 import BalanceSheetReport from "@/app/reports/_components/BalanceSheetReport";
+import { fetchBalanceSheet } from "@/lib/api";
 
 
 
@@ -19,47 +20,7 @@ export default async function BalanceSheetPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  
-  // Build query string
-  const queryParams = new URLSearchParams();
-  if (params.asOfDate) queryParams.set('asOfDate', params.asOfDate);
-  
-  const queryString = queryParams.toString();
-  const url = `/api/reports/balance-sheet${queryString ? `?${queryString}` : ''}`;
-  
-  let reportData = {
-    asOfDate: params.asOfDate || new Date().toISOString().split('T')[0],
-    assets: {
-      currentAssets: {
-        cash: 0,
-        accountsReceivable: 0,
-        inventory: 0,
-        total: 0
-      },
-      total: 0
-    },
-    liabilities: {
-      currentLiabilities: {
-        accountsPayable: 0,
-        total: 0
-      },
-      total: 0
-    },
-    equity: {
-      retainedEarnings: 0,
-      total: 0
-    },
-    totalLiabilitiesAndEquity: 0
-  };
-  
-  try {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (res.ok) {
-      reportData = await res.json();
-    }
-  } catch (error) {
-    console.error('Failed to fetch balance sheet data:', error);
-  }
+  const reportData = await fetchBalanceSheet(params.asOfDate);
   
   return <BalanceSheetReport data={reportData} />;
 }

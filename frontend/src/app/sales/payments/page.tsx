@@ -1,19 +1,7 @@
 import SalesPaymentsList from "@/app/sales/_components/SalesPaymentsList";
+import { fetchSalesInvoices } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
-
-async function fetchSalesInvoices() {
-  try {
-    const res = await fetch(`/api/invoices?type=SALE`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch (error) {
-    console.error("Failed to fetch sales invoices:", error);
-    return [];
-  }
-}
 
 export const metadata = {
   title: "Sales Payments",

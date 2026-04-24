@@ -1,4 +1,5 @@
 import SuppliersList from "@/components/ui/SuppliersList";
+import { fetchSuppliers } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -6,19 +7,6 @@ export const metadata = {
   title: "Suppliers",
   description: "Manage suppliers",
 };
-
-async function fetchSuppliers() {
-  try {
-    const res = await fetch(`/api/suppliers`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch (error) {
-    console.error("Failed to fetch suppliers:", error);
-    return [];
-  }
-}
 
 export default async function SuppliersPage() {
   const suppliers = await fetchSuppliers();
