@@ -242,13 +242,15 @@ export default async function ItemDetailPage({ params }: Props) {
                   Last Updated
                 </p>
                 <p className="text-foreground font-medium">
-                  {new Date(item.updatedAt).toLocaleString("en-IN", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {item.updatedAt
+                    ? new Date(item.updatedAt).toLocaleString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "-"}
                 </p>
               </div>
             </div>

@@ -1,4 +1,9 @@
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
+
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+});
 
 const globalForPrisma = global as unknown as { 
   prisma?: PrismaClient;
@@ -46,11 +51,7 @@ export const prisma =
           { emit: 'event', level: 'error' },
           { emit: 'event', level: 'warn' }
         ],
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
+      adapter,
   });
 
 // Store singleton in global for all environments — prevents multiple clients on any code path

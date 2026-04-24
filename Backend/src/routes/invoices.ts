@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../prisma';
 import { InvoiceCreateBody } from '../types';
 import { InvoiceType, InventoryDirection, InvoiceStatus } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@prisma/client/runtime/client';
 import { clearCachePattern } from '../middleware/cache';
 import { authenticateToken } from '../middleware/auth';
 
