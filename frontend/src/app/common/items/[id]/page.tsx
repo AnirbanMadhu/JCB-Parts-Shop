@@ -209,13 +209,15 @@ export default async function ItemDetailPage({ params }: Props) {
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Created At</p>
                 <p className="text-foreground font-medium">
-                  {new Date(item.createdAt).toLocaleString("en-IN", {
+                  {item.createdAt
+                    ? new Date(item.createdAt).toLocaleString("en-IN", {
                     day: "2-digit",
                     month: "short",
                     year: "numeric",
                     hour: "2-digit",
                     minute: "2-digit",
-                  })}
+                    })
+                    : "-"}
                 </p>
               </div>
             </div>
