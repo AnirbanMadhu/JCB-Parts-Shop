@@ -19,6 +19,13 @@ router.get("/", cacheMiddleware(30), async (req, res) => {
   const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
   const skip = (pageNum - 1) * limitNum;
 
+  console.log('[PARTS] Fetch request', {
+    page: pageNum,
+    limit: limitNum,
+    skip,
+    where: { isDeleted: false },
+  });
+
   try {
     const [parts, total] = await Promise.all([
       prisma.part.findMany({
@@ -29,6 +36,13 @@ router.get("/", cacheMiddleware(30), async (req, res) => {
       }),
       prisma.part.count({ where: { isDeleted: false } }),
     ]);
+
+    console.log('[PARTS] Fetch response', {
+      count: parts.length,
+      total,
+      page: pageNum,
+      limit: limitNum,
+    });
 
     res.json({
       data: parts,

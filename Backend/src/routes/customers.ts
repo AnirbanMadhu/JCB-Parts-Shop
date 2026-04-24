@@ -96,19 +96,30 @@ router.get('/', cacheMiddleware(60), async (req, res) => {
   const { search } = req.query as { search?: string };
 
   try {
+    const where = search
+      ? {
+          isDeleted: false,
+          OR: [
+            { name: { contains: search, mode: 'insensitive' as const } },
+            { indexId: { contains: search, mode: 'insensitive' as const } },
+            { gstin: { contains: search, mode: 'insensitive' as const } },
+            { phone: { contains: search, mode: 'insensitive' as const } }
+          ]
+        }
+      : { isDeleted: false };
+
+    console.log('[CUSTOMERS] Fetch request', {
+      search: search || null,
+      where,
+    });
+
     const customers = await prisma.customer.findMany({
-      where: search
-        ? {
-            isDeleted: false,
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { indexId: { contains: search, mode: 'insensitive' } },
-              { gstin: { contains: search, mode: 'insensitive' } },
-              { phone: { contains: search, mode: 'insensitive' } }
-            ]
-          }
-        : { isDeleted: false },
+      where,
       orderBy: { id: 'asc' }
+    });
+
+    console.log('[CUSTOMERS] Fetch response', {
+      count: customers.length,
     });
 
     res.json(customers);

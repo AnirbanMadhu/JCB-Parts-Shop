@@ -498,6 +498,12 @@ router.get('/profit-loss', cacheMiddleware(60), async (req, res) => {
       }
     }
 
+    console.log('[REPORTS:PROFIT_LOSS] Fetch request', {
+      startDate: startDate || null,
+      endDate: endDate || null,
+      where,
+    });
+
     const [purchases, sales] = await Promise.all([
       prisma.invoice.aggregate({
         where: { ...where, type: 'PURCHASE' },
@@ -512,6 +518,12 @@ router.get('/profit-loss', cacheMiddleware(60), async (req, res) => {
     const totalPurchases = purchases._sum.total || new Decimal(0);
     const totalSales = sales._sum.total || new Decimal(0);
     const profitLoss = totalSales.sub(totalPurchases);
+
+    console.log('[REPORTS:PROFIT_LOSS] Fetch response', {
+      totalPurchases: totalPurchases.toString(),
+      totalSales: totalSales.toString(),
+      profitLoss: profitLoss.toString(),
+    });
 
     res.json({
       totalPurchases,
@@ -537,6 +549,15 @@ router.get('/balance-sheet', cacheMiddleware(120), async (req, res) => {
     // Use provided date or current date
     const balanceDate = asOfDate ? new Date(asOfDate) : new Date();
     balanceDate.setHours(23, 59, 59, 999);
+
+    console.log('[REPORTS:BALANCE_SHEET] Fetch request', {
+      asOfDate: asOfDate || null,
+      balanceDate: balanceDate.toISOString(),
+      invoiceWhere: {
+        status: { notIn: ['CANCELLED', 'DRAFT'] },
+        dateLte: balanceDate.toISOString(),
+      },
+    });
 
     // Get all purchase and sales invoices up to the balance date
     const [purchases, sales, stockValue] = await Promise.all([
@@ -607,6 +628,15 @@ router.get('/balance-sheet', cacheMiddleware(120), async (req, res) => {
     
     // Total Equity (Assets - Liabilities)
     const totalEquity = totalAssets.sub(totalLiabilities);
+
+    console.log('[REPORTS:BALANCE_SHEET] Fetch response', {
+      totalAssets: totalAssets.toString(),
+      totalLiabilities: totalLiabilities.toString(),
+      totalEquity: totalEquity.toString(),
+      accountsReceivable: accountsReceivable.toString(),
+      accountsPayable: accountsPayable.toString(),
+      inventory: inventory.toString(),
+    });
 
     res.json({
       asOfDate: balanceDate.toISOString().split('T')[0],

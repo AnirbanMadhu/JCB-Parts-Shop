@@ -182,6 +182,10 @@ router.get('/metrics', async (_req: Request, res: Response) => {
 // Database data verification endpoint (temporary debug)
 router.get('/data-check', async (_req: Request, res: Response) => {
   try {
+    const dbInfo = await prisma.$queryRaw<Array<{ dbName: string; dbUser: string }>>`
+      SELECT current_database()::text as "dbName", current_user::text as "dbUser"
+    `;
+
     const [
       totalParts,
       activeParts,
@@ -232,6 +236,10 @@ router.get('/data-check', async (_req: Request, res: Response) => {
     res.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
+      database: {
+        name: dbInfo[0]?.dbName || 'unknown',
+        user: dbInfo[0]?.dbUser || 'unknown',
+      },
       counts: {
         parts: { total: totalParts, active: activeParts, deleted: totalParts - activeParts },
         suppliers: { total: totalSuppliers, active: activeSuppliers, deleted: totalSuppliers - activeSuppliers },

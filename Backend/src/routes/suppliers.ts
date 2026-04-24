@@ -80,18 +80,29 @@ router.get('/', cacheMiddleware(60), async (req, res) => {
   const { search } = req.query as { search?: string };
 
   try {
+    const where = search
+      ? {
+          isDeleted: false,
+          OR: [
+            { name: { contains: search, mode: 'insensitive' as const } },
+            { gstin: { contains: search, mode: 'insensitive' as const } },
+            { phone: { contains: search, mode: 'insensitive' as const } }
+          ]
+        }
+      : { isDeleted: false };
+
+    console.log('[SUPPLIERS] Fetch request', {
+      search: search || null,
+      where,
+    });
+
     const suppliers = await prisma.supplier.findMany({
-      where: search
-        ? {
-            isDeleted: false,
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { gstin: { contains: search, mode: 'insensitive' } },
-              { phone: { contains: search, mode: 'insensitive' } }
-            ]
-          }
-        : { isDeleted: false },
+      where,
       orderBy: { name: 'asc' }
+    });
+
+    console.log('[SUPPLIERS] Fetch response', {
+      count: suppliers.length,
     });
 
     res.json(suppliers);

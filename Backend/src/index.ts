@@ -1,9 +1,58 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import fs from 'fs';
+import path from 'path';
+
+function loadEnvFile() {
+  const candidates = [
+    path.resolve(process.cwd(), '.env'),
+    path.resolve(__dirname, '../.env'),
+    path.resolve(__dirname, '../../.env'),
+  ];
+
+  const envPath = candidates.find((candidate) => fs.existsSync(candidate));
+  if (!envPath) {
+    console.warn('[Config] No .env file found in expected locations. Using process environment only.');
+    return;
+  }
+
+  dotenv.config({ path: envPath });
+  console.log(`[Config] Loaded environment from: ${envPath}`);
+}
+
+loadEnvFile();
 
 import http from 'http';
 import app from './app';
 import { prisma } from './prisma';
+
+async function logDatabaseIdentityAndCounts() {
+  try {
+    const dbInfo = await prisma.$queryRaw<Array<{ db_name: string; db_user: string }>>`
+      SELECT current_database()::text as db_name, current_user::text as db_user
+    `;
+
+    const [users, customers, suppliers, parts, invoices] = await Promise.all([
+      prisma.user.count(),
+      prisma.customer.count(),
+      prisma.supplier.count(),
+      prisma.part.count(),
+      prisma.invoice.count(),
+    ]);
+
+    const dbName = dbInfo?.[0]?.db_name || 'unknown';
+    const dbUser = dbInfo?.[0]?.db_user || 'unknown';
+    console.log(`[Database] Connected to DB: ${dbName} as ${dbUser}`);
+    console.log('[Database] Row counts:', {
+      users,
+      customers,
+      suppliers,
+      parts,
+      invoices,
+    });
+  } catch (error: any) {
+    console.error('[Database] Failed to fetch database identity/counts:', error?.message || error);
+  }
+}
 
 // Validate critical environment variables
 if (!process.env.DATABASE_URL) {
@@ -104,6 +153,8 @@ server.listen(port, '0.0.0.0', () => {
     console.log(`🔗 Local: http://localhost:${port}`);
     console.log(`🔗 Health: http://localhost:${port}/api/health`);
   }
+
+  void logDatabaseIdentityAndCounts();
   
   console.log(`✅ Server started successfully at ${new Date().toISOString()}`);
 });
