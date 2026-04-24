@@ -8,6 +8,7 @@ import ScannerInput from "@/app/purchases/_components/ScannerInput";
 import BarcodeScanner from "@/components/features/BarcodeScanner";
 import Toast from "@/components/ui/Toast";
 import { useToast } from "@/hooks/useToast";
+import { authFetch } from "@/lib/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -42,13 +43,13 @@ async function fetchProductByCode(code: string) {
   // Search by barcode first, then by part number
   try {
     // Try barcode search
-    let res = await fetch(`/api/parts/search?barcode=${encodeURIComponent(searchCode)}`, { cache: "no-store" });
+    let res = await authFetch(`/api/parts/search?barcode=${encodeURIComponent(searchCode)}`, { cache: "no-store" });
     if (res.ok) {
       return await res.json();
     }
     
     // Try part number search
-    res = await fetch(`/api/parts/search?q=${encodeURIComponent(searchCode)}`, { cache: "no-store" });
+    res = await authFetch(`/api/parts/search?q=${encodeURIComponent(searchCode)}`, { cache: "no-store" });
     if (res.ok) {
       const parts = await res.json();
       if (parts.length > 0) {

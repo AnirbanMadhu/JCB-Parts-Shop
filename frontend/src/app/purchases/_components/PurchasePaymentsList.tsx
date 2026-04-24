@@ -11,6 +11,7 @@ import { Search, Calendar, Edit } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
+import { authFetch } from "@/lib/auth";
 
 type PurchaseInvoice = {
   id: number;
@@ -115,7 +116,7 @@ export default function PurchasePaymentsList({ payments }: Props) {
 
   const handleSavePayment = async (paymentData: any) => {
     try {
-      const res = await fetch(`/api/invoices/${selectedInvoice?.id}`, {
+      const res = await authFetch(`/api/invoices/${selectedInvoice?.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentData),

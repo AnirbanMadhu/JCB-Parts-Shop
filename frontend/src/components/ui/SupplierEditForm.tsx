@@ -6,6 +6,7 @@ import BackButton from "./BackButton";
 import ToastContainer from "./ToastContainer";
 import ConfirmDialog from "./ConfirmDialog";
 import { useToast } from "@/hooks/useToast";
+import { authFetch } from "@/lib/auth";
 
 
 
@@ -40,9 +41,8 @@ export default function SupplierEditForm({ supplier }: Props) {
     e.preventDefault();
     
     try {
-      const res = await fetch(`/api/suppliers/${supplier.id}`, {
+      const res = await authFetch(`/api/suppliers/${supplier.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -61,7 +61,7 @@ export default function SupplierEditForm({ supplier }: Props) {
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`/api/suppliers/${supplier.id}`, {
+      const res = await authFetch(`/api/suppliers/${supplier.id}`, {
         method: 'DELETE',
       });
 

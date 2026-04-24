@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import BackButton from "./BackButton";
 import { useToast } from "@/hooks/useToast";
 import ToastContainer from "./ToastContainer";
+import { authFetch } from "@/lib/auth";
 import { 
   Mail, 
   Phone, 
@@ -55,7 +56,7 @@ export default function CustomerDetails({ customer, invoices }: Props) {
     }
 
     try {
-      const res = await fetch(`/api/customers/${customer.id}`, {
+      const res = await authFetch(`/api/customers/${customer.id}`, {
         method: 'DELETE',
       });
 

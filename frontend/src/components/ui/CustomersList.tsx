@@ -9,6 +9,7 @@ import { Filter, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
+import { authFetch } from "@/lib/auth";
 
 type Props = {
   customers: Customer[];
@@ -65,7 +66,7 @@ export default function CustomersList({ customers }: Props) {
     setDeletingId(customerId);
 
     try {
-      const res = await fetch(`/api/customers/${customerId}`, {
+      const res = await authFetch(`/api/customers/${customerId}`, {
         method: "DELETE",
       });
 

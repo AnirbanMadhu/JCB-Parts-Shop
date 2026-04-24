@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Toast from "@/components/ui/Toast";
 import { useToast } from "@/hooks/useToast";
 import BackButton from "./BackButton";
+import { authFetch } from "@/lib/auth";
 
 export default function SupplierForm() {
   const router = useRouter();
@@ -23,9 +24,8 @@ export default function SupplierForm() {
     e.preventDefault();
     
     try {
-      const res = await fetch(`/api/suppliers`, {
+      const res = await authFetch(`/api/suppliers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 

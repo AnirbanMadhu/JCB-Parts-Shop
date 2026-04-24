@@ -9,6 +9,7 @@ import { Pencil, Trash2, Search } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
+import { authFetch } from "@/lib/auth";
 
 type Props = {
   items: Item[];
@@ -70,7 +71,7 @@ export default function ItemsList(props: Props) {
     const { itemId, itemName } = confirmDialog;
     setDeletingId(itemId);
     try {
-      const res = await fetch(`/api/parts/${itemId}`, {
+      const res = await authFetch(`/api/parts/${itemId}`, {
         method: 'DELETE',
       });
 
@@ -97,9 +98,8 @@ export default function ItemsList(props: Props) {
 
     setUpdatingStockId(itemId);
     try {
-      const res = await fetch(`/api/stock/${itemId}/adjust`, {
+      const res = await authFetch(`/api/stock/${itemId}/adjust`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ quantity: newStock }),
       });
 

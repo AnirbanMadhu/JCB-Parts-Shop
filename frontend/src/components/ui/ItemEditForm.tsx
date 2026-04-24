@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/hooks/useToast";
 import ToastContainer from "./ToastContainer";
+import { authFetch } from "@/lib/auth";
 
 
 
@@ -61,9 +62,8 @@ export default function ItemEditForm({ item }: { item: any }) {
         description: formData.description || null,
       };
 
-      const res = await fetch(`/api/parts/${item.id}`, {
+      const res = await authFetch(`/api/parts/${item.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submitData),
       });
 

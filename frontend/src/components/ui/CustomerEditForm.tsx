@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Toast from "@/components/ui/Toast";
 import { useToast } from "@/hooks/useToast";
+import { authFetch } from "@/lib/auth";
 
 
 
@@ -45,9 +46,8 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
 
     setSaving(true);
     try {
-      const res = await fetch(`/api/customers/${customer.id}`, {
+      const res = await authFetch(`/api/customers/${customer.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 

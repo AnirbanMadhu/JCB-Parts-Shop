@@ -10,6 +10,7 @@ import { Search, Plus, Edit, Trash2 } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
+import { authFetch } from "@/lib/auth";
 
 
 
@@ -61,7 +62,7 @@ export default function SuppliersList({ suppliers }: Props) {
     const { supplierId, supplierName } = confirmDialog;
 
     try {
-      const res = await fetch(`/api/suppliers/${supplierId}`, {
+      const res = await authFetch(`/api/suppliers/${supplierId}`, {
         method: 'DELETE',
       });
 
