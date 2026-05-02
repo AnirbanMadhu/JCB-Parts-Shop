@@ -373,7 +373,7 @@ export default function SalesInvoiceForm() {
     setSavingManualItem(true);
     try {
       // Check if part already exists in database
-      const checkRes = await fetch(
+      const checkRes = await authFetch(
         `/api/parts/search?q=${encodeURIComponent(upperPartNumber)}`,
         { cache: "no-store" }
       );
@@ -605,7 +605,7 @@ export default function SalesInvoiceForm() {
       setIsSearching(true);
       
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `/api/parts/search?q=${encodeURIComponent(partSearchQuery)}`,
           { cache: "no-store" }
         );
