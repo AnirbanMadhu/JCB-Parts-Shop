@@ -93,7 +93,7 @@ export default function PurchaseInvoiceForm() {
     const fetchInvoiceNumber = async () => {
       if (supplier?.id) {
         try {
-          const res = await fetch(
+          const res = await authFetch(
             `/api/invoices/next-number?type=PURCHASE&supplierId=${supplier.id}`
           );
           if (res.ok) {
@@ -332,7 +332,7 @@ export default function PurchaseInvoiceForm() {
       console.log("Starting manual item creation...");
 
       // Check if part already exists in database
-      const checkRes = await fetch(
+      const checkRes = await authFetch(
         `/api/parts/search?q=${encodeURIComponent(upperPartNumber)}`,
         { cache: "no-store" }
       );
@@ -346,7 +346,7 @@ export default function PurchaseInvoiceForm() {
       console.log("Part exists in DB:", partExistsInDb);
 
       // Create or update the part in the database
-      const res = await fetch(`/api/parts`, {
+      const res = await authFetch(`/api/parts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -473,7 +473,7 @@ export default function PurchaseInvoiceForm() {
         sgstPercent
       };
 
-      const res = await fetch(`/api/invoices`, {
+      const res = await authFetch(`/api/invoices`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(invoiceData)
@@ -509,7 +509,7 @@ export default function PurchaseInvoiceForm() {
   useEffect(() => {
     async function loadSuppliers() {
       try {
-        const res = await fetch(`/api/suppliers`, { cache: "no-store" });
+        const res = await authFetch(`/api/suppliers`, { cache: "no-store" });
         if (res.ok) {
           const data = await res.json();
           setAllSuppliers(data);
