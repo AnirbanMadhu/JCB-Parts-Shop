@@ -534,7 +534,7 @@ export default function PurchaseInvoiceForm() {
       console.log("Searching for parts with query:", partSearchQuery);
       
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `/api/parts/search?q=${encodeURIComponent(partSearchQuery)}`,
           { cache: "no-store" }
         );
