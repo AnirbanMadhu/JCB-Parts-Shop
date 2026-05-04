@@ -3,6 +3,7 @@ import { prisma } from "../prisma";
 import { PartCreateBody } from "../types";
 import { cacheMiddleware, clearCachePattern } from "../middleware/cache";
 import { authenticateToken } from '../middleware/auth';
+import { getWorkbookPart } from '../utils/book-prices';
 
 const router = Router();
 
@@ -243,6 +244,36 @@ router.get("/search", async (req, res) => {
       take: 50,
       orderBy: { partNumber: "asc" },
     });
+
+    if (parts.length === 0 && q) {
+      const workbookPart = await getWorkbookPart(q);
+      if (workbookPart) {
+        const part = await prisma.part.upsert({
+          where: { partNumber: workbookPart.partNumber },
+          update: {
+            itemName: workbookPart.itemName,
+            description: workbookPart.description,
+            hsnCode: workbookPart.hsnCode,
+            gstPercent: workbookPart.gstPercent,
+            unit: workbookPart.unit,
+            mrp: workbookPart.mrp,
+            rtl: workbookPart.rtl,
+          },
+          create: {
+            partNumber: workbookPart.partNumber,
+            itemName: workbookPart.itemName,
+            description: workbookPart.description,
+            hsnCode: workbookPart.hsnCode || '0000',
+            gstPercent: workbookPart.gstPercent,
+            unit: workbookPart.unit,
+            mrp: workbookPart.mrp,
+            rtl: workbookPart.rtl,
+          },
+        });
+
+        return res.json([{ ...part }]);
+      }
+    }
 
     res.json(parts);
   } catch (e) {

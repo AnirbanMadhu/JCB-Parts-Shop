@@ -17,6 +17,7 @@ RUN --mount=type=cache,target=/root/.npm \
 # Without this, Prisma re-downloads them on every single build (~40s → ~2s).
 COPY prisma.config.ts ./
 COPY prisma ./prisma
+COPY Book1.xlsx ./
 RUN --mount=type=cache,target=/root/.cache \
     npx prisma generate
 
@@ -40,6 +41,7 @@ COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nodejs:nodejs /app/prisma.config.ts ./
+COPY --from=builder --chown=nodejs:nodejs /app/Book1.xlsx ./
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 
 # Switch to non-root user
