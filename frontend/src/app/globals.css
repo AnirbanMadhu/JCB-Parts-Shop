@@ -163,8 +163,15 @@ body {
 @layer base {
   html,
   body {
-    @apply h-full;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  html {
+    @apply h-full;
+  }
+
+  body {
+    @apply min-h-full;
   }
 
   * {

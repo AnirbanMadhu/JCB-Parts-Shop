@@ -38,7 +38,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             </div>
             <ThemeToggle />
           </header>
-          <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-background w-full overscroll-contain touch-pan-y [-webkit-overflow-scrolling:touch]">
+          <main className="flex-1 min-h-0 overflow-x-hidden bg-background w-full">
             {children}
           </main>
         </SidebarInset>
