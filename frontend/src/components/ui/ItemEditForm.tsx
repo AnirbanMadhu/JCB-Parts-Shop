@@ -90,41 +90,41 @@ export default function ItemEditForm({ item }: { item: any }) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
-      <header className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-          <Link href="/common/items" className="text-sm text-primary hover:underline transition-colors">
+      <header className="sticky top-0 z-20 bg-card/95 backdrop-blur border-b border-border px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-3 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <Link href="/common/items" className="text-xs sm:text-sm text-primary hover:underline transition-colors whitespace-nowrap">
             ← Back to Items
           </Link>
-          <div className="flex items-center gap-2">
-            <span className="w-1 h-6 bg-primary rounded-full" />
-            <h1 className="text-[17px] font-semibold text-foreground">Edit Item - {item.partNumber}</h1>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-1 h-5 sm:h-6 bg-primary rounded-full flex-shrink-0" />
+            <h1 className="text-sm sm:text-[17px] font-semibold text-foreground truncate">Edit Item - {item.partNumber}</h1>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             type="button"
             onClick={() => router.push('/common/items')}
-            className="px-4 py-2 text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border cursor-pointer"
+            className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border cursor-pointer touch-manipulation"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60 shadow-sm cursor-pointer"
+            className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60 shadow-sm cursor-pointer touch-manipulation"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </header>
 
-      <div className="px-6 py-6">
+      <div className="flex-1 overflow-auto px-3 sm:px-6 py-4 sm:py-6">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-card border border-border rounded-lg shadow-sm p-6">
+          <div className="bg-card border border-border rounded-lg shadow-sm p-4 sm:p-6">
             <form onSubmit={handleSubmit}>
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                 {/* Part Number */}
                 <div className="flex flex-col">
                   <label className="text-sm font-medium text-foreground mb-2">

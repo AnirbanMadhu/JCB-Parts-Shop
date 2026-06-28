@@ -69,7 +69,7 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background overflow-x-hidden">
       {/* Toast notifications */}
       {toasts.map((t) => (
         <Toast
@@ -80,14 +80,14 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
         />
       ))}
       
-      <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="bg-card border-b border-border px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
+        <div className="flex items-center gap-3 min-w-0">
           <Link href="/common/customers" className="text-sm text-primary hover:underline">
             ← Back to Customers
           </Link>
-          <h1 className="text-[17px] font-semibold text-foreground">Edit Customer - {customer.name}</h1>
+          <h1 className="text-[17px] font-semibold text-foreground truncate">Edit Customer - {customer.name}</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
             onClick={() => router.push('/common/customers')}
@@ -105,7 +105,7 @@ export default function CustomerEditForm({ customer }: { customer: any }) {
         </div>
       </header>
 
-      <div className="px-6 py-6">
+      <div className="px-4 sm:px-6 py-6">
         <form onSubmit={handleSubmit} className="max-w-4xl">
           <div className="grid gap-6 md:grid-cols-2">
             {/* Customer Name */}

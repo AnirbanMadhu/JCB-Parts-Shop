@@ -41,9 +41,9 @@ export default function ProfitAndLossReport({ data }: Props) {
   const isProfitable = data.profitLoss >= 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background overflow-x-hidden">
       {/* Header */}
-      <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <header className="bg-card border-b border-border px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-3">
           <BackButton />
           <div className="flex items-center gap-2">
@@ -54,9 +54,9 @@ export default function ProfitAndLossReport({ data }: Props) {
       </header>
 
       {/* Filter Section */}
-      <div className="px-6 py-4 bg-muted/30 border-b border-border">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+      <div className="px-4 sm:px-6 py-4 bg-muted/30 border-b border-border">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <label className="text-sm font-medium text-foreground">From Date</label>
             <input
               type="date"
@@ -66,7 +66,7 @@ export default function ProfitAndLossReport({ data }: Props) {
               placeholder="Select start date"
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <label className="text-sm font-medium text-foreground">To Date</label>
             <input
               type="date"
@@ -97,7 +97,7 @@ export default function ProfitAndLossReport({ data }: Props) {
       </div>
 
       {/* Summary Cards */}
-      <div className="px-6 py-6 animate-fade-in">
+      <div className="px-4 sm:px-6 py-6 animate-fade-in">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/30 hover:border-blue-500/50 transition-all hover:shadow-lg animate-slide-up">
             <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">Total Sales</p>

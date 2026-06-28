@@ -48,9 +48,9 @@ export default function BalanceSheetReport({ data }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background overflow-x-hidden">
       {/* Header */}
-      <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <header className="bg-card border-b border-border px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-3">
           <BackButton />
           <div className="flex items-center gap-2">
@@ -61,9 +61,9 @@ export default function BalanceSheetReport({ data }: Props) {
       </header>
 
       {/* Filter Section */}
-      <div className="px-6 py-4 bg-muted/30 border-b border-border">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+      <div className="px-4 sm:px-6 py-4 bg-muted/30 border-b border-border">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <label className="text-sm font-medium text-foreground">As of Date</label>
             <input
               type="date"
@@ -93,7 +93,7 @@ export default function BalanceSheetReport({ data }: Props) {
       </div>
 
       {/* Balance Sheet Content */}
-      <div className="px-6 py-6 animate-fade-in">
+      <div className="px-4 sm:px-6 py-6 animate-fade-in">
         <div className="mb-4">
           <h2 className="text-lg font-semibold text-foreground">As of {new Date(data.asOfDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</h2>
         </div>

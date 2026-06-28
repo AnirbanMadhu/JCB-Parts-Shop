@@ -34,8 +34,8 @@ export default function SupplierDetails({ supplier, invoices }: Props) {
   const pendingInvoices = invoices.filter(inv => inv.status === 'SUBMITTED').length;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between">
+    <div className="min-h-[100dvh] bg-background overflow-x-hidden">
+      <header className="bg-card border-b border-border px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <BackButton />
           <h1 className="text-[17px] font-semibold text-foreground">Supplier Details</h1>
@@ -48,7 +48,7 @@ export default function SupplierDetails({ supplier, invoices }: Props) {
         </Link>
       </header>
 
-      <div className="px-6 py-6">
+      <div className="px-4 sm:px-6 py-6">
         {/* Supplier Info Card */}
         <div className="bg-card border border-border rounded-lg p-6 mb-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">{supplier.name}</h2>
@@ -147,7 +147,7 @@ export default function SupplierDetails({ supplier, invoices }: Props) {
                 <div className="text-xs font-medium text-muted-foreground text-right">Amount</div>
               </div>
               {/* Table Body */}
-              <div className="max-h-[400px] overflow-y-auto">
+              <div className="max-h-[60vh] overflow-y-auto">
                 {invoices.map((invoice, i) => (
                   <Link
                     key={invoice.id}

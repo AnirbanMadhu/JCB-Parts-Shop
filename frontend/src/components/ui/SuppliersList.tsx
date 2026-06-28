@@ -95,7 +95,7 @@ export default function SuppliersList({ suppliers }: Props) {
   const hasRows = filteredSuppliers && filteredSuppliers.length > 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background overflow-x-hidden">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
@@ -107,21 +107,21 @@ export default function SuppliersList({ suppliers }: Props) {
         cancelText="Cancel"
         variant="danger"
       />
-      <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="bg-card border-b border-border px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
+        <div className="flex items-center gap-3 min-w-0">
           <BackButton />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <span className="w-1 h-6 bg-primary rounded-full" />
-            <h1 className="text-[17px] font-semibold text-foreground">Suppliers</h1>
+            <h1 className="text-[17px] font-semibold text-foreground truncate">Suppliers</h1>
           </div>
         </div>
-        <Link href="/common/suppliers/new" className="flex items-center gap-2 px-4 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
+        <Link href="/common/suppliers/new" className="flex items-center justify-center gap-2 px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
           <Plus className="w-4 h-4" />
           Add Supplier
         </Link>
       </header>
 
-      <div className="px-6 py-6">
+      <div className="px-4 sm:px-6 py-6">
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative max-w-md">
@@ -175,7 +175,7 @@ export default function SuppliersList({ suppliers }: Props) {
                 <div className="text-xs font-medium text-muted-foreground text-center">Actions</div>
               </div>
               {/* Table Body */}
-              <div className="max-h-[600px] overflow-y-auto">
+              <div className="max-h-[60vh] overflow-y-auto">
                 {filteredSuppliers.map((supplier, i) => (
                   <div
                     key={supplier.id}

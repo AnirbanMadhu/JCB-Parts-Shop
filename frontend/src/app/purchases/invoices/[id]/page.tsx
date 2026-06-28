@@ -54,7 +54,7 @@ export default function PurchaseInvoiceDetailPage({ params }: Props) {
 
   if (loading || !isLoaded) {
     return (
-      <div className="min-h-screen bg-background p-6">
+      <div className="min-h-[100dvh] bg-background p-4 sm:p-6 overflow-x-hidden">
         <div className="text-center py-12">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -74,8 +74,8 @@ export default function PurchaseInvoiceDetailPage({ params }: Props) {
   }
   
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-6">
+    <div className="min-h-[100dvh] bg-background overflow-x-hidden">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

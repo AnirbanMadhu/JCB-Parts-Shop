@@ -66,7 +66,7 @@ export default function InvoiceView({ invoice }: InvoiceViewProps) {
       </div>
 
       {/* Screen View */}
-      <div className="no-print min-h-screen bg-white p-6">
+      <div className="no-print min-h-[100dvh] bg-white p-4 sm:p-6 overflow-x-hidden">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6 flex justify-between items-center">
             <div>

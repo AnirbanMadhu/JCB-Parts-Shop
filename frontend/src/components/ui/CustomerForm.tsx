@@ -69,7 +69,7 @@ export default function CustomerForm() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
       {/* Toast notifications */}
       {toasts.map((t) => (
         <Toast
@@ -80,34 +80,34 @@ export default function CustomerForm() {
         />
       ))}
       
-      <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-          <Link href="/common/customers" className="text-sm text-primary hover:underline">
+      <header className="sticky top-0 z-20 bg-card/95 backdrop-blur border-b border-border px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-3 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <Link href="/common/customers" className="text-xs sm:text-sm text-primary hover:underline whitespace-nowrap">
             ← Back to Customers
           </Link>
-          <h1 className="text-[17px] font-semibold text-foreground">Add New Customer</h1>
+          <h1 className="text-sm sm:text-[17px] font-semibold text-foreground truncate">Add New Customer</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             type="button"
             onClick={() => router.push('/common/customers')}
-            className="px-4 py-1.5 text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border cursor-pointer"
+            className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border cursor-pointer touch-manipulation"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="px-4 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60 cursor-pointer"
+            className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60 cursor-pointer touch-manipulation"
           >
             {saving ? 'Saving...' : 'Save Customer'}
           </button>
         </div>
       </header>
 
-      <div className="px-6 py-6">
-        <form onSubmit={handleSubmit} className="max-w-4xl">
-          <div className="grid gap-6 md:grid-cols-2">
+      <div className="flex-1 overflow-auto px-3 sm:px-6 py-4 sm:py-6">
+        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
             {/* Customer Name */}
             <div className="flex flex-col">
               <label className="text-sm font-medium text-foreground mb-1">
@@ -213,18 +213,18 @@ export default function CustomerForm() {
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-3">
             <button
               type="button"
               onClick={() => router.push('/common/customers')}
-              className="px-6 py-2 text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border cursor-pointer"
+              className="px-6 py-2 text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border cursor-pointer touch-manipulation"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60 cursor-pointer"
+              className="px-6 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60 cursor-pointer touch-manipulation"
             >
               {saving ? 'Saving...' : 'Save Customer'}
             </button>

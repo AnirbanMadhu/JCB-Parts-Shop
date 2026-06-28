@@ -7,7 +7,7 @@ export default function ItemsPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-[100dvh] bg-white overflow-x-hidden">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">

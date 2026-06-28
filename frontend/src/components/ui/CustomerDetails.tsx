@@ -78,9 +78,9 @@ export default function CustomerDetails({ customer, invoices }: Props) {
   const pendingInvoices = invoices.filter(inv => inv.status !== 'PAID' && inv.status !== 'CANCELLED').length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background overflow-x-hidden">
       {/* Header */}
-      <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between">
+      <header className="bg-card border-b border-border px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <BackButton />
           <div>
@@ -90,7 +90,7 @@ export default function CustomerDetails({ customer, invoices }: Props) {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Link
             href={`/common/customers/${customer.id}/edit`}
             className="flex items-center gap-2 px-4 py-1.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-md transition-colors border border-blue-200 dark:border-blue-900"
@@ -108,7 +108,7 @@ export default function CustomerDetails({ customer, invoices }: Props) {
         </div>
       </header>
 
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Customer Information Card */}
           <div className="lg:col-span-1">

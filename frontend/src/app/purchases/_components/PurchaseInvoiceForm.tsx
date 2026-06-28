@@ -561,7 +561,7 @@ export default function PurchaseInvoiceForm() {
   }, [supplierQuery, allSuppliers]);
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-[100dvh] bg-background p-3 sm:p-6 overflow-x-hidden">
       {/* Toast notifications */}
       {toast.toasts.map((t) => (
         <Toast

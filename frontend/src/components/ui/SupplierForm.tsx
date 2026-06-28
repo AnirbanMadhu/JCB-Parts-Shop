@@ -45,7 +45,7 @@ export default function SupplierForm() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
       {/* Toast notifications */}
       {toasts.map((t) => (
         <Toast
@@ -56,16 +56,16 @@ export default function SupplierForm() {
         />
       ))}
       
-      <header className="bg-card border-b border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-20 bg-card/95 backdrop-blur border-b border-border px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-3 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <BackButton />
-          <h1 className="text-[17px] font-semibold text-foreground">Add New Supplier</h1>
+          <h1 className="text-sm sm:text-[17px] font-semibold text-foreground truncate">Add New Supplier</h1>
         </div>
       </header>
 
-      <div className="px-6 py-6 max-w-3xl">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="flex-1 overflow-auto px-3 sm:px-6 py-4 sm:py-6">
+        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
             {/* Supplier Name */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">
@@ -161,17 +161,17 @@ export default function SupplierForm() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-3 pt-4">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 pt-4">
             <button
               type="submit"
-              className="px-6 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-colors"
+              className="px-6 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-colors touch-manipulation"
             >
               Create Supplier
             </button>
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-2 bg-muted text-muted-foreground text-sm font-medium rounded-md hover:bg-muted/80 transition-colors cursor-pointer"
+              className="px-6 py-2 bg-muted text-muted-foreground text-sm font-medium rounded-md hover:bg-muted/80 transition-colors cursor-pointer touch-manipulation"
             >
               Cancel
             </button>

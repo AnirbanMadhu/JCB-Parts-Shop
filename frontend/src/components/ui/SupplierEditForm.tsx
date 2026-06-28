@@ -79,12 +79,12 @@ export default function SupplierEditForm({ supplier }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-[100dvh] bg-white overflow-x-hidden">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
-      <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <BackButton />
-          <h1 className="text-[17px] font-semibold text-gray-900">Edit Supplier</h1>
+          <h1 className="text-[17px] font-semibold text-gray-900 truncate">Edit Supplier</h1>
         </div>
         <button
           onClick={() => setShowDeleteDialog(true)}
@@ -94,7 +94,7 @@ export default function SupplierEditForm({ supplier }: Props) {
         </button>
       </header>
 
-      <div className="px-6 py-6 max-w-3xl">
+      <div className="px-4 sm:px-6 py-6 max-w-3xl">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Supplier Name */}

@@ -7,47 +7,47 @@ export default function PurchasePaymentsPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-md cursor-pointer">
+      <header className="sticky top-0 z-20 bg-card/95 backdrop-blur border-b border-border px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-3 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <button onClick={() => router.back()} className="p-2 hover:bg-muted rounded-md cursor-pointer touch-manipulation">
             <ChevronLeft className="w-4 h-4 text-gray-500" />
           </button>
-          <h1 className="text-[17px] font-semibold text-gray-900">Purchase Payment</h1>
+          <h1 className="text-sm sm:text-[17px] font-semibold text-foreground truncate">Purchase Payment</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200 cursor-pointer">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border cursor-pointer touch-manipulation">
             Export
           </button>
-          <button className="flex items-center gap-2 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-md transition-colors border border-gray-200 cursor-pointer">
+          <button className="flex items-center gap-2 px-3 sm:px-4 py-1.5 text-xs sm:text-sm text-muted-foreground hover:bg-muted rounded-md transition-colors border border-border cursor-pointer touch-manipulation">
             <Filter className="w-4 h-4" />
-            Filter
+            <span className="hidden sm:inline">Filter</span>
           </button>
-          <button className="p-2 bg-[#2c3e50] text-white rounded-md hover:bg-[#1a252f] transition-colors cursor-pointer">
+          <button className="p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors cursor-pointer touch-manipulation">
             <Plus className="w-4 h-4" />
           </button>
         </div>
       </header>
 
       {/* Table Container */}
-      <div className="px-6 py-6">
-        <div className="bg-white">
+      <div className="flex-1 overflow-auto px-3 sm:px-6 py-3 sm:py-6">
+        <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
           {/* Table Header */}
-          <div className="grid grid-cols-[60px_repeat(4,1fr)] gap-4 px-4 py-3 border-b border-gray-200">
-            <div className="text-xs font-medium text-gray-500">#</div>
-            <div className="text-xs font-medium text-gray-500">Payment No</div>
-            <div className="text-xs font-medium text-gray-500">Status</div>
-            <div className="text-xs font-medium text-gray-500">Party</div>
-            <div className="text-xs font-medium text-gray-500">Posting Date</div>
-            <div className="text-xs font-medium text-gray-500 text-right">Amount</div>
+          <div className="grid grid-cols-[60px_repeat(4,1fr)] gap-4 px-4 py-3 border-b border-border bg-muted/30">
+            <div className="text-xs font-medium text-muted-foreground">#</div>
+            <div className="text-xs font-medium text-muted-foreground">Payment No</div>
+            <div className="text-xs font-medium text-muted-foreground">Status</div>
+            <div className="text-xs font-medium text-muted-foreground">Party</div>
+            <div className="text-xs font-medium text-muted-foreground">Posting Date</div>
+            <div className="text-xs font-medium text-muted-foreground text-right">Amount</div>
           </div>
 
           {/* Empty State */}
-          <div className="flex flex-col items-center justify-center py-32">
+          <div className="flex flex-col items-center justify-center py-20 sm:py-32 px-4">
             <div className="mb-4">
               <svg
-                className="w-20 h-20 text-gray-300"
+                className="w-16 h-16 sm:w-20 sm:h-20 text-muted"
                 viewBox="0 0 80 80"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -133,8 +133,8 @@ export default function PurchasePaymentsPage() {
                 />
               </svg>
             </div>
-            <p className="text-sm text-gray-400 mb-5">No entries found</p>
-            <button className="px-5 py-2 bg-[#2c3e50] text-white text-sm font-medium rounded-md hover:bg-[#1a252f] transition-colors cursor-pointer">
+            <p className="text-sm text-muted-foreground mb-5">No entries found</p>
+            <button className="px-5 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-colors cursor-pointer touch-manipulation">
               Make Entry
             </button>
           </div>

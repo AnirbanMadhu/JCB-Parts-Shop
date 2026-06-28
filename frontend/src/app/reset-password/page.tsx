@@ -77,8 +77,8 @@ function ResetPasswordForm() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
+      <div className="min-h-[100dvh] flex items-start sm:items-center justify-center bg-gray-50 py-6 sm:py-8 px-4 sm:px-6 lg:px-8 overflow-auto">
+        <div className="max-w-md w-full space-y-8 my-auto">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
               Password reset successful
@@ -127,8 +127,8 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-[100dvh] flex items-start sm:items-center justify-center bg-gray-50 py-6 sm:py-8 px-4 sm:px-6 lg:px-8 overflow-auto">
+      <div className="max-w-md w-full space-y-8 my-auto">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Set new password
@@ -222,7 +222,7 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-gray-50 px-4 overflow-auto">
         <div className="text-gray-600">Loading...</div>
       </div>
     }>

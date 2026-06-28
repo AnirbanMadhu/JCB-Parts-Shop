@@ -61,7 +61,7 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-[100dvh] flex items-center justify-center px-4 overflow-auto">
         <div className="text-center">
           <p className="text-muted-foreground">Loading...</p>
         </div>

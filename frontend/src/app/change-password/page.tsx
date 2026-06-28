@@ -138,8 +138,8 @@ export default function ChangePasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 animate-fade-in">
+      <div className="min-h-[100dvh] flex items-start sm:items-center justify-center bg-background py-6 sm:py-8 px-4 sm:px-6 lg:px-8 overflow-auto">
+        <div className="max-w-md w-full space-y-8 animate-fade-in my-auto">
           <div>
             <h2 className="mt-6 text-center text-3xl font-bold text-foreground">
               Password changed successfully
@@ -181,8 +181,8 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 animate-fade-in">
+    <div className="min-h-[100dvh] flex items-start sm:items-center justify-center bg-background py-6 sm:py-8 px-4 sm:px-6 lg:px-8 overflow-auto">
+      <div className="max-w-md w-full space-y-8 animate-fade-in my-auto">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold text-foreground">
             {isMandatory ? '🔒 Change Your Password' : 'Change Password'}

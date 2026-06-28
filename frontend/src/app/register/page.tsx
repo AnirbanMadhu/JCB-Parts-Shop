@@ -60,8 +60,8 @@ export default function RegisterPage() {
 
   if (!systemStatus) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4 animate-pulse">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4 py-8 overflow-auto">
+        <div className="text-center space-y-4 animate-pulse max-w-sm">
           <div className="w-16 h-16 bg-primary/20 rounded-full mx-auto flex items-center justify-center">
             <Sparkles className="w-8 h-8 text-primary" />
           </div>
@@ -72,14 +72,14 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-[100dvh] flex items-start md:items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 py-6 sm:py-8 px-4 sm:px-6 lg:px-8 relative overflow-auto">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      <div className="max-w-6xl w-full grid md:grid-cols-2 gap-8 items-center relative z-10">
+      <div className="max-w-6xl w-full grid md:grid-cols-2 gap-8 items-start md:items-center relative z-10 my-auto">
         {/* Left side - Welcome section */}
         <div className="hidden md:block space-y-6 animate-fade-in">
           <div className="space-y-4">
@@ -130,7 +130,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Right side - Registration form */}
-        <div className="bg-card border border-border rounded-2xl shadow-2xl p-8 animate-slide-up">
+        <div className="bg-card border border-border rounded-2xl shadow-2xl p-5 sm:p-8 animate-slide-up">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-4">
               <Shield className="w-8 h-8 text-primary" />

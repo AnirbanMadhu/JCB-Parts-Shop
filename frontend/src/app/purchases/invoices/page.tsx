@@ -8,10 +8,10 @@ export default function PurchaseInvoicesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4 py-8 sm:py-12">
+        <div className="text-center max-w-sm">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading invoices...</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Loading invoices...</p>
         </div>
       </div>
     );
@@ -19,9 +19,9 @@ export default function PurchaseInvoicesPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center text-destructive">
-          <p>Failed to load invoices. Please try again.</p>
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4 py-8 sm:py-12">
+        <div className="text-center text-destructive max-w-sm">
+          <p className="text-sm sm:text-base">Failed to load invoices. Please try again.</p>
         </div>
       </div>
     );

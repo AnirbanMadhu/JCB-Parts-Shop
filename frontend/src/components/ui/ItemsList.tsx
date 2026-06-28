@@ -128,7 +128,7 @@ export default function ItemsList(props: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background overflow-x-hidden">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       <header className="sticky top-0 z-10 bg-card border-b border-border px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
@@ -164,7 +164,7 @@ export default function ItemsList(props: Props) {
         </div>
       </div>
 
-      <div className="px-3 sm:px-6 py-3 sm:py-6 max-h-[calc(100vh-180px)] overflow-y-auto">
+      <div className="px-3 sm:px-6 py-3 sm:py-6">
         <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm animate-fade-in">
           {!hasRows ? (
             <div className="flex flex-col items-center justify-center py-16 sm:py-32 px-4">
