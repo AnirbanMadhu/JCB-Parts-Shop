@@ -190,7 +190,7 @@ export default function SalesPaymentsList({ payments }: Props) {
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+        <div className="sticky top-14 sm:top-16 z-20 bg-background/95 backdrop-blur pt-3 pb-3 sm:pb-4 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 border-b border-transparent">
           {/* Search */}
           <div className="relative md:col-span-2">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />

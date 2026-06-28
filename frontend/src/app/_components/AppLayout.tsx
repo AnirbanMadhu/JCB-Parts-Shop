@@ -27,7 +27,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider defaultOpen={false}>
-      <div className="flex h-screen w-screen overflow-hidden relative">
+      <div className="flex min-h-[100dvh] w-full overflow-hidden relative">
         <AppSidebar />
         <SidebarInset className="flex flex-col flex-1 min-w-0 overflow-hidden w-full md:w-auto">
           <header className="sticky top-0 flex h-14 md:h-16 shrink-0 items-center gap-2 border-b bg-background px-3 sm:px-4 z-30 touch-manipulation w-full">
@@ -38,7 +38,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             </div>
             <ThemeToggle />
           </header>
-          <main className="flex-1 overflow-auto bg-background w-full">
+          <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-background w-full overscroll-contain">
             {children}
           </main>
         </SidebarInset>
