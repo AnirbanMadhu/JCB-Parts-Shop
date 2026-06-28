@@ -14,9 +14,9 @@ export type WorkbookPart = {
 };
 
 const workbookPathCandidates = [
-  path.resolve(process.cwd(), 'Book1.xlsx'),
-  path.resolve(__dirname, '../../Book1.xlsx'),
-  path.resolve(__dirname, '../../../Book1.xlsx'),
+  path.resolve(process.cwd(), 'New Price List.xlsx'),
+  path.resolve(__dirname, '../../New Price List.xlsx'),
+  path.resolve(__dirname, '../../../New Price List.xlsx'),
 ];
 
 let priceMapPromise: Promise<Map<string, WorkbookPart>> | null = null;
@@ -58,7 +58,7 @@ async function loadPriceMap() {
       const workbookPath = workbookPathCandidates.find((candidate) => fs.existsSync(candidate));
 
       if (!workbookPath) {
-        console.warn('[WorkbookPrices] Book1.xlsx not found. Workbook fallback is disabled.');
+        console.warn('[WorkbookPrices] Price list workbook not found. Workbook fallback is disabled.');
         return new Map();
       }
 
@@ -100,7 +100,7 @@ async function loadPriceMap() {
       console.log(`[WorkbookPrices] Loaded ${priceMap.size} part entries from ${path.basename(workbookPath)}`);
       return priceMap;
     })().catch((error) => {
-      console.error('[WorkbookPrices] Failed to load Book1.xlsx:', error);
+      console.error('[WorkbookPrices] Failed to load price list workbook:', error);
       return new Map();
     });
   }
