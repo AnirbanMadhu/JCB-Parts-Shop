@@ -10,6 +10,33 @@ const router = Router();
 // Authentication required for all routes
 router.use(authenticateToken);
 
+async function syncWorkbookPricing(part: any) {
+  const workbookPart = await getWorkbookPart(part.partNumber);
+  if (!workbookPart) return part;
+
+  const priceUpdates: { mrp?: number | null; rtl?: number | null } = {};
+
+  if (workbookPart.mrp !== null && Number(part.mrp ?? null) !== workbookPart.mrp) {
+    priceUpdates.mrp = workbookPart.mrp;
+  }
+
+  if (workbookPart.rtl !== null && Number(part.rtl ?? null) !== workbookPart.rtl) {
+    priceUpdates.rtl = workbookPart.rtl;
+  }
+
+  if (Object.keys(priceUpdates).length === 0) {
+    return part;
+  }
+
+  await prisma.part.update({
+    where: { id: part.id },
+    data: priceUpdates,
+  });
+
+  clearCachePattern('/api/parts');
+  return { ...part, ...priceUpdates };
+}
+
 // Get all parts (paginated) - Cache for 30 seconds
 router.get("/", cacheMiddleware(30), async (req, res) => {
   const { page = "1", limit = "50" } = req.query as {
@@ -214,7 +241,8 @@ router.get("/search", async (req, res) => {
       if (!part || part.isDeleted) {
         return res.status(404).json({ error: "Part not found" });
       }
-      const partWithStock = await addStockInfo(part);
+      const refreshedPart = await syncWorkbookPricing(part);
+      const partWithStock = await addStockInfo(refreshedPart);
       return res.json(partWithStock);
     }
 
@@ -226,7 +254,8 @@ router.get("/search", async (req, res) => {
       if (!part || part.isDeleted) {
         return res.status(404).json({ error: "Part not found" });
       }
-      const partWithStock = await addStockInfo(part);
+      const refreshedPart = await syncWorkbookPricing(part);
+      const partWithStock = await addStockInfo(refreshedPart);
       return res.json(partWithStock);
     }
 
@@ -244,6 +273,11 @@ router.get("/search", async (req, res) => {
       take: 50,
       orderBy: { partNumber: "asc" },
     });
+
+    if (q && parts.length > 0) {
+      const refreshedParts = await Promise.all(parts.map((part) => syncWorkbookPricing(part)));
+      return res.json(refreshedParts);
+    }
 
     if (parts.length === 0 && q) {
       const workbookPart = await getWorkbookPart(q);

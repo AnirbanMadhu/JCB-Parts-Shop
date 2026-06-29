@@ -5,6 +5,7 @@ import { InvoiceType, InventoryDirection, InvoiceStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/client';
 import { clearCachePattern } from '../middleware/cache';
 import { authenticateToken } from '../middleware/auth';
+import { getWorkbookPart } from '../utils/book-prices';
 
 const router = Router();
 
@@ -221,7 +222,32 @@ router.post('/', async (req, res) => {
         }
 
         const qty = new Decimal(item.quantity);
-        const rate = new Decimal(item.rate);
+        let rate = new Decimal(item.rate);
+
+        if (body.type === 'PURCHASE') {
+          const workbookPart = await getWorkbookPart(part.partNumber);
+          if (workbookPart) {
+            const workbookRate = workbookPart.rtl ?? workbookPart.mrp;
+            if (workbookRate !== null) {
+              rate = new Decimal(workbookRate);
+
+              const priceUpdates: { mrp?: number | null; rtl?: number | null } = {};
+              if (workbookPart.mrp !== null && Number(part.mrp ?? null) !== workbookPart.mrp) {
+                priceUpdates.mrp = workbookPart.mrp;
+              }
+              if (workbookPart.rtl !== null && Number(part.rtl ?? null) !== workbookPart.rtl) {
+                priceUpdates.rtl = workbookPart.rtl;
+              }
+
+              if (Object.keys(priceUpdates).length > 0) {
+                await tx.part.update({
+                  where: { id: part.id },
+                  data: priceUpdates,
+                });
+              }
+            }
+          }
+        }
         
         // Validate positive values
         if (qty.lte(0)) {
